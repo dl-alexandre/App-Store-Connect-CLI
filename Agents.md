@@ -151,6 +151,20 @@ make install    # Install locally
 3. Add helper functions for output
 4. Add command in `cmd/` to use it
 
+## Git Workflow
+
+- Branch from `main` and keep one logical change per branch
+- Do not commit directly to `main` unless explicitly instructed; prefer PRs
+- Prefer `git worktree add` for parallel tasks; remove with `git worktree remove` when done
+- Keep worktrees clean: run `git status` before/after changes
+- Rebase on `main` before merging; avoid merge commits
+- Commit small, coherent changes; no WIP commits on shared branches
+- Use concise, present-tense commit messages that match repo style
+- Review `git diff` before staging; stage only what you intend
+- Never commit secrets or local config files (keys, `.env`, `config.json`)
+- Run `make format`, `make lint`, and `make test` before committing code changes
+- Avoid rewriting shared history or force pushes unless explicitly required
+
 ## Tips for Claude Code
 
 1. Always run `make test` before committing

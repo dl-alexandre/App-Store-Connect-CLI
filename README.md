@@ -29,10 +29,6 @@ curl -fsSL https://raw.githubusercontent.com/rudrankriyam/App-Store-Connect-CLI/
 
 # Installs to ~/.local/bin by default (ensure it's on your PATH)
 
-# Install to a custom directory
-INSTALL_DIR="$HOME/.local/bin" \
-  curl -fsSL https://raw.githubusercontent.com/rudrankriyam/App-Store-Connect-CLI/main/install.sh | bash
-
 # Or build from source
 git clone https://github.com/rudrankriyam/App-Store-Connect-CLI.git
 cd App-Store-Connect-CLI

@@ -2,9 +2,9 @@
 # https://docs.codemagic.io/yaml-basic-configuration/yaml-getting-started/
 
 workflows:
-  # Main workflow: test and build
-  main-workflow:
-    name: ASC CI
+  # PR workflow: runs on every commit and PR (skips integration tests)
+  pr-workflow:
+    name: PR Checks
     max_build_duration: 30
     environment:
       go:
@@ -17,11 +17,57 @@ workflows:
         - pattern: main
           include: true
         - pattern: "*"
-          include: false
+          include: true
     steps:
       - script:
-          name: Run tests
+          name: Run unit tests (no integration)
           script: |
+            # Skip integration tests by default
+            go test -short ./...
+      - script:
+          name: Build for macOS
+          script: |
+            mkdir -p build
+            GOOS=darwin GOARCH=amd64 go build -o build/asc-darwin-amd64 .
+            GOOS=darwin GOARCH=arm64 go build -o build/asc-darwin-arm64 .
+      - script:
+          name: Build for Linux
+          script: |
+            GOOS=linux GOARCH=amd64 go build -o build/asc-linux-amd64 .
+            GOOS=linux GOARCH=arm64 go build -o build/asc-linux-arm64 .
+      - script:
+          name: Build for Windows
+          script: |
+            GOOS=windows GOARCH=amd64 go build -o build/asc-windows-amd64.exe .
+      - artifacts:
+          name: Build artifacts
+          paths:
+            - build/*
+
+  # Main branch workflow: runs integration tests with real API
+  main-workflow:
+    name: Main Branch (with integration tests)
+    max_build_duration: 60
+    environment:
+      go:
+        version: "latest"
+      variables:
+        # Codemagic environment variables (set in project settings)
+        # - ASC_KEY_ID
+        # - ASC_ISSUER_ID
+        # - ASC_PRIVATE_KEY_PATH
+        # - ASC_APP_ID
+    triggering:
+      events:
+        - push
+      branch_patterns:
+        - pattern: main
+          include: true
+    steps:
+      - script:
+          name: Run all tests (including integration)
+          script: |
+            # Run full test suite (integration tests require env vars)
             go test ./...
       - script:
           name: Build for macOS

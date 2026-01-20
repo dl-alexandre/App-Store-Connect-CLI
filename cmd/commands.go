@@ -924,26 +924,25 @@ func RootCommand(version string) *ffcli.Command {
 }
 
 func getASCClient() (*asc.Client, error) {
-	actualKeyID := os.Getenv("ASC_KEY_ID")
-	actualIssuerID := os.Getenv("ASC_ISSUER_ID")
-	actualKeyPath := os.Getenv("ASC_PRIVATE_KEY_PATH")
+	var actualKeyID, actualIssuerID, actualKeyPath string
 
-	if actualKeyID == "" || actualIssuerID == "" || actualKeyPath == "" {
-		cfg, err := auth.GetDefaultCredentials()
-		if err != nil && actualKeyID == "" && actualIssuerID == "" && actualKeyPath == "" {
-			return nil, err
-		}
-		if cfg != nil {
-			if actualKeyID == "" {
-				actualKeyID = cfg.KeyID
-			}
-			if actualIssuerID == "" {
-				actualIssuerID = cfg.IssuerID
-			}
-			if actualKeyPath == "" {
-				actualKeyPath = cfg.PrivateKeyPath
-			}
-		}
+	// Priority 1: Keychain credentials (explicit user setup via 'asc auth login')
+	cfg, err := auth.GetDefaultCredentials()
+	if err == nil && cfg != nil {
+		actualKeyID = cfg.KeyID
+		actualIssuerID = cfg.IssuerID
+		actualKeyPath = cfg.PrivateKeyPath
+	}
+
+	// Priority 2: Environment variables (fallback for CI/CD or when keychain unavailable)
+	if actualKeyID == "" {
+		actualKeyID = os.Getenv("ASC_KEY_ID")
+	}
+	if actualIssuerID == "" {
+		actualIssuerID = os.Getenv("ASC_ISSUER_ID")
+	}
+	if actualKeyPath == "" {
+		actualKeyPath = os.Getenv("ASC_PRIVATE_KEY_PATH")
 	}
 
 	if actualKeyID == "" || actualIssuerID == "" || actualKeyPath == "" {

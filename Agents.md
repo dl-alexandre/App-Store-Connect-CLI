@@ -39,12 +39,12 @@ Always use long-form flags with clear names:
 
 ### JSON-First Output
 
-All commands support `--json` for easy parsing by AI agents. JSON output is **minified** (one line) to minimize token usage.
+All commands output minified JSON by default to minimize token usage.
 
 Output formats:
 | Format | Flag | Use Case |
 |--------|------|----------|
-| JSON (minified) | `--json` | AI agents, scripting |
+| JSON (minified) | default | AI agents, scripting |
 | Table | `--output table` | Humans in terminal |
 | Markdown | `--output markdown` | Humans, documentation |
 
@@ -54,8 +54,8 @@ Output formats:
 
 ```bash
 # TestFlight - JSON for AI agents
-asc feedback --app "123456789" --json
-asc crashes --app "123456789" --json
+asc feedback --app "123456789"
+asc crashes --app "123456789"
 
 # TestFlight - Table for humans
 asc feedback --app "123456789" --output table
@@ -64,18 +64,18 @@ asc feedback --app "123456789" --output table
 asc crashes --app "123456789" --output markdown
 
 # App Store - JSON for AI agents
-asc reviews --app "123456789" --json
+asc reviews --app "123456789"
 
 # App Store - Table for humans
 asc reviews --app "123456789" --stars 1 --output table
 
 # Apps & Builds - JSON for AI agents
-asc apps --json
-asc apps --sort name --json
-asc builds --app "123456789" --json
-asc builds --app "123456789" --sort -uploadedDate --json
-asc builds info --build "BUILD_ID" --json
-asc builds expire --build "BUILD_ID" --json
+asc apps
+asc apps --sort name
+asc builds --app "123456789"
+asc builds --app "123456789" --sort -uploadedDate
+asc builds info --build "BUILD_ID"
+asc builds expire --build "BUILD_ID"
 
 # Utilities
 asc version
@@ -107,7 +107,7 @@ Environment variables (fallback):
 
 - Use `ffcli` for command structure
 - Return explicit errors with context
-- Support `--json` flag on all commands
+- Output JSON by default; use `--output` for table/markdown
 - Use Go's standard library where possible
 - Write tests for all new functionality
 

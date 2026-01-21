@@ -25,11 +25,12 @@ func validateSandboxEmail(value string) error {
 }
 
 func validateSandboxPassword(value string) error {
-	if len(value) < 8 {
+	trimmed := strings.TrimSpace(value)
+	if len(trimmed) < 8 {
 		return fmt.Errorf("--password must be at least 8 characters")
 	}
 	var hasUpper, hasLower, hasDigit bool
-	for _, r := range value {
+	for _, r := range trimmed {
 		switch {
 		case unicode.IsUpper(r):
 			hasUpper = true

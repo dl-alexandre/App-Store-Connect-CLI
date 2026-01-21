@@ -5,8 +5,10 @@ import (
 	"context"
 	"crypto/ecdsa"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
+	"math/rand"
 	"net/http"
 	"net/url"
 	"os"
@@ -26,7 +28,135 @@ const (
 	// DefaultTimeout is the default request timeout
 	DefaultTimeout = 30 * time.Second
 	tokenLifetime  = 20 * time.Minute
+
+	// Retry defaults
+	DefaultMaxRetries = 3
+	DefaultBaseDelay  = 1 * time.Second
+	DefaultMaxDelay   = 30 * time.Second
 )
+
+// RetryableError is returned when a request can be retried (e.g., rate limiting).
+type RetryableError struct {
+	Err        error
+	RetryAfter time.Duration
+}
+
+func (e *RetryableError) Error() string {
+	return e.Err.Error()
+}
+
+func (e *RetryableError) Unwrap() error {
+	return e.Err
+}
+
+// IsRetryable checks if an error indicates the request can be retried.
+func IsRetryable(err error) bool {
+	var re *RetryableError
+	return errors.As(err, &re)
+}
+
+// GetRetryAfter extracts the retry-after duration from an error.
+func GetRetryAfter(err error) time.Duration {
+	var re *RetryableError
+	if errors.As(err, &re) {
+		return re.RetryAfter
+	}
+	return 0
+}
+
+// RetryOptions configures retry behavior.
+type RetryOptions struct {
+	MaxRetries int
+	BaseDelay  time.Duration
+	MaxDelay   time.Duration
+}
+
+// ResolveRetryOptions returns retry options, optionally overridden by env vars.
+func ResolveRetryOptions() RetryOptions {
+	opts := RetryOptions{
+		MaxRetries: DefaultMaxRetries,
+		BaseDelay:  DefaultBaseDelay,
+		MaxDelay:   DefaultMaxDelay,
+	}
+
+	if override := strings.TrimSpace(os.Getenv("ASC_MAX_RETRIES")); override != "" {
+		if parsed, err := strconv.Atoi(override); err == nil && parsed >= 0 {
+			opts.MaxRetries = parsed
+		}
+	}
+	if override := strings.TrimSpace(os.Getenv("ASC_BASE_DELAY")); override != "" {
+		if parsed, err := time.ParseDuration(override); err == nil && parsed > 0 {
+			opts.BaseDelay = parsed
+		}
+	}
+	if override := strings.TrimSpace(os.Getenv("ASC_MAX_DELAY")); override != "" {
+		if parsed, err := time.ParseDuration(override); err == nil && parsed > 0 {
+			opts.MaxDelay = parsed
+		}
+	}
+	return opts
+}
+
+// WithRetry executes a function with retry logic for rate limiting.
+// It uses exponential backoff with jitter and respects Retry-After headers.
+func WithRetry[T any](ctx context.Context, fn func() (T, error), opts RetryOptions) (T, error) {
+	var zero T
+
+	if opts.MaxRetries <= 0 {
+		opts.MaxRetries = DefaultMaxRetries
+	}
+	if opts.BaseDelay <= 0 {
+		opts.BaseDelay = DefaultBaseDelay
+	}
+	if opts.MaxDelay <= 0 {
+		opts.MaxDelay = DefaultMaxDelay
+	}
+
+	attempt := 0
+
+	for {
+		result, err := fn()
+		if err == nil {
+			return result, nil
+		}
+
+		// Check if error is retryable
+		if !IsRetryable(err) {
+			return zero, err
+		}
+
+		// Check if we've exceeded max retries
+		if attempt >= opts.MaxRetries {
+			return zero, fmt.Errorf("retry limit exceeded after %d attempts: %w", attempt, err)
+		}
+
+		// Calculate delay
+		delay := GetRetryAfter(err)
+		if delay == 0 {
+			// Exponential backoff with jitter
+			expDelay := opts.BaseDelay * time.Duration(1<<attempt)
+			if expDelay > opts.MaxDelay {
+				expDelay = opts.MaxDelay
+			}
+			// Add jitter: ±25% of the delay
+			jitter := float64(expDelay) * 0.25 * (2*rand.Float64() - 1)
+			delay = expDelay + time.Duration(jitter)
+			if delay < 0 {
+				delay = expDelay / 2 // minimum delay
+			}
+		}
+
+		attempt++
+
+		// Wait with context cancellation support
+		select {
+		case <-ctx.Done():
+			return zero, fmt.Errorf("retry cancelled: %w", ctx.Err())
+		case <-time.After(delay):
+			// Continue to next retry
+		}
+	}
+}
 
 // ResolveTimeout returns the request timeout, optionally overridden by env vars.
 func ResolveTimeout() time.Duration {
@@ -1309,6 +1439,16 @@ func (c *Client) do(ctx context.Context, method, path string, body io.Reader) ([
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		respBody, _ := io.ReadAll(resp.Body)
+
+		// Check for rate limiting (429) or service unavailable (503)
+		if resp.StatusCode == http.StatusTooManyRequests || resp.StatusCode == http.StatusServiceUnavailable {
+			retryAfter := parseRetryAfterHeader(resp.Header.Get("Retry-After"))
+			return nil, &RetryableError{
+				Err:        fmt.Errorf("API request failed with status %d", resp.StatusCode),
+				RetryAfter: retryAfter,
+			}
+		}
+
 		if err := ParseError(respBody); err != nil {
 			return nil, err
 		}
@@ -1316,6 +1456,29 @@ func (c *Client) do(ctx context.Context, method, path string, body io.Reader) ([
 	}
 
 	return io.ReadAll(resp.Body)
+}
+
+// parseRetryAfterHeader parses the Retry-After header value.
+// Supports seconds (e.g., "60") or HTTP-date format (e.g., "Wed, 21 Oct 2015 07:28:00 GMT").
+func parseRetryAfterHeader(value string) time.Duration {
+	if value == "" {
+		return 0
+	}
+
+	// Try to parse as seconds first
+	if seconds, err := strconv.Atoi(value); err == nil && seconds > 0 {
+		return time.Duration(seconds) * time.Second
+	}
+
+	// Try to parse as HTTP-date
+	if t, err := time.Parse(http.TimeFormat, value); err == nil {
+		delay := time.Until(t)
+		if delay > 0 {
+			return delay
+		}
+	}
+
+	return 0
 }
 
 func (c *Client) doStream(ctx context.Context, method, path string, body io.Reader, accept string) (*http.Response, error) {
@@ -2433,7 +2596,13 @@ func PaginateAll(ctx context.Context, firstPage PaginatedResponse, fetchNext Pag
 		}
 
 		page++
-		nextPage, err := fetchNext(ctx, links.Next)
+
+		// Fetch next page with retry logic for rate limiting
+		retryOpts := ResolveRetryOptions()
+		nextPage, err := WithRetry(ctx, func() (PaginatedResponse, error) {
+			return fetchNext(ctx, links.Next)
+		}, retryOpts)
+
 		if err != nil {
 			return result, fmt.Errorf("page %d: %w", page, err)
 		}

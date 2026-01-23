@@ -69,6 +69,8 @@ Commands supporting `--paginate`:
 - `asc beta-testers list --app "ID" --paginate`
 - `asc sandbox list --paginate`
 - `asc analytics requests --app "ID" --paginate`
+- `asc xcode-cloud workflows --app "ID" --paginate`
+- `asc xcode-cloud build-runs --workflow-id "ID" --paginate`
 
 ## Commands
 
@@ -120,6 +122,21 @@ asc sandbox clear-history --id "SANDBOX_TESTER_ID" --confirm
 
 # Sandbox - Paginate all testers
 asc sandbox list --paginate
+
+# Xcode Cloud - Trigger workflow
+asc xcode-cloud run --app "123456789" --workflow "CI" --branch "main"
+asc xcode-cloud run --workflow-id "WORKFLOW_ID" --git-reference-id "REF_ID"
+asc xcode-cloud run --app "123456789" --workflow "Deploy" --branch "main" --wait
+
+# Xcode Cloud - Check status
+asc xcode-cloud status --run-id "BUILD_RUN_ID"
+asc xcode-cloud status --run-id "BUILD_RUN_ID" --wait
+
+# Xcode Cloud - List workflows and build runs
+asc xcode-cloud workflows --app "123456789"
+asc xcode-cloud workflows --app "123456789" --paginate
+asc xcode-cloud build-runs --workflow-id "WORKFLOW_ID"
+asc xcode-cloud build-runs --workflow-id "WORKFLOW_ID" --paginate
 
 # Utilities
 asc version

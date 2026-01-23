@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/url"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -718,7 +719,6 @@ func TestWithRetry_SuccessOnFirstTry(t *testing.T) {
 		callCount++
 		return "success", nil
 	}, RetryOptions{MaxRetries: 3})
-
 	if err != nil {
 		t.Fatalf("expected no error, got: %v", err)
 	}
@@ -727,5 +727,53 @@ func TestWithRetry_SuccessOnFirstTry(t *testing.T) {
 	}
 	if callCount != 1 {
 		t.Fatalf("expected 1 call, got %d", callCount)
+	}
+}
+
+func TestPaginateAll_CiBuildRuns_ManyPages(t *testing.T) {
+	const totalPages = 20
+	const perPage = 50
+
+	makePage := func(page int) *CiBuildRunsResponse {
+		data := make([]CiBuildRunResource, 0, perPage)
+		for i := 0; i < perPage; i++ {
+			data = append(data, CiBuildRunResource{
+				Type: ResourceTypeCiBuildRuns,
+				ID:   fmt.Sprintf("run-%d-%d", page, i),
+			})
+		}
+		links := Links{}
+		if page < totalPages {
+			links.Next = fmt.Sprintf("page=%d", page+1)
+		}
+		return &CiBuildRunsResponse{
+			Data:  data,
+			Links: links,
+		}
+	}
+
+	firstPage := makePage(1)
+	response, err := PaginateAll(context.Background(), firstPage, func(ctx context.Context, nextURL string) (PaginatedResponse, error) {
+		pageStr := strings.TrimPrefix(nextURL, "page=")
+		page, err := strconv.Atoi(pageStr)
+		if err != nil {
+			return nil, fmt.Errorf("invalid next URL %q", nextURL)
+		}
+		return makePage(page), nil
+	})
+	if err != nil {
+		t.Fatalf("PaginateAll() error: %v", err)
+	}
+
+	buildRuns, ok := response.(*CiBuildRunsResponse)
+	if !ok {
+		t.Fatalf("expected CiBuildRunsResponse, got %T", response)
+	}
+	expected := totalPages * perPage
+	if len(buildRuns.Data) != expected {
+		t.Fatalf("expected %d build runs, got %d", expected, len(buildRuns.Data))
+	}
+	if buildRuns.Links.Next != "" {
+		t.Fatalf("expected next link to be cleared, got %q", buildRuns.Links.Next)
 	}
 }

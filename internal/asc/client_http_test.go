@@ -1388,3 +1388,215 @@ func TestBuildUploadMethods_ErrorResponse(t *testing.T) {
 		})
 	}
 }
+
+func TestGetCiProducts_WithAppFilterAndLimit(t *testing.T) {
+	response := jsonResponse(http.StatusOK, `{"data":[{"type":"ciProducts","id":"prod-1"}]}`)
+	client := newTestClient(t, func(req *http.Request) {
+		if req.Method != http.MethodGet {
+			t.Fatalf("expected GET, got %s", req.Method)
+		}
+		if req.URL.Path != "/v1/ciProducts" {
+			t.Fatalf("expected path /v1/ciProducts, got %s", req.URL.Path)
+		}
+		values := req.URL.Query()
+		if values.Get("filter[app]") != "app-1" {
+			t.Fatalf("expected filter[app]=app-1, got %q", values.Get("filter[app]"))
+		}
+		if values.Get("limit") != "25" {
+			t.Fatalf("expected limit=25, got %q", values.Get("limit"))
+		}
+		assertAuthorized(t, req)
+	}, response)
+
+	if _, err := client.GetCiProducts(context.Background(), WithCiProductsAppID("app-1"), WithCiProductsLimit(25)); err != nil {
+		t.Fatalf("GetCiProducts() error: %v", err)
+	}
+}
+
+func TestGetCiWorkflows_UsesNextURL(t *testing.T) {
+	next := "https://api.appstoreconnect.apple.com/v1/ciProducts/prod-1/workflows?cursor=abc"
+	response := jsonResponse(http.StatusOK, `{"data":[]}`)
+	client := newTestClient(t, func(req *http.Request) {
+		if req.URL.String() != next {
+			t.Fatalf("expected next URL %q, got %q", next, req.URL.String())
+		}
+		assertAuthorized(t, req)
+	}, response)
+
+	if _, err := client.GetCiWorkflows(context.Background(), "prod-1", WithCiWorkflowsNextURL(next)); err != nil {
+		t.Fatalf("GetCiWorkflows() error: %v", err)
+	}
+}
+
+func TestGetScmGitReferences_WithLimit(t *testing.T) {
+	response := jsonResponse(http.StatusOK, `{"data":[{"type":"scmGitReferences","id":"ref-1"}]}`)
+	client := newTestClient(t, func(req *http.Request) {
+		if req.Method != http.MethodGet {
+			t.Fatalf("expected GET, got %s", req.Method)
+		}
+		if req.URL.Path != "/v1/scmRepositories/repo-1/gitReferences" {
+			t.Fatalf("expected path /v1/scmRepositories/repo-1/gitReferences, got %s", req.URL.Path)
+		}
+		values := req.URL.Query()
+		if values.Get("limit") != "100" {
+			t.Fatalf("expected limit=100, got %q", values.Get("limit"))
+		}
+		assertAuthorized(t, req)
+	}, response)
+
+	if _, err := client.GetScmGitReferences(context.Background(), "repo-1", WithScmGitReferencesLimit(100)); err != nil {
+		t.Fatalf("GetScmGitReferences() error: %v", err)
+	}
+}
+
+func TestGetCiBuildRuns_WithLimit(t *testing.T) {
+	response := jsonResponse(http.StatusOK, `{"data":[{"type":"ciBuildRuns","id":"run-1","attributes":{"number":1}}]}`)
+	client := newTestClient(t, func(req *http.Request) {
+		if req.Method != http.MethodGet {
+			t.Fatalf("expected GET, got %s", req.Method)
+		}
+		if req.URL.Path != "/v1/ciWorkflows/wf-1/buildRuns" {
+			t.Fatalf("expected path /v1/ciWorkflows/wf-1/buildRuns, got %s", req.URL.Path)
+		}
+		values := req.URL.Query()
+		if values.Get("limit") != "50" {
+			t.Fatalf("expected limit=50, got %q", values.Get("limit"))
+		}
+		assertAuthorized(t, req)
+	}, response)
+
+	if _, err := client.GetCiBuildRuns(context.Background(), "wf-1", WithCiBuildRunsLimit(50)); err != nil {
+		t.Fatalf("GetCiBuildRuns() error: %v", err)
+	}
+}
+
+func TestGetCiBuildRun(t *testing.T) {
+	response := jsonResponse(http.StatusOK, `{"data":{"type":"ciBuildRuns","id":"run-1","attributes":{"number":1}}}`)
+	client := newTestClient(t, func(req *http.Request) {
+		if req.Method != http.MethodGet {
+			t.Fatalf("expected GET, got %s", req.Method)
+		}
+		if req.URL.Path != "/v1/ciBuildRuns/run-1" {
+			t.Fatalf("expected path /v1/ciBuildRuns/run-1, got %s", req.URL.Path)
+		}
+		assertAuthorized(t, req)
+	}, response)
+
+	if _, err := client.GetCiBuildRun(context.Background(), "run-1"); err != nil {
+		t.Fatalf("GetCiBuildRun() error: %v", err)
+	}
+}
+
+func TestCreateCiBuildRun(t *testing.T) {
+	response := jsonResponse(http.StatusCreated, `{"data":{"type":"ciBuildRuns","id":"run-1","attributes":{"number":1}}}`)
+	client := newTestClient(t, func(req *http.Request) {
+		if req.Method != http.MethodPost {
+			t.Fatalf("expected POST, got %s", req.Method)
+		}
+		if req.URL.Path != "/v1/ciBuildRuns" {
+			t.Fatalf("expected path /v1/ciBuildRuns, got %s", req.URL.Path)
+		}
+		var payload CiBuildRunCreateRequest
+		if err := json.NewDecoder(req.Body).Decode(&payload); err != nil {
+			t.Fatalf("failed to decode request: %v", err)
+		}
+		if payload.Data.Type != ResourceTypeCiBuildRuns {
+			t.Fatalf("expected type ciBuildRuns, got %q", payload.Data.Type)
+		}
+		if payload.Data.Relationships == nil || payload.Data.Relationships.Workflow == nil || payload.Data.Relationships.SourceBranchOrTag == nil {
+			t.Fatalf("expected workflow and sourceBranchOrTag relationships")
+		}
+		assertAuthorized(t, req)
+	}, response)
+
+	req := CiBuildRunCreateRequest{
+		Data: CiBuildRunCreateData{
+			Type: ResourceTypeCiBuildRuns,
+			Relationships: &CiBuildRunCreateRelationships{
+				Workflow: &Relationship{
+					Data: ResourceData{Type: ResourceTypeCiWorkflows, ID: "wf-1"},
+				},
+				SourceBranchOrTag: &Relationship{
+					Data: ResourceData{Type: ResourceTypeScmGitReferences, ID: "ref-1"},
+				},
+			},
+		},
+	}
+	if _, err := client.CreateCiBuildRun(context.Background(), req); err != nil {
+		t.Fatalf("CreateCiBuildRun() error: %v", err)
+	}
+}
+
+func TestResolveCiWorkflowByName_CaseInsensitive(t *testing.T) {
+	response := jsonResponse(http.StatusOK, `{"data":[{"type":"ciWorkflows","id":"wf-1","attributes":{"name":"CI Build"}}]}`)
+	client := newTestClient(t, func(req *http.Request) {
+		if req.URL.Path != "/v1/ciProducts/prod-1/workflows" {
+			t.Fatalf("expected path /v1/ciProducts/prod-1/workflows, got %s", req.URL.Path)
+		}
+		assertAuthorized(t, req)
+	}, response)
+
+	workflow, err := client.ResolveCiWorkflowByName(context.Background(), "prod-1", "ci build")
+	if err != nil {
+		t.Fatalf("ResolveCiWorkflowByName() error: %v", err)
+	}
+	if workflow.ID != "wf-1" {
+		t.Fatalf("expected workflow ID wf-1, got %q", workflow.ID)
+	}
+}
+
+func TestResolveCiWorkflowByName_NoMatch(t *testing.T) {
+	response := jsonResponse(http.StatusOK, `{"data":[{"type":"ciWorkflows","id":"wf-1","attributes":{"name":"Deploy"}}]}`)
+	client := newTestClient(t, nil, response)
+
+	if _, err := client.ResolveCiWorkflowByName(context.Background(), "prod-1", "ci"); err == nil {
+		t.Fatal("expected error")
+	} else if !strings.Contains(err.Error(), "no workflow named") {
+		t.Fatalf("expected no workflow named error, got %v", err)
+	}
+}
+
+func TestResolveGitReferenceByName_CanonicalMatch(t *testing.T) {
+	response := jsonResponse(http.StatusOK, `{"data":[{"type":"scmGitReferences","id":"ref-1","attributes":{"name":"main","canonicalName":"refs/heads/main","isDeleted":false}}]}`)
+	client := newTestClient(t, func(req *http.Request) {
+		if req.URL.Path != "/v1/scmRepositories/repo-1/gitReferences" {
+			t.Fatalf("expected path /v1/scmRepositories/repo-1/gitReferences, got %s", req.URL.Path)
+		}
+		assertAuthorized(t, req)
+	}, response)
+
+	ref, err := client.ResolveGitReferenceByName(context.Background(), "repo-1", "main")
+	if err != nil {
+		t.Fatalf("ResolveGitReferenceByName() error: %v", err)
+	}
+	if ref.ID != "ref-1" {
+		t.Fatalf("expected git reference ID ref-1, got %q", ref.ID)
+	}
+}
+
+func TestResolveGitReferenceByName_SuffixMatchNotAllowed(t *testing.T) {
+	response := jsonResponse(http.StatusOK, `{"data":[{"type":"scmGitReferences","id":"ref-1","attributes":{"name":"feature/main","canonicalName":"refs/heads/feature/main","isDeleted":false}}]}`)
+	client := newTestClient(t, func(req *http.Request) {
+		if req.URL.Path != "/v1/scmRepositories/repo-1/gitReferences" {
+			t.Fatalf("expected path /v1/scmRepositories/repo-1/gitReferences, got %s", req.URL.Path)
+		}
+		assertAuthorized(t, req)
+	}, response)
+
+	if _, err := client.ResolveGitReferenceByName(context.Background(), "repo-1", "main"); err == nil {
+		t.Fatal("expected error")
+	} else if !strings.Contains(err.Error(), "no git reference named") {
+		t.Fatalf("expected no git reference named error, got %v", err)
+	}
+}
+
+func TestResolveGitReferenceByName_NoMatch(t *testing.T) {
+	response := jsonResponse(http.StatusOK, `{"data":[{"type":"scmGitReferences","id":"ref-1","attributes":{"name":"develop","canonicalName":"refs/heads/develop","isDeleted":false}}]}`)
+	client := newTestClient(t, nil, response)
+
+	if _, err := client.ResolveGitReferenceByName(context.Background(), "repo-1", "main"); err == nil {
+		t.Fatal("expected error")
+	} else if !strings.Contains(err.Error(), "no git reference named") {
+		t.Fatalf("expected no git reference named error, got %v", err)
+	}
+}

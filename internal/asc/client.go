@@ -177,7 +177,13 @@ func WithRetry[T any](ctx context.Context, fn func() (T, error), opts RetryOptio
 
 // ResolveTimeout returns the request timeout, optionally overridden by env vars.
 func ResolveTimeout() time.Duration {
-	timeout := DefaultTimeout
+	return ResolveTimeoutWithDefault(DefaultTimeout)
+}
+
+// ResolveTimeoutWithDefault returns the request timeout using a custom default.
+// ASC_TIMEOUT and ASC_TIMEOUT_SECONDS override the default when set.
+func ResolveTimeoutWithDefault(defaultTimeout time.Duration) time.Duration {
+	timeout := defaultTimeout
 	if override := strings.TrimSpace(os.Getenv("ASC_TIMEOUT")); override != "" {
 		if parsed, err := time.ParseDuration(override); err == nil && parsed > 0 {
 			timeout = parsed
@@ -1489,9 +1495,9 @@ func parseRetryAfterHeader(value string) time.Duration {
 
 	// Try to parse as HTTP-date (try multiple formats)
 	formats := []string{
-		http.TimeFormat,   // RFC1123: "Mon, 02 Jan 2006 15:04:05 GMT"
-		time.RFC850,       // RFC850: "Monday, 02-Jan-06 15:04:05 MST"
-		time.ANSIC,        // ANSIC: "Mon Jan _2 15:04:05 2006"
+		http.TimeFormat, // RFC1123: "Mon, 02 Jan 2006 15:04:05 GMT"
+		time.RFC850,     // RFC850: "Monday, 02-Jan-06 15:04:05 MST"
+		time.ANSIC,      // ANSIC: "Mon Jan _2 15:04:05 2006"
 	}
 	for _, format := range formats {
 		if t, err := time.Parse(format, value); err == nil {
@@ -1550,13 +1556,13 @@ var allowedAnalyticsHosts = []string{
 	"itunes.apple.com",
 	"apps.apple.com",
 	"apple.com",
-	"mzstatic.com",   // Apple static content CDN
-	"cdn-apple.com",  // Apple CDN
+	"mzstatic.com",  // Apple static content CDN
+	"cdn-apple.com", // Apple CDN
 	// Cloud CDNs commonly used by Apple (allow subdomains)
-	"cloudfront.net",     // AWS CloudFront
-	"amazonaws.com",      // AWS S3
-	"s3.amazonaws.com",   // AWS S3
-	"azureedge.net",      // Azure CDN
+	"cloudfront.net",   // AWS CloudFront
+	"amazonaws.com",    // AWS S3
+	"s3.amazonaws.com", // AWS S3
+	"azureedge.net",    // Azure CDN
 }
 
 // isAllowedAnalyticsHost checks if the host matches any allowed host suffix.
@@ -2709,6 +2715,14 @@ func PaginateAll(ctx context.Context, firstPage PaginatedResponse, fetchNext Pag
 		result = &SandboxTestersResponse{Links: Links{}}
 	case *AnalyticsReportRequestsResponse:
 		result = &AnalyticsReportRequestsResponse{Links: Links{}}
+	case *CiProductsResponse:
+		result = &CiProductsResponse{Links: Links{}}
+	case *CiWorkflowsResponse:
+		result = &CiWorkflowsResponse{Links: Links{}}
+	case *ScmGitReferencesResponse:
+		result = &ScmGitReferencesResponse{Links: Links{}}
+	case *CiBuildRunsResponse:
+		result = &CiBuildRunsResponse{Links: Links{}}
 	default:
 		return nil, fmt.Errorf("unsupported response type for pagination")
 	}
@@ -2741,6 +2755,14 @@ func PaginateAll(ctx context.Context, firstPage PaginatedResponse, fetchNext Pag
 			result.(*SandboxTestersResponse).Data = append(result.(*SandboxTestersResponse).Data, p.Data...)
 		case *AnalyticsReportRequestsResponse:
 			result.(*AnalyticsReportRequestsResponse).Data = append(result.(*AnalyticsReportRequestsResponse).Data, p.Data...)
+		case *CiProductsResponse:
+			result.(*CiProductsResponse).Data = append(result.(*CiProductsResponse).Data, p.Data...)
+		case *CiWorkflowsResponse:
+			result.(*CiWorkflowsResponse).Data = append(result.(*CiWorkflowsResponse).Data, p.Data...)
+		case *ScmGitReferencesResponse:
+			result.(*ScmGitReferencesResponse).Data = append(result.(*ScmGitReferencesResponse).Data, p.Data...)
+		case *CiBuildRunsResponse:
+			result.(*CiBuildRunsResponse).Data = append(result.(*CiBuildRunsResponse).Data, p.Data...)
 		}
 
 		// Check for next page
@@ -2756,7 +2778,6 @@ func PaginateAll(ctx context.Context, firstPage PaginatedResponse, fetchNext Pag
 		nextPage, err := WithRetry(ctx, func() (PaginatedResponse, error) {
 			return fetchNext(ctx, links.Next)
 		}, retryOpts)
-
 		if err != nil {
 			return result, fmt.Errorf("page %d: %w", page, err)
 		}
@@ -2799,6 +2820,14 @@ func typeOf(p PaginatedResponse) string {
 		return "SandboxTestersResponse"
 	case *AnalyticsReportRequestsResponse:
 		return "AnalyticsReportRequestsResponse"
+	case *CiProductsResponse:
+		return "CiProductsResponse"
+	case *CiWorkflowsResponse:
+		return "CiWorkflowsResponse"
+	case *ScmGitReferencesResponse:
+		return "ScmGitReferencesResponse"
+	case *CiBuildRunsResponse:
+		return "CiBuildRunsResponse"
 	default:
 		return "unknown"
 	}
@@ -2888,6 +2917,16 @@ func PrintMarkdown(data interface{}) error {
 		return printSandboxTesterDeleteResultMarkdown(v)
 	case *SandboxTesterClearHistoryResult:
 		return printSandboxTesterClearHistoryResultMarkdown(v)
+	case *XcodeCloudRunResult:
+		return printXcodeCloudRunResultMarkdown(v)
+	case *XcodeCloudStatusResult:
+		return printXcodeCloudStatusResultMarkdown(v)
+	case *CiProductsResponse:
+		return printCiProductsMarkdown(v)
+	case *CiWorkflowsResponse:
+		return printCiWorkflowsMarkdown(v)
+	case *CiBuildRunsResponse:
+		return printCiBuildRunsMarkdown(v)
 	default:
 		return PrintJSON(data)
 	}
@@ -2964,6 +3003,16 @@ func PrintTable(data interface{}) error {
 		return printSandboxTesterDeleteResultTable(v)
 	case *SandboxTesterClearHistoryResult:
 		return printSandboxTesterClearHistoryResultTable(v)
+	case *XcodeCloudRunResult:
+		return printXcodeCloudRunResultTable(v)
+	case *XcodeCloudStatusResult:
+		return printXcodeCloudStatusResultTable(v)
+	case *CiProductsResponse:
+		return printCiProductsTable(v)
+	case *CiWorkflowsResponse:
+		return printCiWorkflowsTable(v)
+	case *CiBuildRunsResponse:
+		return printCiBuildRunsTable(v)
 	default:
 		return PrintJSON(data)
 	}

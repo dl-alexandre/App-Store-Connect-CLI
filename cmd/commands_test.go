@@ -506,3 +506,121 @@ func TestVersionsValidationErrors(t *testing.T) {
 		})
 	}
 }
+
+func TestXcodeCloudValidationErrors(t *testing.T) {
+	t.Setenv("ASC_APP_ID", "")
+
+	tests := []struct {
+		name    string
+		args    []string
+		wantErr string
+	}{
+		{
+			name:    "xcode-cloud run missing workflow",
+			args:    []string{"xcode-cloud", "run", "--branch", "main"},
+			wantErr: "--workflow or --workflow-id is required",
+		},
+		{
+			name:    "xcode-cloud run missing branch",
+			args:    []string{"xcode-cloud", "run", "--workflow-id", "WF_ID"},
+			wantErr: "--branch or --git-reference-id is required",
+		},
+		{
+			name:    "xcode-cloud run workflow by name without app",
+			args:    []string{"xcode-cloud", "run", "--workflow", "CI", "--branch", "main"},
+			wantErr: "--app is required when using --workflow",
+		},
+		{
+			name:    "xcode-cloud status missing run-id",
+			args:    []string{"xcode-cloud", "status"},
+			wantErr: "--run-id is required",
+		},
+		{
+			name:    "xcode-cloud workflows missing app",
+			args:    []string{"xcode-cloud", "workflows"},
+			wantErr: "--app is required",
+		},
+		{
+			name:    "xcode-cloud build-runs missing workflow-id",
+			args:    []string{"xcode-cloud", "build-runs"},
+			wantErr: "--workflow-id is required",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			root := RootCommand("1.2.3")
+			root.FlagSet.SetOutput(io.Discard)
+
+			stdout, stderr := captureOutput(t, func() {
+				if err := root.Parse(test.args); err != nil {
+					t.Fatalf("parse error: %v", err)
+				}
+				err := root.Run(context.Background())
+				if !errors.Is(err, flag.ErrHelp) {
+					t.Fatalf("expected ErrHelp, got %v", err)
+				}
+			})
+
+			if stdout != "" {
+				t.Fatalf("expected empty stdout, got %q", stdout)
+			}
+			if !strings.Contains(stderr, test.wantErr) {
+				t.Fatalf("expected error %q, got %q", test.wantErr, stderr)
+			}
+		})
+	}
+}
+
+func TestXcodeCloudMutualExclusiveFlags(t *testing.T) {
+	tests := []struct {
+		name    string
+		args    []string
+		wantErr string
+	}{
+		{
+			name:    "xcode-cloud run workflow and workflow-id are mutually exclusive",
+			args:    []string{"xcode-cloud", "run", "--workflow", "CI", "--workflow-id", "WF_ID", "--branch", "main"},
+			wantErr: "--workflow and --workflow-id are mutually exclusive",
+		},
+		{
+			name:    "xcode-cloud run branch and git-reference-id are mutually exclusive",
+			args:    []string{"xcode-cloud", "run", "--workflow-id", "WF_ID", "--branch", "main", "--git-reference-id", "REF_ID"},
+			wantErr: "--branch and --git-reference-id are mutually exclusive",
+		},
+		{
+			name:    "xcode-cloud run invalid poll-interval",
+			args:    []string{"xcode-cloud", "run", "--workflow-id", "WF_ID", "--branch", "main", "--wait", "--poll-interval", "0s"},
+			wantErr: "--poll-interval must be greater than 0",
+		},
+		{
+			name:    "xcode-cloud status invalid timeout",
+			args:    []string{"xcode-cloud", "status", "--run-id", "RUN_ID", "--timeout", "-1s"},
+			wantErr: "--timeout must be greater than or equal to 0",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			root := RootCommand("1.2.3")
+			root.FlagSet.SetOutput(io.Discard)
+
+			stdout, stderr := captureOutput(t, func() {
+				if err := root.Parse(test.args); err != nil {
+					t.Fatalf("parse error: %v", err)
+				}
+				err := root.Run(context.Background())
+				if err == nil {
+					t.Fatal("expected error, got nil")
+				}
+				if !strings.Contains(err.Error(), test.wantErr) {
+					t.Fatalf("expected error containing %q, got %v", test.wantErr, err)
+				}
+			})
+
+			// These errors come from Exec, not from validation that returns ErrHelp
+			_ = stdout
+			_ = stderr
+		})
+	}
+}

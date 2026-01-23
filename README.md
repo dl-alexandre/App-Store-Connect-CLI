@@ -205,6 +205,50 @@ Notes:
 - Sandbox list/get use the v2 API; create/delete use v1 endpoints (may be unavailable on some accounts)
 - Update/clear-history use the v2 API
 
+### Xcode Cloud
+
+```bash
+# List workflows for an app (find workflow IDs)
+asc xcode-cloud workflows --app "123456789"
+
+# List build runs for a workflow (find run IDs)
+asc xcode-cloud build-runs --workflow-id "WORKFLOW_ID"
+
+# Fetch all workflows/build runs (all pages)
+asc xcode-cloud workflows --app "123456789" --paginate
+asc xcode-cloud build-runs --workflow-id "WORKFLOW_ID" --paginate
+
+# Trigger a workflow by name (requires --app)
+asc xcode-cloud run --app "123456789" --workflow "CI Build" --branch "main"
+
+# Trigger a workflow by ID (no app needed)
+asc xcode-cloud run --workflow-id "WORKFLOW_ID" --git-reference-id "REF_ID"
+
+# Trigger and wait for completion
+asc xcode-cloud run --app "123456789" --workflow "Deploy" --branch "release/1.0" --wait
+
+# Trigger with custom polling interval and timeout
+asc xcode-cloud run --app "123456789" --workflow "CI" --branch "main" --wait --poll-interval 30s --timeout 1h
+
+# Check build run status
+asc xcode-cloud status --run-id "BUILD_RUN_ID"
+
+# Check status with table output
+asc xcode-cloud status --run-id "BUILD_RUN_ID" --output table
+
+# Wait for an existing build run to complete
+asc xcode-cloud status --run-id "BUILD_RUN_ID" --wait
+```
+
+Notes:
+- Workflows must have manual start conditions enabled to be triggered via API
+- Use `--workflow` with `--app` for human-friendly workflow lookup by name
+- Use `--workflow-id` and `--git-reference-id` for direct ID-based triggering
+- Use `asc xcode-cloud workflows` and `asc xcode-cloud build-runs` to discover IDs
+- When using `--wait`, the command polls until the build completes (or times out)
+- Exit code is non-zero if the build fails, errors, or is canceled
+- Use `ASC_TIMEOUT` env var or `--timeout` flag for long-running builds
+
 ### Apps & Builds
 
 ```bash

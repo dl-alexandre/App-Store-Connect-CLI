@@ -912,6 +912,7 @@ func RootCommand(version string) *ffcli.Command {
 			BetaTestersCommand(),
 			SandboxCommand(),
 			SubmitCommand(),
+			XcodeCloudCommand(),
 			VersionCommand(version),
 		},
 	}

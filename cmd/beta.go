@@ -488,6 +488,7 @@ func BetaTestersCommand() *ffcli.Command {
 
 Examples:
   asc beta-testers list --app "APP_ID"
+  asc beta-testers get --id "TESTER_ID"
   asc beta-testers add --app "APP_ID" --email "tester@example.com" --group "Beta"
   asc beta-testers remove --app "APP_ID" --email "tester@example.com"
   asc beta-testers invite --app "APP_ID" --email "tester@example.com"
@@ -496,6 +497,7 @@ Examples:
 		UsageFunc: DefaultUsageFunc,
 		Subcommands: []*ffcli.Command{
 			BetaTestersListCommand(),
+			BetaTestersGetCommand(),
 			BetaTestersAddCommand(),
 			BetaTestersRemoveCommand(),
 			BetaTestersInviteCommand(),
@@ -511,6 +513,7 @@ func BetaTestersListCommand() *ffcli.Command {
 	fs := flag.NewFlagSet("list", flag.ExitOnError)
 
 	appID := fs.String("app", "", "App Store Connect app ID (or ASC_APP_ID env)")
+	buildID := fs.String("build", "", "Build ID to filter")
 	group := fs.String("group", "", "Beta group name or ID to filter")
 	email := fs.String("email", "", "Filter by tester email")
 	output := fs.String("output", "json", "Output format: json (default), table, markdown")
@@ -527,6 +530,7 @@ func BetaTestersListCommand() *ffcli.Command {
 
 Examples:
   asc beta-testers list --app "APP_ID"
+  asc beta-testers list --app "APP_ID" --build "BUILD_ID"
   asc beta-testers list --app "APP_ID" --group "Beta"
   asc beta-testers list --app "APP_ID" --limit 25
   asc beta-testers list --app "APP_ID" --paginate`,
@@ -557,6 +561,10 @@ Examples:
 			opts := []asc.BetaTestersOption{
 				asc.WithBetaTestersLimit(*limit),
 				asc.WithBetaTestersNextURL(*next),
+			}
+
+			if strings.TrimSpace(*buildID) != "" {
+				opts = append(opts, asc.WithBetaTestersBuildID(strings.TrimSpace(*buildID)))
 			}
 
 			if strings.TrimSpace(*email) != "" {
@@ -596,6 +604,49 @@ Examples:
 			}
 
 			return printOutput(testers, *output, *pretty)
+		},
+	}
+}
+
+// BetaTestersGetCommand returns the beta testers get subcommand.
+func BetaTestersGetCommand() *ffcli.Command {
+	fs := flag.NewFlagSet("get", flag.ExitOnError)
+
+	id := fs.String("id", "", "Beta tester ID")
+	output := fs.String("output", "json", "Output format: json (default), table, markdown")
+	pretty := fs.Bool("pretty", false, "Pretty-print JSON output")
+
+	return &ffcli.Command{
+		Name:       "get",
+		ShortUsage: "asc beta-testers get [flags]",
+		ShortHelp:  "Get a TestFlight beta tester by ID.",
+		LongHelp: `Get a TestFlight beta tester by ID.
+
+Examples:
+  asc beta-testers get --id "TESTER_ID"`,
+		FlagSet:   fs,
+		UsageFunc: DefaultUsageFunc,
+		Exec: func(ctx context.Context, args []string) error {
+			idValue := strings.TrimSpace(*id)
+			if idValue == "" {
+				fmt.Fprintln(os.Stderr, "Error: --id is required")
+				return flag.ErrHelp
+			}
+
+			client, err := getASCClient()
+			if err != nil {
+				return fmt.Errorf("beta-testers get: %w", err)
+			}
+
+			requestCtx, cancel := contextWithTimeout(ctx)
+			defer cancel()
+
+			tester, err := client.GetBetaTester(requestCtx, idValue)
+			if err != nil {
+				return fmt.Errorf("beta-testers get: failed to fetch: %w", err)
+			}
+
+			return printOutput(tester, *output, *pretty)
 		},
 	}
 }

@@ -413,8 +413,9 @@ type betaGroupsQuery struct {
 
 type betaTestersQuery struct {
 	listQuery
-	email    string
-	groupIDs []string
+	email        string
+	groupIDs     []string
+	filterBuilds string
 }
 
 // AppAttributes describes an app resource.
@@ -1364,6 +1365,13 @@ func WithBetaTestersGroupIDs(ids []string) BetaTestersOption {
 	}
 }
 
+// WithBetaTestersBuildID filters beta testers by build ID.
+func WithBetaTestersBuildID(buildID string) BetaTestersOption {
+	return func(q *betaTestersQuery) {
+		q.filterBuilds = strings.TrimSpace(buildID)
+	}
+}
+
 // WithAppStoreVersionLocalizationsLimit sets the max number of localizations to return.
 func WithAppStoreVersionLocalizationsLimit(limit int) AppStoreVersionLocalizationsOption {
 	return func(q *appStoreVersionLocalizationsQuery) {
@@ -1806,6 +1814,9 @@ func buildBetaTestersQuery(appID string, query *betaTestersQuery) string {
 		values.Set("filter[email]", strings.TrimSpace(query.email))
 	}
 	addCSV(values, "filter[betaGroups]", query.groupIDs)
+	if strings.TrimSpace(query.filterBuilds) != "" {
+		values.Set("filter[builds]", strings.TrimSpace(query.filterBuilds))
+	}
 	addLimit(values, query.limit)
 	return values.Encode()
 }
@@ -2349,6 +2360,22 @@ func (c *Client) GetBetaTesters(ctx context.Context, appID string, opts ...BetaT
 	}
 
 	var response BetaTestersResponse
+	if err := json.Unmarshal(data, &response); err != nil {
+		return nil, fmt.Errorf("failed to parse response: %w", err)
+	}
+
+	return &response, nil
+}
+
+// GetBetaTester retrieves a beta tester by ID.
+func (c *Client) GetBetaTester(ctx context.Context, testerID string) (*BetaTesterResponse, error) {
+	path := fmt.Sprintf("/v1/betaTesters/%s", testerID)
+	data, err := c.do(ctx, "GET", path, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var response BetaTesterResponse
 	if err := json.Unmarshal(data, &response); err != nil {
 		return nil, fmt.Errorf("failed to parse response: %w", err)
 	}
@@ -3040,7 +3067,7 @@ func PrintMarkdown(data interface{}) error {
 	case *BetaTestersResponse:
 		return printBetaTestersMarkdown(v)
 	case *BetaTesterResponse:
-		return printBetaTestersMarkdown(&BetaTestersResponse{Data: []Resource[BetaTesterAttributes]{v.Data}})
+		return printBetaTesterMarkdown(v)
 	case *SandboxTestersResponse:
 		return printSandboxTestersMarkdown(v)
 	case *SandboxTesterResponse:
@@ -3126,7 +3153,7 @@ func PrintTable(data interface{}) error {
 	case *BetaTestersResponse:
 		return printBetaTestersTable(v)
 	case *BetaTesterResponse:
-		return printBetaTestersTable(&BetaTestersResponse{Data: []Resource[BetaTesterAttributes]{v.Data}})
+		return printBetaTesterTable(v)
 	case *SandboxTestersResponse:
 		return printSandboxTestersTable(v)
 	case *SandboxTesterResponse:
@@ -3497,6 +3524,12 @@ func printBetaTestersTable(resp *BetaTestersResponse) error {
 	return w.Flush()
 }
 
+func printBetaTesterTable(resp *BetaTesterResponse) error {
+	return printBetaTestersTable(&BetaTestersResponse{
+		Data: []Resource[BetaTesterAttributes]{resp.Data},
+	})
+}
+
 func printBuildsTable(resp *BuildsResponse) error {
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 	fmt.Fprintln(w, "Version\tUploaded\tProcessing\tExpired")
@@ -3618,6 +3651,12 @@ func printBetaTestersMarkdown(resp *BetaTestersResponse) error {
 		)
 	}
 	return nil
+}
+
+func printBetaTesterMarkdown(resp *BetaTesterResponse) error {
+	return printBetaTestersMarkdown(&BetaTestersResponse{
+		Data: []Resource[BetaTesterAttributes]{resp.Data},
+	})
 }
 
 func printBuildsMarkdown(resp *BuildsResponse) error {

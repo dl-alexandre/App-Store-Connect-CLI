@@ -25,8 +25,10 @@ func TestIntegrationEndpoints(t *testing.T) {
 		t.Fatalf("failed to create client: %v", err)
 	}
 
+	timeout := ResolveTimeoutWithDefault(60 * time.Second)
+
 	t.Run("feedback", func(t *testing.T) {
-		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), timeout)
 		defer cancel()
 
 		feedback, err := client.GetFeedback(ctx, appID, WithFeedbackLimit(1))
@@ -43,7 +45,7 @@ func TestIntegrationEndpoints(t *testing.T) {
 			t.Fatal("expected feedback data type to be set")
 		}
 		if feedback.Links.Next != "" {
-			nextCtx, nextCancel := context.WithTimeout(context.Background(), 30*time.Second)
+			nextCtx, nextCancel := context.WithTimeout(context.Background(), timeout)
 			defer nextCancel()
 			nextFeedback, err := client.GetFeedback(nextCtx, appID, WithFeedbackNextURL(feedback.Links.Next))
 			if err != nil {
@@ -62,7 +64,7 @@ func TestIntegrationEndpoints(t *testing.T) {
 
 		first := feedback.Data[0].Attributes
 		if first.DeviceModel != "" {
-			filteredCtx, filteredCancel := context.WithTimeout(context.Background(), 30*time.Second)
+			filteredCtx, filteredCancel := context.WithTimeout(context.Background(), timeout)
 			defer filteredCancel()
 			filtered, err := client.GetFeedback(
 				filteredCtx,
@@ -85,7 +87,7 @@ func TestIntegrationEndpoints(t *testing.T) {
 		}
 
 		if first.OSVersion != "" {
-			filteredCtx, filteredCancel := context.WithTimeout(context.Background(), 30*time.Second)
+			filteredCtx, filteredCancel := context.WithTimeout(context.Background(), timeout)
 			defer filteredCancel()
 			filtered, err := client.GetFeedback(
 				filteredCtx,
@@ -108,7 +110,7 @@ func TestIntegrationEndpoints(t *testing.T) {
 		}
 
 		if first.AppPlatform != "" {
-			filteredCtx, filteredCancel := context.WithTimeout(context.Background(), 30*time.Second)
+			filteredCtx, filteredCancel := context.WithTimeout(context.Background(), timeout)
 			defer filteredCancel()
 			filtered, err := client.GetFeedback(
 				filteredCtx,
@@ -131,7 +133,7 @@ func TestIntegrationEndpoints(t *testing.T) {
 		}
 
 		if first.DevicePlatform != "" {
-			filteredCtx, filteredCancel := context.WithTimeout(context.Background(), 30*time.Second)
+			filteredCtx, filteredCancel := context.WithTimeout(context.Background(), timeout)
 			defer filteredCancel()
 			filtered, err := client.GetFeedback(
 				filteredCtx,
@@ -153,7 +155,7 @@ func TestIntegrationEndpoints(t *testing.T) {
 			}
 		}
 
-		sortedCtx, sortedCancel := context.WithTimeout(context.Background(), 30*time.Second)
+		sortedCtx, sortedCancel := context.WithTimeout(context.Background(), timeout)
 		defer sortedCancel()
 		sorted, err := client.GetFeedback(
 			sortedCtx,
@@ -179,7 +181,7 @@ func TestIntegrationEndpoints(t *testing.T) {
 	})
 
 	t.Run("crashes", func(t *testing.T) {
-		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), timeout)
 		defer cancel()
 
 		crashes, err := client.GetCrashes(ctx, appID, WithCrashLimit(1))
@@ -196,7 +198,7 @@ func TestIntegrationEndpoints(t *testing.T) {
 			t.Fatal("expected crash data type to be set")
 		}
 		if crashes.Links.Next != "" {
-			nextCtx, nextCancel := context.WithTimeout(context.Background(), 30*time.Second)
+			nextCtx, nextCancel := context.WithTimeout(context.Background(), timeout)
 			defer nextCancel()
 			nextCrashes, err := client.GetCrashes(nextCtx, appID, WithCrashNextURL(crashes.Links.Next))
 			if err != nil {
@@ -215,7 +217,7 @@ func TestIntegrationEndpoints(t *testing.T) {
 
 		first := crashes.Data[0].Attributes
 		if first.DeviceModel != "" {
-			filteredCtx, filteredCancel := context.WithTimeout(context.Background(), 30*time.Second)
+			filteredCtx, filteredCancel := context.WithTimeout(context.Background(), timeout)
 			defer filteredCancel()
 			filtered, err := client.GetCrashes(
 				filteredCtx,
@@ -238,7 +240,7 @@ func TestIntegrationEndpoints(t *testing.T) {
 		}
 
 		if first.OSVersion != "" {
-			filteredCtx, filteredCancel := context.WithTimeout(context.Background(), 30*time.Second)
+			filteredCtx, filteredCancel := context.WithTimeout(context.Background(), timeout)
 			defer filteredCancel()
 			filtered, err := client.GetCrashes(
 				filteredCtx,
@@ -261,7 +263,7 @@ func TestIntegrationEndpoints(t *testing.T) {
 		}
 
 		if first.AppPlatform != "" {
-			filteredCtx, filteredCancel := context.WithTimeout(context.Background(), 30*time.Second)
+			filteredCtx, filteredCancel := context.WithTimeout(context.Background(), timeout)
 			defer filteredCancel()
 			filtered, err := client.GetCrashes(
 				filteredCtx,
@@ -284,7 +286,7 @@ func TestIntegrationEndpoints(t *testing.T) {
 		}
 
 		if first.DevicePlatform != "" {
-			filteredCtx, filteredCancel := context.WithTimeout(context.Background(), 30*time.Second)
+			filteredCtx, filteredCancel := context.WithTimeout(context.Background(), timeout)
 			defer filteredCancel()
 			filtered, err := client.GetCrashes(
 				filteredCtx,
@@ -306,7 +308,7 @@ func TestIntegrationEndpoints(t *testing.T) {
 			}
 		}
 
-		sortedCtx, sortedCancel := context.WithTimeout(context.Background(), 30*time.Second)
+		sortedCtx, sortedCancel := context.WithTimeout(context.Background(), timeout)
 		defer sortedCancel()
 		sorted, err := client.GetCrashes(
 			sortedCtx,
@@ -332,7 +334,7 @@ func TestIntegrationEndpoints(t *testing.T) {
 	})
 
 	t.Run("reviews", func(t *testing.T) {
-		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), timeout)
 		defer cancel()
 
 		reviews, err := client.GetReviews(ctx, appID, WithLimit(1))
@@ -349,7 +351,7 @@ func TestIntegrationEndpoints(t *testing.T) {
 			t.Fatal("expected review data type to be set")
 		}
 		if reviews.Links.Next != "" {
-			nextCtx, nextCancel := context.WithTimeout(context.Background(), 30*time.Second)
+			nextCtx, nextCancel := context.WithTimeout(context.Background(), timeout)
 			defer nextCancel()
 			nextReviews, err := client.GetReviews(nextCtx, appID, WithNextURL(reviews.Links.Next))
 			if err != nil {
@@ -368,7 +370,7 @@ func TestIntegrationEndpoints(t *testing.T) {
 
 		first := reviews.Data[0].Attributes
 		if first.Rating >= 1 && first.Rating <= 5 {
-			filteredCtx, filteredCancel := context.WithTimeout(context.Background(), 30*time.Second)
+			filteredCtx, filteredCancel := context.WithTimeout(context.Background(), timeout)
 			defer filteredCancel()
 			filtered, err := client.GetReviews(
 				filteredCtx,
@@ -391,7 +393,7 @@ func TestIntegrationEndpoints(t *testing.T) {
 		}
 
 		if first.Territory != "" {
-			filteredCtx, filteredCancel := context.WithTimeout(context.Background(), 30*time.Second)
+			filteredCtx, filteredCancel := context.WithTimeout(context.Background(), timeout)
 			defer filteredCancel()
 			filtered, err := client.GetReviews(
 				filteredCtx,
@@ -413,7 +415,7 @@ func TestIntegrationEndpoints(t *testing.T) {
 			}
 		}
 
-		sortedCtx, sortedCancel := context.WithTimeout(context.Background(), 30*time.Second)
+		sortedCtx, sortedCancel := context.WithTimeout(context.Background(), timeout)
 		defer sortedCancel()
 		sorted, err := client.GetReviews(
 			sortedCtx,
@@ -439,7 +441,7 @@ func TestIntegrationEndpoints(t *testing.T) {
 	})
 
 	t.Run("builds", func(t *testing.T) {
-		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), timeout)
 		defer cancel()
 
 		builds, err := client.GetBuilds(ctx, appID, WithBuildsLimit(5))
@@ -460,7 +462,7 @@ func TestIntegrationEndpoints(t *testing.T) {
 			t.Fatal("expected build ID to be set")
 		}
 
-		infoCtx, infoCancel := context.WithTimeout(context.Background(), 30*time.Second)
+		infoCtx, infoCancel := context.WithTimeout(context.Background(), timeout)
 		defer infoCancel()
 		build, err := client.GetBuild(infoCtx, first.ID)
 		if err != nil {
@@ -476,7 +478,7 @@ func TestIntegrationEndpoints(t *testing.T) {
 			t.Fatal("expected build version to be set")
 		}
 
-		sortedCtx, sortedCancel := context.WithTimeout(context.Background(), 30*time.Second)
+		sortedCtx, sortedCancel := context.WithTimeout(context.Background(), timeout)
 		defer sortedCancel()
 		sorted, err := client.GetBuilds(
 			sortedCtx,
@@ -501,7 +503,7 @@ func TestIntegrationEndpoints(t *testing.T) {
 		assertSortedByCreatedDateDesc(t, uploadedDates)
 
 		if expireID := os.Getenv("ASC_EXPIRE_BUILD_ID"); expireID != "" {
-			expireCtx, expireCancel := context.WithTimeout(context.Background(), 30*time.Second)
+			expireCtx, expireCancel := context.WithTimeout(context.Background(), timeout)
 			defer expireCancel()
 			expired, err := client.ExpireBuild(expireCtx, expireID)
 			if err != nil {

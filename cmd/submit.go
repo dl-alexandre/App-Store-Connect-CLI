@@ -17,12 +17,7 @@ func SubmitCommand() *ffcli.Command {
 		Name:       "submit",
 		ShortUsage: "asc submit <subcommand> [flags]",
 		ShortHelp:  "Submit builds for App Store review.",
-		LongHelp: `Submit builds for App Store review.
-
-Subcommands:
-  create  Submit a build for review.
-  status  Check submission status.
-  cancel  Cancel a submission.`,
+		LongHelp: `Submit builds for App Store review.`,
 		UsageFunc: DefaultUsageFunc,
 		Subcommands: []*ffcli.Command{
 			SubmitCreateCommand(),

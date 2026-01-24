@@ -25,13 +25,6 @@ func BuildLocalizationsCommand() *ffcli.Command {
 		ShortHelp:  "Manage build release notes localizations.",
 		LongHelp: `Manage localized release notes by build.
 
-Subcommands:
-  list    List localizations for a build.
-  get     Get a localization by ID.
-  create  Create a localization for a build.
-  update  Update a localization by ID.
-  delete  Delete a localization by ID.
-
 Examples:
   asc build-localizations list --build "BUILD_ID"
   asc build-localizations get --id "LOCALIZATION_ID"

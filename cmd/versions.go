@@ -47,12 +47,7 @@ func VersionsCommand() *ffcli.Command {
 		Name:       "versions",
 		ShortUsage: "asc versions <subcommand> [flags]",
 		ShortHelp:  "Manage App Store versions.",
-		LongHelp: `Manage App Store versions.
-
-Subcommands:
-  list          List app store versions for an app.
-  get           Get details for an app store version.
-  attach-build  Attach a build to an app store version.`,
+		LongHelp: `Manage App Store versions.`,
 		UsageFunc: DefaultUsageFunc,
 		Subcommands: []*ffcli.Command{
 			VersionsListCommand(),

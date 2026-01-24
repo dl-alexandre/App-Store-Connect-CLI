@@ -60,11 +60,7 @@ Examples:
 				fmt.Fprintln(os.Stderr, "Error: --profile-type is required")
 				return flag.ErrHelp
 			}
-
-			if isDevelopmentProfile(profType) && strings.TrimSpace(*deviceIDs) == "" {
-				fmt.Fprintln(os.Stderr, "Error: --device is required for development profiles")
-				return flag.ErrHelp
-			}
+			profType = strings.ToUpper(profType)
 
 			outputDir := strings.TrimSpace(*outputPath)
 			if outputDir == "" {
@@ -187,18 +183,27 @@ func findCertificates(ctx context.Context, client *asc.Client, profileType, cert
 }
 
 func findOrCreateProfile(ctx context.Context, client *asc.Client, bundleIDResourceID, profileType string, certIDs, deviceIDs []string, createMissing bool) (*asc.ProfileResponse, bool, error) {
-	profiles, err := client.GetProfiles(ctx,
-		asc.WithProfilesFilterBundleID(bundleIDResourceID),
-		asc.WithProfilesFilterType(profileType),
-	)
-	if err != nil {
-		return nil, false, err
-	}
-
-	for _, profile := range profiles.Data {
-		if profile.Attributes.ProfileState == asc.ProfileStateActive {
-			return &asc.ProfileResponse{Data: profile}, false, nil
+	next := ""
+	for {
+		profiles, err := client.GetProfiles(ctx,
+			asc.WithProfilesFilterBundleID(bundleIDResourceID),
+			asc.WithProfilesFilterType(profileType),
+			asc.WithProfilesNextURL(next),
+		)
+		if err != nil {
+			return nil, false, err
 		}
+
+		for _, profile := range profiles.Data {
+			if profile.Attributes.ProfileState == asc.ProfileStateActive {
+				return &asc.ProfileResponse{Data: profile}, false, nil
+			}
+		}
+
+		if strings.TrimSpace(profiles.Links.Next) == "" {
+			break
+		}
+		next = profiles.Links.Next
 	}
 
 	if !createMissing {
@@ -206,6 +211,9 @@ func findOrCreateProfile(ctx context.Context, client *asc.Client, bundleIDResour
 	}
 	if len(certIDs) == 0 {
 		return nil, false, fmt.Errorf("no certificates available to create profile")
+	}
+	if isDevelopmentProfile(profileType) && len(deviceIDs) == 0 {
+		return nil, false, fmt.Errorf("no device IDs provided; use --device for development profiles")
 	}
 
 	name := fmt.Sprintf("%s-%s", profileType, time.Now().Format("20060102"))

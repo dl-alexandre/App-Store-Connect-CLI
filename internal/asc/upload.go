@@ -141,11 +141,13 @@ func ExecuteUploadOperations(ctx context.Context, filePath string, operations []
 		go worker()
 	}
 
+sendLoop:
 	for i, op := range operations {
-		if ctx.Err() != nil {
-			break
+		select {
+		case <-ctx.Done():
+			break sendLoop
+		case jobs <- uploadTask{index: i, op: op}:
 		}
-		jobs <- uploadTask{index: i, op: op}
 	}
 	close(jobs)
 

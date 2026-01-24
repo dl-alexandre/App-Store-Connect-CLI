@@ -6,6 +6,7 @@ require (
 	github.com/99designs/keyring v1.2.2
 	github.com/golang-jwt/jwt/v5 v5.2.0
 	github.com/peterbourgon/ff/v3 v3.4.0
+	howett.net/plist v1.0.1
 )
 
 require (

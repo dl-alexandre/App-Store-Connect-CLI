@@ -65,6 +65,13 @@ Analytics & sales env:
 - `ASC_TIMEOUT` (e.g., `90s`, `2m`)
 - `ASC_TIMEOUT_SECONDS` (e.g., `120`)
 
+Retry behavior env:
+- `ASC_MAX_RETRIES` (default: 3) for GET/HEAD requests
+- `ASC_BASE_DELAY` (default: `1s`)
+- `ASC_MAX_DELAY` (default: `30s`)
+- `ASC_RETRY_LOG=1` to log retries to stderr
+- Retry errors include `retry after` in the final error message when available
+
 ## Commands
 
 ### Agent Quickstart

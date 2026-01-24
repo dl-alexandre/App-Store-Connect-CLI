@@ -580,12 +580,39 @@ Examples:
 				return fmt.Errorf("builds upload: --platform must be IOS, MAC_OS, TV_OS, or VISION_OS")
 			}
 
-			// TODO: Extract version and build number from IPA if not provided
-			if *version == "" {
-				return fmt.Errorf("builds upload: --version is required (auto-extraction not yet implemented)")
+			versionValue := strings.TrimSpace(*version)
+			buildNumberValue := strings.TrimSpace(*buildNumber)
+			if versionValue == "" || buildNumberValue == "" {
+				info, err := extractBundleInfoFromIPA(*ipaPath)
+				if err != nil {
+					missingFlags := make([]string, 0, 2)
+					if versionValue == "" {
+						missingFlags = append(missingFlags, "--version")
+					}
+					if buildNumberValue == "" {
+						missingFlags = append(missingFlags, "--build-number")
+					}
+					return fmt.Errorf("builds upload: %s required (failed to extract from IPA: %w)", strings.Join(missingFlags, " and "), err)
+				}
+				if versionValue == "" {
+					versionValue = info.Version
+				}
+				if buildNumberValue == "" {
+					buildNumberValue = info.BuildNumber
+				}
 			}
-			if *buildNumber == "" {
-				return fmt.Errorf("builds upload: --build-number is required (auto-extraction not yet implemented)")
+			if versionValue == "" || buildNumberValue == "" {
+				missingFields := make([]string, 0, 2)
+				missingFlags := make([]string, 0, 2)
+				if versionValue == "" {
+					missingFields = append(missingFields, "CFBundleShortVersionString")
+					missingFlags = append(missingFlags, "--version")
+				}
+				if buildNumberValue == "" {
+					missingFields = append(missingFields, "CFBundleVersion")
+					missingFlags = append(missingFlags, "--build-number")
+				}
+				return fmt.Errorf("builds upload: Info.plist missing %s; provide %s", strings.Join(missingFields, " and "), strings.Join(missingFlags, " and "))
 			}
 
 			client, err := getASCClient()
@@ -601,8 +628,8 @@ Examples:
 				Data: asc.BuildUploadCreateData{
 					Type: asc.ResourceTypeBuildUploads,
 					Attributes: asc.BuildUploadAttributes{
-						CFBundleShortVersionString: *version,
-						CFBundleVersion:            *buildNumber,
+						CFBundleShortVersionString: versionValue,
+						CFBundleVersion:            buildNumberValue,
 						Platform:                   platformValue,
 					},
 					Relationships: &asc.BuildUploadRelationships{
@@ -720,10 +747,6 @@ Examples:
   asc builds list --app "123456789" --paginate`,
 		FlagSet:   fs,
 		UsageFunc: DefaultUsageFunc,
-		Subcommands: []*ffcli.Command{
-			BuildsInfoCommand(),
-			BuildsExpireCommand(),
-		},
 		Exec: func(ctx context.Context, args []string) error {
 			if *limit != 0 && (*limit < 1 || *limit > 200) {
 				return fmt.Errorf("builds: --limit must be between 1 and 200")

@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"strings"
 	"testing"
+	"time"
 )
 
 type roundTripFunc func(*http.Request) (*http.Response, error)
@@ -57,6 +58,36 @@ func assertAuthorized(t *testing.T, req *http.Request) {
 	auth := req.Header.Get("Authorization")
 	if !strings.HasPrefix(auth, "Bearer ") {
 		t.Fatalf("expected Authorization bearer token, got %q", auth)
+	}
+}
+
+func TestGetApps_RateLimitedIncludesRetryAfter(t *testing.T) {
+	t.Setenv("ASC_MAX_RETRIES", "0")
+
+	response := jsonResponse(http.StatusTooManyRequests, `{"errors":[{"title":"Rate limit","detail":"Too many requests"}]}`)
+	response.Header.Set("Retry-After", "120")
+	client := newTestClient(t, func(req *http.Request) {
+		if req.Method != http.MethodGet {
+			t.Fatalf("expected GET, got %s", req.Method)
+		}
+		assertAuthorized(t, req)
+	}, response)
+
+	_, err := client.GetApps(context.Background())
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+	if !IsRetryable(err) {
+		t.Fatalf("expected retryable error, got %v", err)
+	}
+	if got := GetRetryAfter(err); got != 2*time.Minute {
+		t.Fatalf("expected retry-after 2m, got %s", got)
+	}
+	if !strings.Contains(err.Error(), "retry after") {
+		t.Fatalf("expected retry-after in error, got %q", err.Error())
+	}
+	if !strings.Contains(err.Error(), "status 429") {
+		t.Fatalf("expected status 429 in error, got %q", err.Error())
 	}
 }
 

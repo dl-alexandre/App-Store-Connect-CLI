@@ -29,6 +29,8 @@ func PrintMarkdown(data interface{}) error {
 		return printReviewsMarkdown(v)
 	case *AppsResponse:
 		return printAppsMarkdown(v)
+	case *AppCategoriesResponse:
+		return printAppCategoriesMarkdown(v)
 	case *AppResponse:
 		return printAppsMarkdown(&AppsResponse{Data: []Resource[AppAttributes]{v.Data}})
 	case *TerritoriesResponse:
@@ -157,6 +159,8 @@ func PrintTable(data interface{}) error {
 		return printReviewsTable(v)
 	case *AppsResponse:
 		return printAppsTable(v)
+	case *AppCategoriesResponse:
+		return printAppCategoriesTable(v)
 	case *AppResponse:
 		return printAppsTable(&AppsResponse{Data: []Resource[AppAttributes]{v.Data}})
 	case *TerritoriesResponse:

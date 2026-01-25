@@ -444,6 +444,18 @@ asc builds add-groups --build "BUILD_ID" --group "GROUP_ID"
 asc builds remove-groups --build "BUILD_ID" --group "GROUP_ID"
 ```
 
+### Categories
+
+```bash
+# List all App Store categories
+asc categories list
+asc categories list --output table
+
+# Set primary and secondary categories for an app
+asc categories set --app "123456789" --primary GAMES
+asc categories set --app "123456789" --primary GAMES --secondary ENTERTAINMENT
+```
+
 ### Versions
 
 ```bash

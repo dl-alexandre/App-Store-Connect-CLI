@@ -156,7 +156,10 @@ func TestIntegrationAuthConfig(t *testing.T) {
 
 		// Check auth status
 		cmd := exec.Command(ascBinary, "auth", "status")
-		cmd.Env = append(os.Environ(), "ASC_CONFIG_PATH="+configPath)
+		cmd.Env = append(os.Environ(),
+			"ASC_CONFIG_PATH="+configPath,
+			"ASC_BYPASS_KEYCHAIN=1",
+		)
 		output, err := cmd.CombinedOutput()
 		if err != nil {
 			t.Fatalf("auth status failed: %v\nOutput: %s", err, output)

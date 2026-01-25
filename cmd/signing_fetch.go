@@ -176,14 +176,30 @@ func findCertificates(ctx context.Context, client *asc.Client, profileType, cert
 		certType = inferred
 	}
 
-	resp, err := client.GetCertificates(ctx, asc.WithCertificatesFilterType(certType))
-	if err != nil {
-		return nil, err
+	var (
+		all   []asc.Resource[asc.CertificateAttributes]
+		links asc.Links
+		next  string
+	)
+	for {
+		resp, err := client.GetCertificates(ctx,
+			asc.WithCertificatesFilterType(certType),
+			asc.WithCertificatesNextURL(next),
+		)
+		if err != nil {
+			return nil, err
+		}
+		all = append(all, resp.Data...)
+		links = resp.Links
+		if strings.TrimSpace(resp.Links.Next) == "" {
+			break
+		}
+		next = resp.Links.Next
 	}
-	if len(resp.Data) == 0 {
+	if len(all) == 0 {
 		return nil, fmt.Errorf("no certificates found for type %s", certType)
 	}
-	return resp, nil
+	return &asc.CertificatesResponse{Data: all, Links: links}, nil
 }
 
 func findOrCreateProfile(ctx context.Context, client *asc.Client, bundleIDResourceID, profileType string, certIDs, deviceIDs []string, createMissing bool) (*asc.ProfileResponse, bool, error) {
@@ -253,6 +269,12 @@ func inferCertificateType(profileType string) (string, error) {
 		strings.Contains(normalized, "TVOS_APP_ADHOC"),
 		strings.Contains(normalized, "TVOS_APP_INHOUSE"):
 		return "TVOS_DISTRIBUTION", nil
+	case strings.Contains(normalized, "MAC_CATALYST_APP_DEVELOPMENT"):
+		return "IOS_DEVELOPMENT", nil
+	case strings.Contains(normalized, "MAC_CATALYST_APP_STORE"):
+		return "MAC_APP_DISTRIBUTION", nil
+	case strings.Contains(normalized, "MAC_CATALYST_APP_DIRECT"):
+		return "DEVELOPER_ID_APPLICATION", nil
 	case strings.Contains(normalized, "MAC_APP_DEVELOPMENT"):
 		return "MAC_APP_DEVELOPMENT", nil
 	case strings.Contains(normalized, "MAC_APP_STORE"):

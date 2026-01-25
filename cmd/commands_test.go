@@ -545,6 +545,7 @@ func TestUsersValidationErrors(t *testing.T) {
 }
 
 func TestTestFlightAppsValidationErrors(t *testing.T) {
+	t.Setenv("ASC_BYPASS_KEYCHAIN", "1")
 	t.Setenv("ASC_KEY_ID", "")
 	t.Setenv("ASC_ISSUER_ID", "")
 	t.Setenv("ASC_PRIVATE_KEY_PATH", "")

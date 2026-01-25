@@ -10,6 +10,7 @@ import (
 	"text/tabwriter"
 
 	"github.com/peterbourgon/ff/v3/ffcli"
+	"golang.org/x/term"
 
 	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/asc"
 	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/auth"
@@ -24,7 +25,20 @@ var (
 
 // Bold returns the string wrapped in ANSI bold codes
 func Bold(s string) string {
+	if !supportsANSI() {
+		return s
+	}
 	return bold + s + reset
+}
+
+func supportsANSI() bool {
+	if _, ok := os.LookupEnv("NO_COLOR"); ok {
+		return false
+	}
+	if strings.EqualFold(os.Getenv("TERM"), "dumb") {
+		return false
+	}
+	return term.IsTerminal(int(os.Stderr.Fd()))
 }
 
 // DefaultUsageFunc returns a usage string with bold section headers
@@ -113,11 +127,13 @@ func getASCClient() (*asc.Client, error) {
 	var actualKeyID, actualIssuerID, actualKeyPath string
 
 	// Priority 1: Keychain credentials (explicit user setup via 'asc auth login')
-	cfg, err := auth.GetDefaultCredentials()
-	if err == nil && cfg != nil {
-		actualKeyID = cfg.KeyID
-		actualIssuerID = cfg.IssuerID
-		actualKeyPath = cfg.PrivateKeyPath
+	if strings.TrimSpace(os.Getenv("ASC_BYPASS_KEYCHAIN")) == "" {
+		cfg, err := auth.GetDefaultCredentials()
+		if err == nil && cfg != nil {
+			actualKeyID = cfg.KeyID
+			actualIssuerID = cfg.IssuerID
+			actualKeyPath = cfg.PrivateKeyPath
+		}
 	}
 
 	// Priority 2: Environment variables (fallback for CI/CD or when keychain unavailable)

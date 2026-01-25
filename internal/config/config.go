@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
+	"time"
 )
 
 const (
@@ -13,6 +15,97 @@ const (
 	configFileName   = "config.json"
 	configPathEnvVar = "ASC_CONFIG_PATH"
 )
+
+// DurationValue stores a duration with its raw string representation.
+// It marshals to/from JSON as a string to preserve config compatibility.
+type DurationValue struct {
+	Duration time.Duration
+	Raw      string
+}
+
+// ParseDurationValue parses a duration string or seconds value into a DurationValue.
+func ParseDurationValue(raw string) (DurationValue, error) {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		return DurationValue{}, nil
+	}
+	parsed, err := parseDurationValue(raw)
+	if err != nil {
+		return DurationValue{}, err
+	}
+	return DurationValue{Duration: parsed, Raw: raw}, nil
+}
+
+// Value returns the parsed duration if it's positive.
+func (d DurationValue) Value() (time.Duration, bool) {
+	if d.Duration > 0 {
+		return d.Duration, true
+	}
+	raw := strings.TrimSpace(d.Raw)
+	if raw == "" {
+		return 0, false
+	}
+	parsed, err := parseDurationValue(raw)
+	if err != nil || parsed <= 0 {
+		return 0, false
+	}
+	return parsed, true
+}
+
+// String returns the raw string when available, falling back to the duration value.
+func (d DurationValue) String() string {
+	if strings.TrimSpace(d.Raw) != "" {
+		return d.Raw
+	}
+	if d.Duration == 0 {
+		return ""
+	}
+	return d.Duration.String()
+}
+
+// MarshalJSON stores the raw string when available, preserving the config format.
+func (d DurationValue) MarshalJSON() ([]byte, error) {
+	raw := strings.TrimSpace(d.Raw)
+	if raw == "" {
+		if d.Duration == 0 {
+			return json.Marshal("")
+		}
+		raw = d.Duration.String()
+	}
+	return json.Marshal(raw)
+}
+
+// UnmarshalJSON parses duration strings or seconds values from JSON.
+func (d *DurationValue) UnmarshalJSON(data []byte) error {
+	var raw string
+	if err := json.Unmarshal(data, &raw); err != nil {
+		return err
+	}
+	raw = strings.TrimSpace(raw)
+	d.Raw = raw
+	if raw == "" {
+		d.Duration = 0
+		return nil
+	}
+	parsed, err := parseDurationValue(raw)
+	if err != nil {
+		d.Duration = 0
+		return nil
+	}
+	d.Duration = parsed
+	return nil
+}
+
+func parseDurationValue(raw string) (time.Duration, error) {
+	if parsed, err := time.ParseDuration(raw); err == nil {
+		return parsed, nil
+	}
+	seconds, err := strconv.Atoi(raw)
+	if err != nil {
+		return 0, fmt.Errorf("invalid duration %q", raw)
+	}
+	return time.Duration(seconds) * time.Second, nil
+}
 
 // Config holds the application configuration
 type Config struct {
@@ -25,14 +118,14 @@ type Config struct {
 	VendorNumber          string `json:"vendor_number"`
 	AnalyticsVendorNumber string `json:"analytics_vendor_number"`
 
-	Timeout              string `json:"timeout"`
-	TimeoutSeconds       string `json:"timeout_seconds"`
-	UploadTimeout        string `json:"upload_timeout"`
-	UploadTimeoutSeconds string `json:"upload_timeout_seconds"`
-	MaxRetries           string `json:"max_retries"`
-	BaseDelay            string `json:"base_delay"`
-	MaxDelay             string `json:"max_delay"`
-	RetryLog             string `json:"retry_log"`
+	Timeout              DurationValue `json:"timeout"`
+	TimeoutSeconds       DurationValue `json:"timeout_seconds"`
+	UploadTimeout        DurationValue `json:"upload_timeout"`
+	UploadTimeoutSeconds DurationValue `json:"upload_timeout_seconds"`
+	MaxRetries           string        `json:"max_retries"`
+	BaseDelay            string        `json:"base_delay"`
+	MaxDelay             string        `json:"max_delay"`
+	RetryLog             string        `json:"retry_log"`
 }
 
 // ErrNotFound is returned when the config file doesn't exist

@@ -251,7 +251,13 @@ func TestIntegrationAuthConfig(t *testing.T) {
 			DefaultKeyName: "LogoutTestKey",
 			AppID:          "12345",
 			VendorNumber:   "67890",
-			Timeout:        "60s",
+			Timeout: func() config.DurationValue {
+				value, err := config.ParseDurationValue("60s")
+				if err != nil {
+					t.Fatalf("ParseDurationValue(\"60s\") error: %v", err)
+				}
+				return value
+			}(),
 		}
 		if err := config.SaveAt(configPath, cfg); err != nil {
 			t.Fatalf("failed to save config: %v", err)
@@ -289,8 +295,8 @@ func TestIntegrationAuthConfig(t *testing.T) {
 		if loadedCfg.VendorNumber != "67890" {
 			t.Fatalf("VendorNumber should be preserved, got %q", loadedCfg.VendorNumber)
 		}
-		if loadedCfg.Timeout != "60s" {
-			t.Fatalf("Timeout should be preserved, got %q", loadedCfg.Timeout)
+		if loadedCfg.Timeout.String() != "60s" {
+			t.Fatalf("Timeout should be preserved, got %q", loadedCfg.Timeout.String())
 		}
 	})
 }

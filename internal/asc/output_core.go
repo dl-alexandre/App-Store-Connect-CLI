@@ -31,6 +31,14 @@ func PrintMarkdown(data interface{}) error {
 		return printAppsMarkdown(v)
 	case *AppResponse:
 		return printAppsMarkdown(&AppsResponse{Data: []Resource[AppAttributes]{v.Data}})
+	case *TerritoriesResponse:
+		return printTerritoriesMarkdown(v)
+	case *AppPricePointsV3Response:
+		return printAppPricePointsMarkdown(v)
+	case *AppPriceScheduleResponse:
+		return printAppPriceScheduleMarkdown(v)
+	case *AppPricesResponse:
+		return printAppPricesMarkdown(v)
 	case *BuildsResponse:
 		return printBuildsMarkdown(v)
 	case *AppStoreVersionsResponse:
@@ -39,6 +47,10 @@ func PrintMarkdown(data interface{}) error {
 		return printPreReleaseVersionsMarkdown(v)
 	case *BuildResponse:
 		return printBuildsMarkdown(&BuildsResponse{Data: []Resource[BuildAttributes]{v.Data}})
+	case *AppAvailabilityV2Response:
+		return printAppAvailabilityMarkdown(v)
+	case *TerritoryAvailabilitiesResponse:
+		return printTerritoryAvailabilitiesMarkdown(v)
 	case *PreReleaseVersionResponse:
 		return printPreReleaseVersionsMarkdown(&PreReleaseVersionsResponse{Data: []PreReleaseVersion{v.Data}})
 	case *AppStoreVersionLocalizationsResponse:
@@ -91,6 +103,10 @@ func PrintMarkdown(data interface{}) error {
 		return printAppPreviewUploadResultMarkdown(v)
 	case *AssetDeleteResult:
 		return printAssetDeleteResultMarkdown(v)
+	case *TestFlightPublishResult:
+		return printTestFlightPublishResultMarkdown(v)
+	case *AppStorePublishResult:
+		return printAppStorePublishResultMarkdown(v)
 	case *SalesReportResult:
 		return printSalesReportResultMarkdown(v)
 	case *FinanceReportResult:
@@ -169,6 +185,14 @@ func PrintTable(data interface{}) error {
 		return printAppsTable(v)
 	case *AppResponse:
 		return printAppsTable(&AppsResponse{Data: []Resource[AppAttributes]{v.Data}})
+	case *TerritoriesResponse:
+		return printTerritoriesTable(v)
+	case *AppPricePointsV3Response:
+		return printAppPricePointsTable(v)
+	case *AppPriceScheduleResponse:
+		return printAppPriceScheduleTable(v)
+	case *AppPricesResponse:
+		return printAppPricesTable(v)
 	case *BuildsResponse:
 		return printBuildsTable(v)
 	case *AppStoreVersionsResponse:
@@ -177,6 +201,10 @@ func PrintTable(data interface{}) error {
 		return printPreReleaseVersionsTable(v)
 	case *BuildResponse:
 		return printBuildsTable(&BuildsResponse{Data: []Resource[BuildAttributes]{v.Data}})
+	case *AppAvailabilityV2Response:
+		return printAppAvailabilityTable(v)
+	case *TerritoryAvailabilitiesResponse:
+		return printTerritoryAvailabilitiesTable(v)
 	case *PreReleaseVersionResponse:
 		return printPreReleaseVersionsTable(&PreReleaseVersionsResponse{Data: []PreReleaseVersion{v.Data}})
 	case *AppStoreVersionLocalizationsResponse:
@@ -229,6 +257,10 @@ func PrintTable(data interface{}) error {
 		return printAppPreviewUploadResultTable(v)
 	case *AssetDeleteResult:
 		return printAssetDeleteResultTable(v)
+	case *TestFlightPublishResult:
+		return printTestFlightPublishResultTable(v)
+	case *AppStorePublishResult:
+		return printAppStorePublishResultTable(v)
 	case *SalesReportResult:
 		return printSalesReportResultTable(v)
 	case *FinanceReportResult:

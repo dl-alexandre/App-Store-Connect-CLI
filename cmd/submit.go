@@ -97,31 +97,35 @@ Examples:
 				}
 			}
 
+			// Attach build to version
 			if err := client.AttachBuildToVersion(requestCtx, resolvedVersionID, strings.TrimSpace(*buildID)); err != nil {
 				return fmt.Errorf("submit create: failed to attach build: %w", err)
 			}
 
-			submitReq := asc.AppStoreVersionSubmissionCreateRequest{
-				Data: asc.AppStoreVersionSubmissionCreateData{
-					Type: asc.ResourceTypeAppStoreVersionSubmissions,
-					Relationships: &asc.AppStoreVersionSubmissionRelationships{
-						AppStoreVersion: &asc.Relationship{
-							Data: asc.ResourceData{Type: asc.ResourceTypeAppStoreVersions, ID: resolvedVersionID},
-						},
-					},
-				},
+			// Use the new reviewSubmissions API (the old appStoreVersionSubmissions is deprecated)
+			// Step 1: Create review submission for the app
+			reviewSubmission, err := client.CreateReviewSubmission(requestCtx, resolvedAppID, asc.Platform(normalizedPlatform))
+			if err != nil {
+				return fmt.Errorf("submit create: failed to create review submission: %w", err)
 			}
 
-			submitResp, err := client.CreateAppStoreVersionSubmission(requestCtx, submitReq)
+			// Step 2: Add the app store version as a submission item
+			_, err = client.AddReviewSubmissionItem(requestCtx, reviewSubmission.Data.ID, resolvedVersionID)
 			if err != nil {
-				return fmt.Errorf("submit create: failed to create submission: %w", err)
+				return fmt.Errorf("submit create: failed to add version to submission: %w", err)
+			}
+
+			// Step 3: Submit for review
+			submitResp, err := client.SubmitReviewSubmission(requestCtx, reviewSubmission.Data.ID)
+			if err != nil {
+				return fmt.Errorf("submit create: failed to submit for review: %w", err)
 			}
 
 			result := &asc.AppStoreVersionSubmissionCreateResult{
 				SubmissionID: submitResp.Data.ID,
 				VersionID:    resolvedVersionID,
 				BuildID:      strings.TrimSpace(*buildID),
-				CreatedDate:  submitResp.Data.Attributes.CreatedDate,
+				CreatedDate:  submitResp.Data.Attributes.SubmittedDate,
 			}
 
 			return printOutput(result, *output, *pretty)
@@ -251,21 +255,35 @@ Examples:
 
 			resolvedSubmissionID := strings.TrimSpace(*submissionID)
 			if resolvedSubmissionID == "" {
+				// Try to find existing submission for version via old API first
 				submissionResp, err := client.GetAppStoreVersionSubmissionForVersion(requestCtx, strings.TrimSpace(*versionID))
-				if err != nil {
+				if err != nil && !asc.IsNotFound(err) {
+					return fmt.Errorf("submit cancel: %w", err)
+				}
+				if submissionResp != nil {
+					resolvedSubmissionID = submissionResp.Data.ID
+				}
+			}
+
+			// If we found an old-style submission, delete it
+			if resolvedSubmissionID != "" {
+				if err := client.DeleteAppStoreVersionSubmission(requestCtx, resolvedSubmissionID); err != nil {
 					if asc.IsNotFound(err) {
-						return fmt.Errorf("submit cancel: no submission found for version %q", strings.TrimSpace(*versionID))
+						return fmt.Errorf("submit cancel: no submission found for ID %q", resolvedSubmissionID)
 					}
 					return fmt.Errorf("submit cancel: %w", err)
 				}
-				resolvedSubmissionID = submissionResp.Data.ID
-			}
-
-			if err := client.DeleteAppStoreVersionSubmission(requestCtx, resolvedSubmissionID); err != nil {
-				if asc.IsNotFound(err) {
-					return fmt.Errorf("submit cancel: no submission found for ID %q", resolvedSubmissionID)
+			} else {
+				// Try new reviewSubmissions API - cancel by setting canceled: true
+				// Note: This requires the review submission ID which the user must provide
+				if strings.TrimSpace(*submissionID) == "" {
+					return fmt.Errorf("submit cancel: no submission found for version %q (use --id with the review submission ID)", strings.TrimSpace(*versionID))
 				}
-				return fmt.Errorf("submit cancel: %w", err)
+				_, err := client.CancelReviewSubmission(requestCtx, strings.TrimSpace(*submissionID))
+				if err != nil {
+					return fmt.Errorf("submit cancel: %w", err)
+				}
+				resolvedSubmissionID = strings.TrimSpace(*submissionID)
 			}
 
 			result := &asc.AppStoreVersionSubmissionCancelResult{

@@ -6,11 +6,14 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/peterbourgon/ff/v3/ffcli"
 
 	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/asc"
 )
+
+const buildWaitDefaultTimeout = 3 * time.Minute
 
 // BuildsUploadCommand returns a command to upload a build
 func BuildsUploadCommand() *ffcli.Command {
@@ -151,7 +154,11 @@ Examples:
 				return fmt.Errorf("builds upload: %w", err)
 			}
 
-			requestCtx, cancel := contextWithTimeout(ctx)
+			timeoutValue := asc.ResolveTimeout()
+			if *wait || testNotesValue != "" {
+				timeoutValue = asc.ResolveTimeoutWithDefault(buildWaitDefaultTimeout)
+			}
+			requestCtx, cancel := contextWithPublishTimeout(ctx, timeoutValue)
 			defer cancel()
 
 			// Step 1: Create build upload record

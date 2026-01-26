@@ -31,10 +31,3 @@ Use this skill when you need to run or design `asc` commands for App Store Conne
 ## Timeouts
 - `ASC_TIMEOUT` / `ASC_TIMEOUT_SECONDS` control request timeouts.
 - `ASC_UPLOAD_TIMEOUT` / `ASC_UPLOAD_TIMEOUT_SECONDS` control upload timeouts.
-
-## References
-- `AGENTS.md`
-- `docs/TESTING.md`
-- `docs/GO_STANDARDS.md`
-- `docs/API_NOTES.md`
-- `CONTRIBUTING.md`

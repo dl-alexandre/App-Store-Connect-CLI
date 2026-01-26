@@ -52,7 +52,7 @@ API keys are generated at https://appstoreconnect.apple.com/access/integrations/
 | `ASC_UPLOAD_TIMEOUT` | Upload timeout (e.g., `60s`, `2m`) |
 | `ASC_UPLOAD_TIMEOUT_SECONDS` | Upload timeout in seconds (alternative) |
 
-## Further Reading
+## References
 
 Detailed guidance on specific topics (only read when needed):
 

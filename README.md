@@ -117,7 +117,7 @@ Config.json keys (same semantics, snake_case):
 
 - JSON output is default for machine parsing; add `--pretty` when debugging.
 - Use `--paginate` to automatically fetch all pages (recommended for AI agents).
-- `--paginate` works on list commands including apps, builds list, feedback, crashes, reviews, versions list, pre-release versions list, localizations list, build-localizations list, beta-groups list, beta-testers list, sandbox list, analytics requests/get, testflight apps list, and Xcode Cloud workflows/build-runs.
+- `--paginate` works on list commands including apps, builds list, devices list, feedback, crashes, reviews, versions list, pre-release versions list, localizations list, build-localizations list, beta-groups list, beta-testers list, sandbox list, analytics requests/get, testflight apps list, and Xcode Cloud workflows/build-runs.
 - Use `--limit` + `--next "<links.next>"` for manual pagination control.
 - Sort with `--sort` (prefix `-` for descending):
   - Feedback/Crashes: `createdDate` / `-createdDate`
@@ -207,6 +207,29 @@ asc beta-testers invite --app "APP_ID" --email "tester@example.com"
 # Manage group membership
 asc beta-testers add-groups --id "TESTER_ID" --group "GROUP_ID"
 asc beta-testers remove-groups --id "TESTER_ID" --group "GROUP_ID"
+```
+
+### Devices
+
+```bash
+# List devices
+asc devices list
+
+# Filter by platform/status/UDID
+asc devices list --platform IOS --status ENABLED --udid "UDID1,UDID2"
+
+# Fetch all devices (all pages)
+asc devices list --paginate
+
+# Get a device by ID
+asc devices get --id "DEVICE_ID"
+
+# Register a device
+asc devices register --name "My iPhone" --udid "UDID" --platform IOS
+
+# Update device name/status
+asc devices update --id "DEVICE_ID" --name "New Name"
+asc devices update --id "DEVICE_ID" --status DISABLED
 ```
 
 ### App Store

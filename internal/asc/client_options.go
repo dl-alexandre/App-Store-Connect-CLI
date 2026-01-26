@@ -17,6 +17,9 @@ type AppsOption func(*appsQuery)
 // BuildsOption is a functional option for GetBuilds.
 type BuildsOption func(*buildsQuery)
 
+// SubscriptionOfferCodeOneTimeUseCodesOption is a functional option for GetSubscriptionOfferCodeOneTimeUseCodes.
+type SubscriptionOfferCodeOneTimeUseCodesOption func(*subscriptionOfferCodeOneTimeUseCodesQuery)
+
 // AppStoreVersionsOption is a functional option for GetAppStoreVersions.
 type AppStoreVersionsOption func(*appStoreVersionsQuery)
 
@@ -38,6 +41,9 @@ type BetaTestersOption func(*betaTestersQuery)
 // UsersOption is a functional option for GetUsers.
 type UsersOption func(*usersQuery)
 
+// DevicesOption is a functional option for GetDevices.
+type DevicesOption func(*devicesQuery)
+
 // UserInvitationsOption is a functional option for GetUserInvitations.
 type UserInvitationsOption func(*userInvitationsQuery)
 
@@ -55,6 +61,9 @@ type BetaRecruitmentCriterionOptionsOption func(*betaRecruitmentCriterionOptions
 
 // AppStoreVersionLocalizationsOption is a functional option for version localizations.
 type AppStoreVersionLocalizationsOption func(*appStoreVersionLocalizationsQuery)
+
+// BetaBuildLocalizationsOption is a functional option for beta build localizations.
+type BetaBuildLocalizationsOption func(*betaBuildLocalizationsQuery)
 
 // AppInfoLocalizationsOption is a functional option for app info localizations.
 type AppInfoLocalizationsOption func(*appInfoLocalizationsQuery)
@@ -187,6 +196,24 @@ func WithCrashBuildIDs(ids []string) CrashOption {
 func WithCrashBuildPreReleaseVersionIDs(ids []string) CrashOption {
 	return func(q *crashQuery) {
 		q.buildPreReleaseVersionIDs = normalizeList(ids)
+	}
+}
+
+// WithSubscriptionOfferCodeOneTimeUseCodesLimit sets the max number of offer code batches to return.
+func WithSubscriptionOfferCodeOneTimeUseCodesLimit(limit int) SubscriptionOfferCodeOneTimeUseCodesOption {
+	return func(q *subscriptionOfferCodeOneTimeUseCodesQuery) {
+		if limit > 0 {
+			q.limit = limit
+		}
+	}
+}
+
+// WithSubscriptionOfferCodeOneTimeUseCodesNextURL uses a next page URL directly.
+func WithSubscriptionOfferCodeOneTimeUseCodesNextURL(next string) SubscriptionOfferCodeOneTimeUseCodesOption {
+	return func(q *subscriptionOfferCodeOneTimeUseCodesQuery) {
+		if strings.TrimSpace(next) != "" {
+			q.nextURL = strings.TrimSpace(next)
+		}
 	}
 }
 
@@ -555,6 +582,79 @@ func WithUsersRoles(roles []string) UsersOption {
 	}
 }
 
+// WithDevicesLimit sets the max number of devices to return.
+func WithDevicesLimit(limit int) DevicesOption {
+	return func(q *devicesQuery) {
+		if limit > 0 {
+			q.limit = limit
+		}
+	}
+}
+
+// WithDevicesNextURL uses a next page URL directly.
+func WithDevicesNextURL(next string) DevicesOption {
+	return func(q *devicesQuery) {
+		if strings.TrimSpace(next) != "" {
+			q.nextURL = strings.TrimSpace(next)
+		}
+	}
+}
+
+// WithDevicesNames filters devices by name(s).
+func WithDevicesNames(names []string) DevicesOption {
+	return func(q *devicesQuery) {
+		q.names = normalizeList(names)
+	}
+}
+
+// WithDevicesPlatform filters devices by platform.
+func WithDevicesPlatform(platform string) DevicesOption {
+	return func(q *devicesQuery) {
+		if strings.TrimSpace(platform) != "" {
+			q.platform = strings.ToUpper(strings.TrimSpace(platform))
+		}
+	}
+}
+
+// WithDevicesStatus filters devices by status.
+func WithDevicesStatus(status string) DevicesOption {
+	return func(q *devicesQuery) {
+		if strings.TrimSpace(status) != "" {
+			q.status = strings.ToUpper(strings.TrimSpace(status))
+		}
+	}
+}
+
+// WithDevicesUDIDs filters devices by UDID(s).
+func WithDevicesUDIDs(udids []string) DevicesOption {
+	return func(q *devicesQuery) {
+		q.udids = normalizeList(udids)
+	}
+}
+
+// WithDevicesIDs filters devices by ID(s).
+func WithDevicesIDs(ids []string) DevicesOption {
+	return func(q *devicesQuery) {
+		q.ids = normalizeList(ids)
+	}
+}
+
+// WithDevicesSort sets the sort order for devices.
+func WithDevicesSort(sort string) DevicesOption {
+	return func(q *devicesQuery) {
+		if strings.TrimSpace(sort) != "" {
+			q.sort = strings.TrimSpace(sort)
+		}
+	}
+}
+
+// WithDevicesFields sets fields[devices] for device responses.
+func WithDevicesFields(fields []string) DevicesOption {
+	return func(q *devicesQuery) {
+		q.fields = normalizeList(fields)
+	}
+}
+
 // WithUserInvitationsLimit sets the max number of invitations to return.
 func WithUserInvitationsLimit(limit int) UserInvitationsOption {
 	return func(q *userInvitationsQuery) {
@@ -680,6 +780,31 @@ func WithAppStoreVersionLocalizationsNextURL(next string) AppStoreVersionLocaliz
 // WithAppStoreVersionLocalizationLocales filters version localizations by locale.
 func WithAppStoreVersionLocalizationLocales(locales []string) AppStoreVersionLocalizationsOption {
 	return func(q *appStoreVersionLocalizationsQuery) {
+		q.locales = normalizeList(locales)
+	}
+}
+
+// WithBetaBuildLocalizationsLimit sets the max number of beta build localizations to return.
+func WithBetaBuildLocalizationsLimit(limit int) BetaBuildLocalizationsOption {
+	return func(q *betaBuildLocalizationsQuery) {
+		if limit > 0 {
+			q.limit = limit
+		}
+	}
+}
+
+// WithBetaBuildLocalizationsNextURL uses a next page URL directly.
+func WithBetaBuildLocalizationsNextURL(next string) BetaBuildLocalizationsOption {
+	return func(q *betaBuildLocalizationsQuery) {
+		if strings.TrimSpace(next) != "" {
+			q.nextURL = strings.TrimSpace(next)
+		}
+	}
+}
+
+// WithBetaBuildLocalizationLocales filters beta build localizations by locale.
+func WithBetaBuildLocalizationLocales(locales []string) BetaBuildLocalizationsOption {
+	return func(q *betaBuildLocalizationsQuery) {
 		q.locales = normalizeList(locales)
 	}
 }

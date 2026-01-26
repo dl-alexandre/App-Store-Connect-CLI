@@ -57,6 +57,10 @@ type buildsQuery struct {
 	preReleaseVersionID string
 }
 
+type subscriptionOfferCodeOneTimeUseCodesQuery struct {
+	listQuery
+}
+
 type appStoreVersionsQuery struct {
 	listQuery
 	platforms      []string
@@ -71,6 +75,11 @@ type preReleaseVersionsQuery struct {
 }
 
 type appStoreVersionLocalizationsQuery struct {
+	listQuery
+	locales []string
+}
+
+type betaBuildLocalizationsQuery struct {
 	listQuery
 	locales []string
 }
@@ -105,6 +114,17 @@ type usersQuery struct {
 	roles []string
 }
 
+type devicesQuery struct {
+	listQuery
+	names    []string
+	platform string
+	status   string
+	udids    []string
+	ids      []string
+	sort     string
+	fields   []string
+}
+
 type userInvitationsQuery struct {
 	listQuery
 }
@@ -135,6 +155,7 @@ type buildBetaDetailsQuery struct {
 type betaRecruitmentCriterionOptionsQuery struct {
 	listQuery
 }
+
 func buildReviewQuery(opts []ReviewOption) string {
 	query := &reviewQuery{}
 	for _, opt := range opts {
@@ -256,6 +277,31 @@ func buildUsersQuery(query *usersQuery) string {
 	return values.Encode()
 }
 
+func buildDevicesQuery(query *devicesQuery) string {
+	values := url.Values{}
+	addCSV(values, "filter[name]", query.names)
+	if strings.TrimSpace(query.platform) != "" {
+		values.Set("filter[platform]", strings.TrimSpace(query.platform))
+	}
+	if strings.TrimSpace(query.status) != "" {
+		values.Set("filter[status]", strings.TrimSpace(query.status))
+	}
+	addCSV(values, "filter[udid]", query.udids)
+	addCSV(values, "filter[id]", query.ids)
+	if query.sort != "" {
+		values.Set("sort", query.sort)
+	}
+	addCSV(values, "fields[devices]", query.fields)
+	addLimit(values, query.limit)
+	return values.Encode()
+}
+
+func buildDevicesFieldsQuery(fields []string) string {
+	values := url.Values{}
+	addCSV(values, "fields[devices]", fields)
+	return values.Encode()
+}
+
 func buildUserInvitationsQuery(query *userInvitationsQuery) string {
 	values := url.Values{}
 	addLimit(values, query.limit)
@@ -291,6 +337,12 @@ func buildBetaRecruitmentCriterionOptionsQuery(query *betaRecruitmentCriterionOp
 	return values.Encode()
 }
 
+func buildSubscriptionOfferCodeOneTimeUseCodesQuery(query *subscriptionOfferCodeOneTimeUseCodesQuery) string {
+	values := url.Values{}
+	addLimit(values, query.limit)
+	return values.Encode()
+}
+
 func buildAppStoreVersionsQuery(query *appStoreVersionsQuery) string {
 	values := url.Values{}
 	addCSV(values, "filter[platform]", query.platforms)
@@ -316,6 +368,13 @@ func buildPreReleaseVersionsQuery(appID string, query *preReleaseVersionsQuery) 
 }
 
 func buildAppStoreVersionLocalizationsQuery(query *appStoreVersionLocalizationsQuery) string {
+	values := url.Values{}
+	addCSV(values, "filter[locale]", query.locales)
+	addLimit(values, query.limit)
+	return values.Encode()
+}
+
+func buildBetaBuildLocalizationsQuery(query *betaBuildLocalizationsQuery) string {
 	values := url.Values{}
 	addCSV(values, "filter[locale]", query.locales)
 	addLimit(values, query.limit)

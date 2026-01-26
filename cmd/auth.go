@@ -220,7 +220,8 @@ Examples:
 		FlagSet:   fs,
 		UsageFunc: DefaultUsageFunc,
 		Exec: func(ctx context.Context, args []string) error {
-			if strings.TrimSpace(*name) == "" {
+			trimmedName := strings.TrimSpace(*name)
+			if trimmedName == "" {
 				fmt.Fprintln(os.Stderr, "Error: --name is required")
 				return flag.ErrHelp
 			}
@@ -235,20 +236,20 @@ Examples:
 
 			found := false
 			for _, cred := range credentials {
-				if cred.Name == strings.TrimSpace(*name) {
+				if strings.TrimSpace(cred.Name) == trimmedName {
 					found = true
 					break
 				}
 			}
 			if !found {
-				return fmt.Errorf("auth switch: profile %q not found", strings.TrimSpace(*name))
+				return fmt.Errorf("auth switch: profile %q not found", trimmedName)
 			}
 
-			if err := auth.SetDefaultCredentials(*name); err != nil {
+			if err := auth.SetDefaultCredentials(trimmedName); err != nil {
 				return fmt.Errorf("auth switch: %w", err)
 			}
 
-			fmt.Printf("Default profile set to '%s'\n", strings.TrimSpace(*name))
+			fmt.Printf("Default profile set to '%s'\n", trimmedName)
 			return nil
 		},
 	}
@@ -273,15 +274,19 @@ Examples:
 		FlagSet:   fs,
 		UsageFunc: DefaultUsageFunc,
 		Exec: func(ctx context.Context, args []string) error {
-			if *name != "" && *all {
+			trimmedName := strings.TrimSpace(*name)
+			if trimmedName == "" && *name != "" {
+				return fmt.Errorf("auth logout: --name cannot be blank")
+			}
+			if trimmedName != "" && *all {
 				return fmt.Errorf("auth logout: --all and --name are mutually exclusive")
 			}
 
-			if strings.TrimSpace(*name) != "" {
+			if trimmedName != "" {
 				if err := auth.RemoveCredentials(*name); err != nil {
 					return fmt.Errorf("auth logout: failed to remove credentials: %w", err)
 				}
-				fmt.Printf("Successfully removed stored credential '%s'\n", strings.TrimSpace(*name))
+				fmt.Printf("Successfully removed stored credential '%s'\n", trimmedName)
 				return nil
 			}
 

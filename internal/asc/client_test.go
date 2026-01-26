@@ -428,6 +428,32 @@ func TestBuildBuildsQuery(t *testing.T) {
 	}
 }
 
+func TestBuildPromoCodesQuery(t *testing.T) {
+	query := &promoCodesQuery{}
+	opts := []PromoCodesOption{
+		WithPromoCodesLimit(10),
+		WithPromoCodesNextURL("https://api.appstoreconnect.apple.com/v1/apps/123/promoCodes?cursor=abc"),
+	}
+	for _, opt := range opts {
+		opt(query)
+	}
+
+	if query.limit != 10 {
+		t.Fatalf("expected limit=10, got %d", query.limit)
+	}
+	if query.nextURL != "https://api.appstoreconnect.apple.com/v1/apps/123/promoCodes?cursor=abc" {
+		t.Fatalf("expected nextURL to be set, got %q", query.nextURL)
+	}
+
+	values, err := url.ParseQuery(buildPromoCodesQuery(query))
+	if err != nil {
+		t.Fatalf("failed to parse query: %v", err)
+	}
+	if got := values.Get("limit"); got != "10" {
+		t.Fatalf("expected limit=10, got %q", got)
+	}
+}
+
 func TestBuildUploadCreateRequest_JSON(t *testing.T) {
 	req := BuildUploadCreateRequest{
 		Data: BuildUploadCreateData{
@@ -492,6 +518,73 @@ func TestBuildUploadCreateRequest_JSON(t *testing.T) {
 	}
 	if parsed.Data.Attributes.Platform != "IOS" {
 		t.Fatalf("expected platform=IOS, got %q", parsed.Data.Attributes.Platform)
+	}
+	if parsed.Data.Relationships.App.Data.Type != "apps" {
+		t.Fatalf("expected app type=apps, got %q", parsed.Data.Relationships.App.Data.Type)
+	}
+	if parsed.Data.Relationships.App.Data.ID != "APP_ID_123" {
+		t.Fatalf("expected app id=APP_ID_123, got %q", parsed.Data.Relationships.App.Data.ID)
+	}
+}
+
+func TestPromoCodeCreateRequest_JSON(t *testing.T) {
+	req := PromoCodeCreateRequest{
+		Data: PromoCodeCreateData{
+			Type: ResourceTypePromoCodes,
+			Attributes: PromoCodeCreateAttributes{
+				ProductType: PromoCodeProductTypeApp,
+				Quantity:    3,
+			},
+			Relationships: PromoCodeCreateRelationships{
+				App: Relationship{
+					Data: ResourceData{
+						Type: ResourceTypeApps,
+						ID:   "APP_ID_123",
+					},
+				},
+			},
+		},
+	}
+
+	body, err := BuildRequestBody(req)
+	if err != nil {
+		t.Fatalf("BuildRequestBody() error: %v", err)
+	}
+
+	buf := new(bytes.Buffer)
+	if _, err := buf.ReadFrom(body); err != nil {
+		t.Fatalf("read body error: %v", err)
+	}
+
+	var parsed struct {
+		Data struct {
+			Type       string `json:"type"`
+			Attributes struct {
+				ProductType string `json:"productType"`
+				Quantity    int    `json:"quantity"`
+			} `json:"attributes"`
+			Relationships struct {
+				App struct {
+					Data struct {
+						Type string `json:"type"`
+						ID   string `json:"id"`
+					} `json:"data"`
+				} `json:"app"`
+			} `json:"relationships"`
+		} `json:"data"`
+	}
+	if err := json.Unmarshal(buf.Bytes(), &parsed); err != nil {
+		t.Fatalf("failed to unmarshal body: %v", err)
+	}
+
+	if parsed.Data.Type != "promoCodes" {
+		t.Fatalf("expected type=promoCodes, got %q", parsed.Data.Type)
+	}
+	if parsed.Data.Attributes.ProductType != "APP" {
+		t.Fatalf("expected productType=APP, got %q", parsed.Data.Attributes.ProductType)
+	}
+	if parsed.Data.Attributes.Quantity != 3 {
+		t.Fatalf("expected quantity=3, got %d", parsed.Data.Attributes.Quantity)
 	}
 	if parsed.Data.Relationships.App.Data.Type != "apps" {
 		t.Fatalf("expected app type=apps, got %q", parsed.Data.Relationships.App.Data.Type)

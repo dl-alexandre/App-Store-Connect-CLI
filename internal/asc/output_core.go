@@ -43,12 +43,16 @@ func PrintMarkdown(data interface{}) error {
 		return printAppPricesMarkdown(v)
 	case *BuildsResponse:
 		return printBuildsMarkdown(v)
+	case *PromoCodesResponse:
+		return printPromoCodesMarkdown(v)
 	case *AppStoreVersionsResponse:
 		return printAppStoreVersionsMarkdown(v)
 	case *PreReleaseVersionsResponse:
 		return printPreReleaseVersionsMarkdown(v)
 	case *BuildResponse:
 		return printBuildsMarkdown(&BuildsResponse{Data: []Resource[BuildAttributes]{v.Data}})
+	case *PromoCodeResponse:
+		return printPromoCodesMarkdown(&PromoCodesResponse{Data: []Resource[PromoCodeAttributes]{v.Data}})
 	case *AppAvailabilityV2Response:
 		return printAppAvailabilityMarkdown(v)
 	case *TerritoryAvailabilitiesResponse:
@@ -217,12 +221,16 @@ func PrintTable(data interface{}) error {
 		return printAppPricesTable(v)
 	case *BuildsResponse:
 		return printBuildsTable(v)
+	case *PromoCodesResponse:
+		return printPromoCodesTable(v)
 	case *AppStoreVersionsResponse:
 		return printAppStoreVersionsTable(v)
 	case *PreReleaseVersionsResponse:
 		return printPreReleaseVersionsTable(v)
 	case *BuildResponse:
 		return printBuildsTable(&BuildsResponse{Data: []Resource[BuildAttributes]{v.Data}})
+	case *PromoCodeResponse:
+		return printPromoCodesTable(&PromoCodesResponse{Data: []Resource[PromoCodeAttributes]{v.Data}})
 	case *AppAvailabilityV2Response:
 		return printAppAvailabilityTable(v)
 	case *TerritoryAvailabilitiesResponse:

@@ -166,7 +166,7 @@ Config.json keys (same semantics, snake_case):
 
 - JSON output is default for machine parsing; add `--pretty` when debugging.
 - Use `--paginate` to automatically fetch all pages (recommended for AI agents).
-- `--paginate` works on list commands including apps, builds list, devices list, feedback, crashes, reviews, versions list, pre-release versions list, localizations list, build-localizations list, beta-groups list, beta-testers list, sandbox list, analytics requests/get, testflight apps list, and Xcode Cloud workflows/build-runs.
+- `--paginate` works on list commands including apps, builds list, promo codes list, devices list, feedback, crashes, reviews, versions list, pre-release versions list, localizations list, build-localizations list, beta-groups list, beta-testers list, sandbox list, analytics requests/get, testflight apps list, and Xcode Cloud workflows/build-runs.
 - Use `--limit` + `--next "<links.next>"` for manual pagination control.
 - Sort with `--sort` (prefix `-` for descending):
   - Feedback/Crashes: `createdDate` / `-createdDate`
@@ -518,6 +518,22 @@ Notes:
 # Add/remove beta groups from a build
 asc builds add-groups --build "BUILD_ID" --group "GROUP_ID"
 asc builds remove-groups --build "BUILD_ID" --group "GROUP_ID"
+```
+
+### Promo Codes
+
+```bash
+# List promo codes for an app
+asc promocodes list --app "123456789"
+
+# Fetch all promo codes (all pages)
+asc promocodes list --app "123456789" --paginate
+
+# Generate app promo codes
+asc promocodes generate --app "123456789" --type app --quantity 5
+
+# Generate subscription promo codes and write to a file
+asc promocodes generate --app "123456789" --type subscription --quantity 3 --output "./promo-codes.txt"
 ```
 
 ### Categories

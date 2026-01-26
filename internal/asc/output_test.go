@@ -194,6 +194,62 @@ func TestPrintMarkdown_Reviews_StripsControlChars(t *testing.T) {
 	}
 }
 
+func TestPrintTable_PromoCodes(t *testing.T) {
+	resp := &PromoCodesResponse{
+		Data: []Resource[PromoCodeAttributes]{
+			{
+				ID: "1",
+				Attributes: PromoCodeAttributes{
+					Code:        "ABC123",
+					ExpiresDate: "2026-01-31T00:00:00Z",
+					IsUsed:      false,
+					IsExpired:   false,
+					ProductType: PromoCodeProductTypeApp,
+				},
+			},
+		},
+	}
+
+	output := captureStdout(t, func() error {
+		return PrintTable(resp)
+	})
+
+	if !strings.Contains(output, "Code") || !strings.Contains(output, "Expires") {
+		t.Fatalf("expected header in output, got: %s", output)
+	}
+	if !strings.Contains(output, "ABC123") {
+		t.Fatalf("expected code in output, got: %s", output)
+	}
+}
+
+func TestPrintMarkdown_PromoCodes(t *testing.T) {
+	resp := &PromoCodesResponse{
+		Data: []Resource[PromoCodeAttributes]{
+			{
+				ID: "1",
+				Attributes: PromoCodeAttributes{
+					Code:        "ABC123",
+					ExpiresDate: "2026-01-31T00:00:00Z",
+					IsUsed:      false,
+					IsExpired:   false,
+					ProductType: PromoCodeProductTypeApp,
+				},
+			},
+		},
+	}
+
+	output := captureStdout(t, func() error {
+		return PrintMarkdown(resp)
+	})
+
+	if !strings.Contains(output, "| Code |") {
+		t.Fatalf("expected markdown header, got: %s", output)
+	}
+	if !strings.Contains(output, "ABC123") {
+		t.Fatalf("expected code in output, got: %s", output)
+	}
+}
+
 func TestPrintTable_Apps(t *testing.T) {
 	resp := &AppsResponse{
 		Data: []Resource[AppAttributes]{

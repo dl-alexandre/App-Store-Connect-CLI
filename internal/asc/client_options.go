@@ -17,6 +17,9 @@ type AppsOption func(*appsQuery)
 // BuildsOption is a functional option for GetBuilds.
 type BuildsOption func(*buildsQuery)
 
+// PromoCodesOption is a functional option for GetPromoCodes.
+type PromoCodesOption func(*promoCodesQuery)
+
 // AppStoreVersionsOption is a functional option for GetAppStoreVersions.
 type AppStoreVersionsOption func(*appStoreVersionsQuery)
 
@@ -193,6 +196,24 @@ func WithCrashBuildIDs(ids []string) CrashOption {
 func WithCrashBuildPreReleaseVersionIDs(ids []string) CrashOption {
 	return func(q *crashQuery) {
 		q.buildPreReleaseVersionIDs = normalizeList(ids)
+	}
+}
+
+// WithPromoCodesLimit sets the max number of promo codes to return.
+func WithPromoCodesLimit(limit int) PromoCodesOption {
+	return func(q *promoCodesQuery) {
+		if limit > 0 {
+			q.limit = limit
+		}
+	}
+}
+
+// WithPromoCodesNextURL uses a next page URL directly.
+func WithPromoCodesNextURL(next string) PromoCodesOption {
+	return func(q *promoCodesQuery) {
+		if strings.TrimSpace(next) != "" {
+			q.nextURL = strings.TrimSpace(next)
+		}
 	}
 }
 

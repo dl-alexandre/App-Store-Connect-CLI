@@ -179,6 +179,128 @@ func TestGetApp(t *testing.T) {
 	}
 }
 
+func TestGetPromoCodes_WithLimit(t *testing.T) {
+	response := jsonResponse(http.StatusOK, `{"data":[{"type":"promoCodes","id":"1","attributes":{"code":"ABC123"}}]}`)
+	client := newTestClient(t, func(req *http.Request) {
+		if req.Method != http.MethodGet {
+			t.Fatalf("expected GET, got %s", req.Method)
+		}
+		if req.URL.Path != "/v1/apps/123/promoCodes" {
+			t.Fatalf("expected path /v1/apps/123/promoCodes, got %s", req.URL.Path)
+		}
+		values := req.URL.Query()
+		if values.Get("limit") != "5" {
+			t.Fatalf("expected limit=5, got %q", values.Get("limit"))
+		}
+		assertAuthorized(t, req)
+	}, response)
+
+	if _, err := client.GetPromoCodes(context.Background(), "123", WithPromoCodesLimit(5)); err != nil {
+		t.Fatalf("GetPromoCodes() error: %v", err)
+	}
+}
+
+func TestGetPromoCodes_UsesNextURL(t *testing.T) {
+	next := "https://api.appstoreconnect.apple.com/v1/apps/123/promoCodes?cursor=abc"
+	response := jsonResponse(http.StatusOK, `{"data":[]}`)
+	client := newTestClient(t, func(req *http.Request) {
+		if req.URL.String() != next {
+			t.Fatalf("expected next URL %q, got %q", next, req.URL.String())
+		}
+		assertAuthorized(t, req)
+	}, response)
+
+	if _, err := client.GetPromoCodes(context.Background(), "123", WithPromoCodesNextURL(next)); err != nil {
+		t.Fatalf("GetPromoCodes() error: %v", err)
+	}
+}
+
+func TestGetPromoCode(t *testing.T) {
+	response := jsonResponse(http.StatusOK, `{"data":{"type":"promoCodes","id":"promo-1","attributes":{"code":"ABC123"}}}`)
+	client := newTestClient(t, func(req *http.Request) {
+		if req.Method != http.MethodGet {
+			t.Fatalf("expected GET, got %s", req.Method)
+		}
+		if req.URL.Path != "/v1/promoCodes/promo-1" {
+			t.Fatalf("expected path /v1/promoCodes/promo-1, got %s", req.URL.Path)
+		}
+		assertAuthorized(t, req)
+	}, response)
+
+	if _, err := client.GetPromoCode(context.Background(), "promo-1"); err != nil {
+		t.Fatalf("GetPromoCode() error: %v", err)
+	}
+}
+
+func TestCreatePromoCodes_SendsRequest(t *testing.T) {
+	response := jsonResponse(http.StatusCreated, `{"data":[{"type":"promoCodes","id":"promo-1","attributes":{"code":"ABC123"}}]}`)
+	client := newTestClient(t, func(req *http.Request) {
+		if req.Method != http.MethodPost {
+			t.Fatalf("expected POST, got %s", req.Method)
+		}
+		if req.URL.Path != "/v1/promoCodes" {
+			t.Fatalf("expected path /v1/promoCodes, got %s", req.URL.Path)
+		}
+		var payload struct {
+			Data struct {
+				Type       string `json:"type"`
+				Attributes struct {
+					ProductType string `json:"productType"`
+					Quantity    int    `json:"quantity"`
+				} `json:"attributes"`
+				Relationships struct {
+					App struct {
+						Data struct {
+							Type string `json:"type"`
+							ID   string `json:"id"`
+						} `json:"data"`
+					} `json:"app"`
+				} `json:"relationships"`
+			} `json:"data"`
+		}
+		if err := json.NewDecoder(req.Body).Decode(&payload); err != nil {
+			t.Fatalf("decode error: %v", err)
+		}
+		if payload.Data.Type != "promoCodes" {
+			t.Fatalf("expected type=promoCodes, got %q", payload.Data.Type)
+		}
+		if payload.Data.Attributes.ProductType != "APP" {
+			t.Fatalf("expected productType=APP, got %q", payload.Data.Attributes.ProductType)
+		}
+		if payload.Data.Attributes.Quantity != 5 {
+			t.Fatalf("expected quantity=5, got %d", payload.Data.Attributes.Quantity)
+		}
+		if payload.Data.Relationships.App.Data.Type != "apps" {
+			t.Fatalf("expected app type=apps, got %q", payload.Data.Relationships.App.Data.Type)
+		}
+		if payload.Data.Relationships.App.Data.ID != "APP_ID_123" {
+			t.Fatalf("expected app id=APP_ID_123, got %q", payload.Data.Relationships.App.Data.ID)
+		}
+		assertAuthorized(t, req)
+	}, response)
+
+	req := PromoCodeCreateRequest{
+		Data: PromoCodeCreateData{
+			Type: ResourceTypePromoCodes,
+			Attributes: PromoCodeCreateAttributes{
+				ProductType: PromoCodeProductTypeApp,
+				Quantity:    5,
+			},
+			Relationships: PromoCodeCreateRelationships{
+				App: Relationship{
+					Data: ResourceData{
+						Type: ResourceTypeApps,
+						ID:   "APP_ID_123",
+					},
+				},
+			},
+		},
+	}
+	if _, err := client.CreatePromoCodes(context.Background(), req); err != nil {
+		t.Fatalf("CreatePromoCodes() error: %v", err)
+	}
+}
+
 func TestGetBuilds_WithSortAndLimit(t *testing.T) {
 	response := jsonResponse(http.StatusOK, `{"data":[{"type":"builds","id":"1","attributes":{"version":"1.0","uploadedDate":"2026-01-20T00:00:00Z"}}]}`)
 	client := newTestClient(t, func(req *http.Request) {

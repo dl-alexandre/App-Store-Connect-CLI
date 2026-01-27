@@ -1,4 +1,4 @@
-# CLAUDE.md
+# AGENTS.md
 
 A fast, lightweight, AI-agent-friendly CLI for App Store Connect. Built in Go with [ffcli](https://github.com/peterbourgon/ff).
 

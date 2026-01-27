@@ -162,7 +162,7 @@ func (c *Client) CreateSubscription(ctx context.Context, groupID string, attrs S
 			Type:       ResourceTypeSubscriptions,
 			Attributes: attrs,
 			Relationships: &SubscriptionRelationships{
-				SubscriptionGroup: &Relationship{
+				Group: &Relationship{
 					Data: ResourceData{
 						Type: ResourceTypeSubscriptionGroups,
 						ID:   strings.TrimSpace(groupID),

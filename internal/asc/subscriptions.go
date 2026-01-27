@@ -84,7 +84,7 @@ type SubscriptionUpdateAttributes struct {
 
 // SubscriptionRelationships describes relationships for subscriptions.
 type SubscriptionRelationships struct {
-	SubscriptionGroup *Relationship `json:"subscriptionGroup"`
+	Group *Relationship `json:"group"`
 }
 
 // SubscriptionCreateData is the data portion of a subscription create request.

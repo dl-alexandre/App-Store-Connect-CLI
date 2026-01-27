@@ -3018,11 +3018,11 @@ func TestCreateSubscription(t *testing.T) {
 		if payload.Data.Attributes.Name != "Monthly" || payload.Data.Attributes.ProductID != "com.example.sub.monthly" {
 			t.Fatalf("unexpected attributes: %+v", payload.Data.Attributes)
 		}
-		if payload.Data.Relationships == nil || payload.Data.Relationships.SubscriptionGroup == nil {
-			t.Fatalf("expected subscriptionGroup relationship")
+		if payload.Data.Relationships == nil || payload.Data.Relationships.Group == nil {
+			t.Fatalf("expected group relationship")
 		}
-		if payload.Data.Relationships.SubscriptionGroup.Data.Type != ResourceTypeSubscriptionGroups || payload.Data.Relationships.SubscriptionGroup.Data.ID != "group-1" {
-			t.Fatalf("unexpected relationship: %+v", payload.Data.Relationships.SubscriptionGroup.Data)
+		if payload.Data.Relationships.Group.Data.Type != ResourceTypeSubscriptionGroups || payload.Data.Relationships.Group.Data.ID != "group-1" {
+			t.Fatalf("unexpected relationship: %+v", payload.Data.Relationships.Group.Data)
 		}
 		assertAuthorized(t, req)
 	}, response)

@@ -97,6 +97,12 @@ update-deps:
 	$(GO) get -u ./...
 	$(GO) mod tidy
 
+# Update OpenAPI index
+.PHONY: update-openapi
+update-openapi:
+	@echo "$(BLUE)Updating OpenAPI paths index...$(NC)"
+	python scripts/update-openapi-index.py
+
 # Clean build artifacts
 .PHONY: clean
 clean:
@@ -147,6 +153,7 @@ help:
 	@echo "  format         Format code"
 	@echo "  deps           Install dependencies"
 	@echo "  update-deps    Update dependencies"
+	@echo "  update-openapi Update OpenAPI paths index"
 	@echo "  clean          Clean build artifacts"
 	@echo "  install        Install binary"
 	@echo "  uninstall      Uninstall binary"

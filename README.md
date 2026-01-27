@@ -774,6 +774,7 @@ make install  # Installs to /usr/local/bin
 
 - [CLAUDE.md](CLAUDE.md) - Development guidelines for AI assistants
 - [CONTRIBUTING.md](CONTRIBUTING.md) - Contribution guidelines
+- [docs/openapi/README.md](docs/openapi/README.md) - Offline OpenAPI snapshot + update steps
 
 ## Security
 

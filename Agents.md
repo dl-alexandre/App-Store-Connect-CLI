@@ -26,6 +26,12 @@ Do not memorize commands. Always check `--help` for the current interface.
 When looking up App Store Connect API docs, prefer the `sosumi.ai` mirror instead of `developer.apple.com`.
 Replace `https://developer.apple.com/documentation/appstoreconnectapi/...` with `https://sosumi.ai/documentation/appstoreconnectapi/...`.
 
+## OpenAPI (offline)
+
+For endpoint existence and request/response schemas, use the offline snapshot:
+`docs/openapi/latest.json` and the quick index `docs/openapi/paths.txt`.
+Update instructions live in `docs/openapi/README.md`.
+
 ## Build & Test
 
 ```bash

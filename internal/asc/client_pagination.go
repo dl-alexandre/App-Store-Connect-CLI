@@ -161,6 +161,7 @@ func PaginateAll(ctx context.Context, firstPage PaginatedResponse, fetchNext Pag
 	}
 
 	page := 1
+	seenNext := make(map[string]struct{})
 	for {
 		// Aggregate data from current page using reflection over the Data field.
 		// This keeps aggregation generic while still validating type compatibility.
@@ -174,6 +175,10 @@ func PaginateAll(ctx context.Context, firstPage PaginatedResponse, fetchNext Pag
 			break
 		}
 
+		if _, ok := seenNext[links.Next]; ok {
+			return result, fmt.Errorf("page %d: detected repeated pagination URL", page+1)
+		}
+		seenNext[links.Next] = struct{}{}
 		page++
 
 		// Fetch next page

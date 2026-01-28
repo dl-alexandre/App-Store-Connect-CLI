@@ -37,6 +37,15 @@ var (
 	selectedProfile    string
 )
 
+// CleanupTempPrivateKey removes any temporary private key created from env values.
+func CleanupTempPrivateKey() {
+	if privateKeyTempPath == "" {
+		return
+	}
+	_ = os.Remove(privateKeyTempPath)
+	privateKeyTempPath = ""
+}
+
 // Bold returns the string wrapped in ANSI bold codes
 func Bold(s string) string {
 	if !supportsANSI() {

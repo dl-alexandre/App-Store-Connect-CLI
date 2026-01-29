@@ -163,6 +163,12 @@ type AppEncryptionDeclarationsOption func(*appEncryptionDeclarationsQuery)
 // MarketplaceWebhooksOption is a functional option for marketplace webhooks.
 type MarketplaceWebhooksOption func(*marketplaceWebhooksQuery)
 
+// WebhooksOption is a functional option for webhooks list endpoints.
+type WebhooksOption func(*webhooksQuery)
+
+// WebhookDeliveriesOption is a functional option for webhook deliveries endpoints.
+type WebhookDeliveriesOption func(*webhookDeliveriesQuery)
+
 // WithFeedbackDeviceModels filters feedback by device model(s).
 func WithFeedbackDeviceModels(models []string) FeedbackOption {
 	return func(q *feedbackQuery) {
@@ -328,6 +334,105 @@ func WithMarketplaceWebhooksNextURL(next string) MarketplaceWebhooksOption {
 func WithMarketplaceWebhooksFields(fields []string) MarketplaceWebhooksOption {
 	return func(q *marketplaceWebhooksQuery) {
 		q.fields = normalizeList(fields)
+	}
+}
+
+// WithWebhooksLimit sets the max number of webhooks to return.
+func WithWebhooksLimit(limit int) WebhooksOption {
+	return func(q *webhooksQuery) {
+		if limit > 0 {
+			q.limit = limit
+		}
+	}
+}
+
+// WithWebhooksNextURL uses a next page URL directly.
+func WithWebhooksNextURL(next string) WebhooksOption {
+	return func(q *webhooksQuery) {
+		if strings.TrimSpace(next) != "" {
+			q.nextURL = strings.TrimSpace(next)
+		}
+	}
+}
+
+// WithWebhooksFields sets fields[webhooks] for webhook responses.
+func WithWebhooksFields(fields []string) WebhooksOption {
+	return func(q *webhooksQuery) {
+		q.fields = normalizeList(fields)
+	}
+}
+
+// WithWebhooksAppFields sets fields[apps] for webhook responses.
+func WithWebhooksAppFields(fields []string) WebhooksOption {
+	return func(q *webhooksQuery) {
+		q.appFields = normalizeList(fields)
+	}
+}
+
+// WithWebhooksInclude sets include for webhook responses.
+func WithWebhooksInclude(include []string) WebhooksOption {
+	return func(q *webhooksQuery) {
+		q.include = normalizeList(include)
+	}
+}
+
+// WithWebhookDeliveriesLimit sets the max number of webhook deliveries to return.
+func WithWebhookDeliveriesLimit(limit int) WebhookDeliveriesOption {
+	return func(q *webhookDeliveriesQuery) {
+		if limit > 0 {
+			q.limit = limit
+		}
+	}
+}
+
+// WithWebhookDeliveriesNextURL uses a next page URL directly.
+func WithWebhookDeliveriesNextURL(next string) WebhookDeliveriesOption {
+	return func(q *webhookDeliveriesQuery) {
+		if strings.TrimSpace(next) != "" {
+			q.nextURL = strings.TrimSpace(next)
+		}
+	}
+}
+
+// WithWebhookDeliveriesDeliveryStates filters deliveries by state.
+func WithWebhookDeliveriesDeliveryStates(states []string) WebhookDeliveriesOption {
+	return func(q *webhookDeliveriesQuery) {
+		q.deliveryStates = normalizeUpperList(states)
+	}
+}
+
+// WithWebhookDeliveriesCreatedAfter filters deliveries created after or equal to a timestamp.
+func WithWebhookDeliveriesCreatedAfter(values []string) WebhookDeliveriesOption {
+	return func(q *webhookDeliveriesQuery) {
+		q.createdAfter = normalizeList(values)
+	}
+}
+
+// WithWebhookDeliveriesCreatedBefore filters deliveries created before a timestamp.
+func WithWebhookDeliveriesCreatedBefore(values []string) WebhookDeliveriesOption {
+	return func(q *webhookDeliveriesQuery) {
+		q.createdBefore = normalizeList(values)
+	}
+}
+
+// WithWebhookDeliveriesFields sets fields[webhookDeliveries] for delivery responses.
+func WithWebhookDeliveriesFields(fields []string) WebhookDeliveriesOption {
+	return func(q *webhookDeliveriesQuery) {
+		q.fields = normalizeList(fields)
+	}
+}
+
+// WithWebhookDeliveriesEventFields sets fields[webhookEvents] for delivery responses.
+func WithWebhookDeliveriesEventFields(fields []string) WebhookDeliveriesOption {
+	return func(q *webhookDeliveriesQuery) {
+		q.eventFields = normalizeList(fields)
+	}
+}
+
+// WithWebhookDeliveriesInclude sets include for delivery responses.
+func WithWebhookDeliveriesInclude(include []string) WebhookDeliveriesOption {
+	return func(q *webhookDeliveriesQuery) {
+		q.include = normalizeList(include)
 	}
 }
 

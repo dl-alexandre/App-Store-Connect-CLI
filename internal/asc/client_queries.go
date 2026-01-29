@@ -102,6 +102,23 @@ type marketplaceWebhooksQuery struct {
 	fields []string
 }
 
+type webhooksQuery struct {
+	listQuery
+	fields    []string
+	appFields []string
+	include   []string
+}
+
+type webhookDeliveriesQuery struct {
+	listQuery
+	deliveryStates []string
+	createdAfter   []string
+	createdBefore  []string
+	fields         []string
+	eventFields    []string
+	include        []string
+}
+
 type winBackOffersQuery struct {
 	listQuery
 	fields      []string
@@ -819,6 +836,27 @@ func buildSubscriptionOfferCodeOneTimeUseCodesQuery(query *subscriptionOfferCode
 func buildMarketplaceWebhooksQuery(query *marketplaceWebhooksQuery) string {
 	values := url.Values{}
 	addCSV(values, "fields[marketplaceWebhooks]", query.fields)
+	addLimit(values, query.limit)
+	return values.Encode()
+}
+
+func buildWebhooksQuery(query *webhooksQuery) string {
+	values := url.Values{}
+	addCSV(values, "fields[webhooks]", query.fields)
+	addCSV(values, "fields[apps]", query.appFields)
+	addCSV(values, "include", query.include)
+	addLimit(values, query.limit)
+	return values.Encode()
+}
+
+func buildWebhookDeliveriesQuery(query *webhookDeliveriesQuery) string {
+	values := url.Values{}
+	addCSV(values, "filter[deliveryState]", query.deliveryStates)
+	addCSV(values, "filter[createdDateGreaterThanOrEqualTo]", query.createdAfter)
+	addCSV(values, "filter[createdDateLessThan]", query.createdBefore)
+	addCSV(values, "fields[webhookDeliveries]", query.fields)
+	addCSV(values, "fields[webhookEvents]", query.eventFields)
+	addCSV(values, "include", query.include)
 	addLimit(values, query.limit)
 	return values.Encode()
 }

@@ -68,6 +68,9 @@ type BundleIDCapabilitiesOption func(*bundleIDCapabilitiesQuery)
 // PassTypeIDsOption is a functional option for GetPassTypeIDs.
 type PassTypeIDsOption func(*passTypeIDsQuery)
 
+// PassTypeIDOption is a functional option for GetPassTypeID.
+type PassTypeIDOption func(*passTypeIDQuery)
+
 // PassTypeIDCertificatesOption is a functional option for GetPassTypeIDCertificates.
 type PassTypeIDCertificatesOption func(*passTypeIDCertificatesQuery)
 
@@ -1043,6 +1046,16 @@ func WithPassTypeIDsNextURL(next string) PassTypeIDsOption {
 	}
 }
 
+// WithPassTypeIDsFilterIDs filters pass type IDs by ID(s).
+func WithPassTypeIDsFilterIDs(ids []string) PassTypeIDsOption {
+	return func(q *passTypeIDsQuery) {
+		normalized := normalizeList(ids)
+		if len(normalized) > 0 {
+			q.ids = strings.Join(normalized, ",")
+		}
+	}
+}
+
 // WithPassTypeIDsFilterIdentifier filters pass type IDs by identifier (supports CSV).
 func WithPassTypeIDsFilterIdentifier(identifier string) PassTypeIDsOption {
 	return func(q *passTypeIDsQuery) {
@@ -1063,6 +1076,75 @@ func WithPassTypeIDsFilterName(name string) PassTypeIDsOption {
 	}
 }
 
+// WithPassTypeIDsSort sets the sort order for pass type IDs.
+func WithPassTypeIDsSort(sort string) PassTypeIDsOption {
+	return func(q *passTypeIDsQuery) {
+		if strings.TrimSpace(sort) != "" {
+			q.sort = strings.TrimSpace(sort)
+		}
+	}
+}
+
+// WithPassTypeIDsFields sets fields[passTypeIds] for pass type ID responses.
+func WithPassTypeIDsFields(fields []string) PassTypeIDsOption {
+	return func(q *passTypeIDsQuery) {
+		q.fields = normalizeList(fields)
+	}
+}
+
+// WithPassTypeIDsCertificateFields sets fields[certificates] for included certificates.
+func WithPassTypeIDsCertificateFields(fields []string) PassTypeIDsOption {
+	return func(q *passTypeIDsQuery) {
+		q.certificateFields = normalizeList(fields)
+	}
+}
+
+// WithPassTypeIDsInclude sets include for pass type ID responses.
+func WithPassTypeIDsInclude(include []string) PassTypeIDsOption {
+	return func(q *passTypeIDsQuery) {
+		q.include = normalizeList(include)
+	}
+}
+
+// WithPassTypeIDsCertificatesLimit sets limit[certificates] for included certificates.
+func WithPassTypeIDsCertificatesLimit(limit int) PassTypeIDsOption {
+	return func(q *passTypeIDsQuery) {
+		if limit > 0 {
+			q.certificatesLimit = limit
+		}
+	}
+}
+
+// WithPassTypeIDFields sets fields[passTypeIds] for pass type ID responses.
+func WithPassTypeIDFields(fields []string) PassTypeIDOption {
+	return func(q *passTypeIDQuery) {
+		q.fields = normalizeList(fields)
+	}
+}
+
+// WithPassTypeIDCertificateFields sets fields[certificates] for included certificates.
+func WithPassTypeIDCertificateFields(fields []string) PassTypeIDOption {
+	return func(q *passTypeIDQuery) {
+		q.certificateFields = normalizeList(fields)
+	}
+}
+
+// WithPassTypeIDInclude sets include for pass type ID responses.
+func WithPassTypeIDInclude(include []string) PassTypeIDOption {
+	return func(q *passTypeIDQuery) {
+		q.include = normalizeList(include)
+	}
+}
+
+// WithPassTypeIDCertificatesIncludeLimit sets limit[certificates] for included certificates.
+func WithPassTypeIDCertificatesIncludeLimit(limit int) PassTypeIDOption {
+	return func(q *passTypeIDQuery) {
+		if limit > 0 {
+			q.certificatesLimit = limit
+		}
+	}
+}
+
 // WithPassTypeIDCertificatesLimit sets the max number of certificates to return.
 func WithPassTypeIDCertificatesLimit(limit int) PassTypeIDCertificatesOption {
 	return func(q *passTypeIDCertificatesQuery) {
@@ -1078,6 +1160,64 @@ func WithPassTypeIDCertificatesNextURL(next string) PassTypeIDCertificatesOption
 		if strings.TrimSpace(next) != "" {
 			q.nextURL = strings.TrimSpace(next)
 		}
+	}
+}
+
+// WithPassTypeIDCertificatesFilterDisplayNames filters certificates by display name(s).
+func WithPassTypeIDCertificatesFilterDisplayNames(names []string) PassTypeIDCertificatesOption {
+	return func(q *passTypeIDCertificatesQuery) {
+		q.displayNames = normalizeList(names)
+	}
+}
+
+// WithPassTypeIDCertificatesFilterCertificateTypes filters certificates by type(s).
+func WithPassTypeIDCertificatesFilterCertificateTypes(types []string) PassTypeIDCertificatesOption {
+	return func(q *passTypeIDCertificatesQuery) {
+		q.certificateTypes = normalizeUpperList(types)
+	}
+}
+
+// WithPassTypeIDCertificatesFilterSerialNumbers filters certificates by serial number(s).
+func WithPassTypeIDCertificatesFilterSerialNumbers(serials []string) PassTypeIDCertificatesOption {
+	return func(q *passTypeIDCertificatesQuery) {
+		q.serialNumbers = normalizeList(serials)
+	}
+}
+
+// WithPassTypeIDCertificatesFilterIDs filters certificates by ID(s).
+func WithPassTypeIDCertificatesFilterIDs(ids []string) PassTypeIDCertificatesOption {
+	return func(q *passTypeIDCertificatesQuery) {
+		q.ids = normalizeList(ids)
+	}
+}
+
+// WithPassTypeIDCertificatesSort sets the sort order for certificates.
+func WithPassTypeIDCertificatesSort(sort string) PassTypeIDCertificatesOption {
+	return func(q *passTypeIDCertificatesQuery) {
+		if strings.TrimSpace(sort) != "" {
+			q.sort = strings.TrimSpace(sort)
+		}
+	}
+}
+
+// WithPassTypeIDCertificatesFields sets fields[certificates] for certificate responses.
+func WithPassTypeIDCertificatesFields(fields []string) PassTypeIDCertificatesOption {
+	return func(q *passTypeIDCertificatesQuery) {
+		q.fields = normalizeList(fields)
+	}
+}
+
+// WithPassTypeIDCertificatesPassTypeIDFields sets fields[passTypeIds] for included pass type IDs.
+func WithPassTypeIDCertificatesPassTypeIDFields(fields []string) PassTypeIDCertificatesOption {
+	return func(q *passTypeIDCertificatesQuery) {
+		q.passTypeIDFields = normalizeList(fields)
+	}
+}
+
+// WithPassTypeIDCertificatesInclude sets include for certificate responses.
+func WithPassTypeIDCertificatesInclude(include []string) PassTypeIDCertificatesOption {
+	return func(q *passTypeIDCertificatesQuery) {
+		q.include = normalizeList(include)
 	}
 }
 

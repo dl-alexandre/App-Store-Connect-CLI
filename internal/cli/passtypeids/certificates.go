@@ -42,6 +42,14 @@ func PassTypeIDCertificatesListCommand() *ffcli.Command {
 	fs := flag.NewFlagSet("list", flag.ExitOnError)
 
 	passTypeID := fs.String("pass-type-id", "", "Pass type ID")
+	displayName := fs.String("display-name", "", "Filter by display name(s), comma-separated")
+	certificateType := fs.String("certificate-type", "", "Filter by certificate type(s), comma-separated")
+	serialNumber := fs.String("serial-number", "", "Filter by serial number(s), comma-separated")
+	ids := fs.String("id", "", "Filter by certificate ID(s), comma-separated")
+	sort := fs.String("sort", "", "Sort by: "+strings.Join(passTypeIDCertificatesSortList(), ", "))
+	fields := fs.String("fields", "", "Fields to include: "+strings.Join(certificateFieldsList(), ", "))
+	passTypeIDFields := fs.String("pass-type-id-fields", "", "Pass type ID fields to include: "+strings.Join(passTypeIDFieldsList(), ", "))
+	include := fs.String("include", "", "Include relationships: "+strings.Join(passTypeIDCertificatesIncludeList(), ", "))
 	limit := fs.Int("limit", 0, "Maximum results per page (1-200)")
 	next := fs.String("next", "", "Fetch next page using a links.next URL")
 	paginate := fs.Bool("paginate", false, "Automatically fetch all pages (aggregate results)")
@@ -71,6 +79,22 @@ Examples:
 			if err := validateNextURL(*next); err != nil {
 				return fmt.Errorf("pass-type-ids certificates list: %w", err)
 			}
+			if err := validateSort(*sort, passTypeIDCertificatesSortList()...); err != nil {
+				return fmt.Errorf("pass-type-ids certificates list: %w", err)
+			}
+
+			fieldsValue, err := normalizeCertificateFields(*fields, "--fields")
+			if err != nil {
+				return fmt.Errorf("pass-type-ids certificates list: %w", err)
+			}
+			passTypeIDFieldsValue, err := normalizePassTypeIDFields(*passTypeIDFields, "--pass-type-id-fields")
+			if err != nil {
+				return fmt.Errorf("pass-type-ids certificates list: %w", err)
+			}
+			includeValue, err := normalizePassTypeIDCertificatesInclude(*include)
+			if err != nil {
+				return fmt.Errorf("pass-type-ids certificates list: %w", err)
+			}
 
 			client, err := getASCClient()
 			if err != nil {
@@ -83,6 +107,34 @@ Examples:
 			opts := []asc.PassTypeIDCertificatesOption{
 				asc.WithPassTypeIDCertificatesLimit(*limit),
 				asc.WithPassTypeIDCertificatesNextURL(*next),
+			}
+			displayNameValues := splitCSV(*displayName)
+			if len(displayNameValues) > 0 {
+				opts = append(opts, asc.WithPassTypeIDCertificatesFilterDisplayNames(displayNameValues))
+			}
+			certificateTypes := splitCSVUpper(*certificateType)
+			if len(certificateTypes) > 0 {
+				opts = append(opts, asc.WithPassTypeIDCertificatesFilterCertificateTypes(certificateTypes))
+			}
+			serialNumbers := splitCSV(*serialNumber)
+			if len(serialNumbers) > 0 {
+				opts = append(opts, asc.WithPassTypeIDCertificatesFilterSerialNumbers(serialNumbers))
+			}
+			idsValue := splitCSV(*ids)
+			if len(idsValue) > 0 {
+				opts = append(opts, asc.WithPassTypeIDCertificatesFilterIDs(idsValue))
+			}
+			if strings.TrimSpace(*sort) != "" {
+				opts = append(opts, asc.WithPassTypeIDCertificatesSort(*sort))
+			}
+			if len(fieldsValue) > 0 {
+				opts = append(opts, asc.WithPassTypeIDCertificatesFields(fieldsValue))
+			}
+			if len(passTypeIDFieldsValue) > 0 {
+				opts = append(opts, asc.WithPassTypeIDCertificatesPassTypeIDFields(passTypeIDFieldsValue))
+			}
+			if len(includeValue) > 0 {
+				opts = append(opts, asc.WithPassTypeIDCertificatesInclude(includeValue))
 			}
 
 			if *paginate {

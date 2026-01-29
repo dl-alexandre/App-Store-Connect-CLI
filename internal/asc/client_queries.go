@@ -165,12 +165,33 @@ type bundleIDCapabilitiesQuery struct {
 
 type passTypeIDsQuery struct {
 	listQuery
-	identifier string
-	name       string
+	ids               string
+	identifier        string
+	name              string
+	sort              string
+	fields            []string
+	certificateFields []string
+	include           []string
+	certificatesLimit int
+}
+
+type passTypeIDQuery struct {
+	fields            []string
+	certificateFields []string
+	include           []string
+	certificatesLimit int
 }
 
 type passTypeIDCertificatesQuery struct {
 	listQuery
+	displayNames     []string
+	certificateTypes []string
+	serialNumbers    []string
+	ids              []string
+	sort             string
+	fields           []string
+	passTypeIDFields []string
+	include          []string
 }
 
 type certificatesQuery struct {
@@ -464,13 +485,36 @@ func buildBundleIDsQuery(query *bundleIDsQuery) string {
 
 func buildPassTypeIDsQuery(query *passTypeIDsQuery) string {
 	values := url.Values{}
+	if strings.TrimSpace(query.ids) != "" {
+		values.Set("filter[id]", strings.TrimSpace(query.ids))
+	}
 	if strings.TrimSpace(query.identifier) != "" {
 		values.Set("filter[identifier]", strings.TrimSpace(query.identifier))
 	}
 	if strings.TrimSpace(query.name) != "" {
 		values.Set("filter[name]", strings.TrimSpace(query.name))
 	}
+	if strings.TrimSpace(query.sort) != "" {
+		values.Set("sort", strings.TrimSpace(query.sort))
+	}
+	addCSV(values, "fields[passTypeIds]", query.fields)
+	addCSV(values, "fields[certificates]", query.certificateFields)
+	addCSV(values, "include", query.include)
 	addLimit(values, query.limit)
+	if query.certificatesLimit > 0 {
+		values.Set("limit[certificates]", strconv.Itoa(query.certificatesLimit))
+	}
+	return values.Encode()
+}
+
+func buildPassTypeIDQuery(query *passTypeIDQuery) string {
+	values := url.Values{}
+	addCSV(values, "fields[passTypeIds]", query.fields)
+	addCSV(values, "fields[certificates]", query.certificateFields)
+	addCSV(values, "include", query.include)
+	if query.certificatesLimit > 0 {
+		values.Set("limit[certificates]", strconv.Itoa(query.certificatesLimit))
+	}
 	return values.Encode()
 }
 
@@ -488,6 +532,16 @@ func buildCertificatesQuery(query *certificatesQuery) string {
 
 func buildPassTypeIDCertificatesQuery(query *passTypeIDCertificatesQuery) string {
 	values := url.Values{}
+	addCSV(values, "filter[displayName]", query.displayNames)
+	addCSV(values, "filter[certificateType]", query.certificateTypes)
+	addCSV(values, "filter[serialNumber]", query.serialNumbers)
+	addCSV(values, "filter[id]", query.ids)
+	if strings.TrimSpace(query.sort) != "" {
+		values.Set("sort", strings.TrimSpace(query.sort))
+	}
+	addCSV(values, "fields[certificates]", query.fields)
+	addCSV(values, "fields[passTypeIds]", query.passTypeIDFields)
+	addCSV(values, "include", query.include)
 	addLimit(values, query.limit)
 	return values.Encode()
 }

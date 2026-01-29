@@ -14,7 +14,7 @@ type PassTypeIDCreateAttributes struct {
 
 // PassTypeIDUpdateAttributes describes attributes for updating a pass type ID.
 type PassTypeIDUpdateAttributes struct {
-	Name string `json:"name,omitempty"`
+	Name *NullableString `json:"name,omitempty"`
 }
 
 // PassTypeIDCreateData is the data portion of a pass type ID create request.

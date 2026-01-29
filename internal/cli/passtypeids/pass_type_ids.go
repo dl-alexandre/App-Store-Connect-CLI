@@ -49,8 +49,14 @@ Examples:
 func PassTypeIDsListCommand() *ffcli.Command {
 	fs := flag.NewFlagSet("list", flag.ExitOnError)
 
+	ids := fs.String("id", "", "Filter by pass type ID(s), comma-separated")
 	identifier := fs.String("identifier", "", "Filter by identifier (comma-separated)")
 	name := fs.String("name", "", "Filter by name (comma-separated)")
+	sort := fs.String("sort", "", "Sort by: "+strings.Join(passTypeIDSortList(), ", "))
+	fields := fs.String("fields", "", "Fields to include: "+strings.Join(passTypeIDFieldsList(), ", "))
+	certificateFields := fs.String("certificate-fields", "", "Certificate fields to include: "+strings.Join(certificateFieldsList(), ", "))
+	include := fs.String("include", "", "Include relationships: "+strings.Join(passTypeIDIncludeList(), ", "))
+	certificatesLimit := fs.Int("limit-certificates", 0, "Maximum included certificates (1-50)")
 	limit := fs.Int("limit", 0, "Maximum results per page (1-200)")
 	next := fs.String("next", "", "Fetch next page using a links.next URL")
 	paginate := fs.Bool("paginate", false, "Automatically fetch all pages (aggregate results)")
@@ -65,6 +71,7 @@ func PassTypeIDsListCommand() *ffcli.Command {
 
 Examples:
   asc pass-type-ids list
+  asc pass-type-ids list --id "PASS_ID"
   asc pass-type-ids list --identifier "pass.com.example"
   asc pass-type-ids list --name "Example"
   asc pass-type-ids list --paginate`,
@@ -74,7 +81,26 @@ Examples:
 			if *limit != 0 && (*limit < 1 || *limit > 200) {
 				return fmt.Errorf("pass-type-ids list: --limit must be between 1 and 200")
 			}
+			if *certificatesLimit != 0 && (*certificatesLimit < 1 || *certificatesLimit > 50) {
+				return fmt.Errorf("pass-type-ids list: --limit-certificates must be between 1 and 50")
+			}
 			if err := validateNextURL(*next); err != nil {
+				return fmt.Errorf("pass-type-ids list: %w", err)
+			}
+			if err := validateSort(*sort, passTypeIDSortList()...); err != nil {
+				return fmt.Errorf("pass-type-ids list: %w", err)
+			}
+
+			fieldsValue, err := normalizePassTypeIDFields(*fields, "--fields")
+			if err != nil {
+				return fmt.Errorf("pass-type-ids list: %w", err)
+			}
+			certificateFieldsValue, err := normalizeCertificateFields(*certificateFields, "--certificate-fields")
+			if err != nil {
+				return fmt.Errorf("pass-type-ids list: %w", err)
+			}
+			includeValue, err := normalizePassTypeIDInclude(*include)
+			if err != nil {
 				return fmt.Errorf("pass-type-ids list: %w", err)
 			}
 
@@ -90,11 +116,30 @@ Examples:
 				asc.WithPassTypeIDsLimit(*limit),
 				asc.WithPassTypeIDsNextURL(*next),
 			}
+			idsValue := splitCSV(*ids)
+			if len(idsValue) > 0 {
+				opts = append(opts, asc.WithPassTypeIDsFilterIDs(idsValue))
+			}
 			if strings.TrimSpace(*identifier) != "" {
 				opts = append(opts, asc.WithPassTypeIDsFilterIdentifier(*identifier))
 			}
 			if strings.TrimSpace(*name) != "" {
 				opts = append(opts, asc.WithPassTypeIDsFilterName(*name))
+			}
+			if strings.TrimSpace(*sort) != "" {
+				opts = append(opts, asc.WithPassTypeIDsSort(*sort))
+			}
+			if len(fieldsValue) > 0 {
+				opts = append(opts, asc.WithPassTypeIDsFields(fieldsValue))
+			}
+			if len(certificateFieldsValue) > 0 {
+				opts = append(opts, asc.WithPassTypeIDsCertificateFields(certificateFieldsValue))
+			}
+			if len(includeValue) > 0 {
+				opts = append(opts, asc.WithPassTypeIDsInclude(includeValue))
+			}
+			if *certificatesLimit > 0 {
+				opts = append(opts, asc.WithPassTypeIDsCertificatesLimit(*certificatesLimit))
 			}
 
 			if *paginate {
@@ -129,6 +174,10 @@ func PassTypeIDsGetCommand() *ffcli.Command {
 	fs := flag.NewFlagSet("get", flag.ExitOnError)
 
 	passTypeID := fs.String("pass-type-id", "", "Pass type ID")
+	fields := fs.String("fields", "", "Fields to include: "+strings.Join(passTypeIDFieldsList(), ", "))
+	certificateFields := fs.String("certificate-fields", "", "Certificate fields to include: "+strings.Join(certificateFieldsList(), ", "))
+	include := fs.String("include", "", "Include relationships: "+strings.Join(passTypeIDIncludeList(), ", "))
+	certificatesLimit := fs.Int("limit-certificates", 0, "Maximum included certificates (1-50)")
 	output := fs.String("output", "json", "Output format: json (default), table, markdown")
 	pretty := fs.Bool("pretty", false, "Pretty-print JSON output")
 
@@ -143,6 +192,23 @@ Examples:
 		FlagSet:   fs,
 		UsageFunc: DefaultUsageFunc,
 		Exec: func(ctx context.Context, args []string) error {
+			if *certificatesLimit != 0 && (*certificatesLimit < 1 || *certificatesLimit > 50) {
+				return fmt.Errorf("pass-type-ids get: --limit-certificates must be between 1 and 50")
+			}
+
+			fieldsValue, err := normalizePassTypeIDFields(*fields, "--fields")
+			if err != nil {
+				return fmt.Errorf("pass-type-ids get: %w", err)
+			}
+			certificateFieldsValue, err := normalizeCertificateFields(*certificateFields, "--certificate-fields")
+			if err != nil {
+				return fmt.Errorf("pass-type-ids get: %w", err)
+			}
+			includeValue, err := normalizePassTypeIDInclude(*include)
+			if err != nil {
+				return fmt.Errorf("pass-type-ids get: %w", err)
+			}
+
 			passTypeIDValue := strings.TrimSpace(*passTypeID)
 			if passTypeIDValue == "" {
 				fmt.Fprintln(os.Stderr, "Error: --pass-type-id is required")
@@ -157,7 +223,21 @@ Examples:
 			requestCtx, cancel := contextWithTimeout(ctx)
 			defer cancel()
 
-			resp, err := client.GetPassTypeID(requestCtx, passTypeIDValue)
+			opts := []asc.PassTypeIDOption{}
+			if len(fieldsValue) > 0 {
+				opts = append(opts, asc.WithPassTypeIDFields(fieldsValue))
+			}
+			if len(certificateFieldsValue) > 0 {
+				opts = append(opts, asc.WithPassTypeIDCertificateFields(certificateFieldsValue))
+			}
+			if len(includeValue) > 0 {
+				opts = append(opts, asc.WithPassTypeIDInclude(includeValue))
+			}
+			if *certificatesLimit > 0 {
+				opts = append(opts, asc.WithPassTypeIDCertificatesIncludeLimit(*certificatesLimit))
+			}
+
+			resp, err := client.GetPassTypeID(requestCtx, passTypeIDValue, opts...)
 			if err != nil {
 				return fmt.Errorf("pass-type-ids get: failed to fetch: %w", err)
 			}
@@ -259,7 +339,9 @@ Examples:
 			requestCtx, cancel := contextWithTimeout(ctx)
 			defer cancel()
 
-			attrs := asc.PassTypeIDUpdateAttributes{Name: nameValue}
+			attrs := asc.PassTypeIDUpdateAttributes{
+				Name: &asc.NullableString{Value: &nameValue},
+			}
 			resp, err := client.UpdatePassTypeID(requestCtx, passTypeIDValue, attrs)
 			if err != nil {
 				return fmt.Errorf("pass-type-ids update: failed to update: %w", err)
@@ -319,5 +401,107 @@ Examples:
 
 			return printOutput(result, *output, *pretty)
 		},
+	}
+}
+
+func normalizePassTypeIDFields(value, flagName string) ([]string, error) {
+	fields := splitCSV(value)
+	if len(fields) == 0 {
+		return nil, nil
+	}
+	allowed := map[string]struct{}{}
+	for _, field := range passTypeIDFieldsList() {
+		allowed[field] = struct{}{}
+	}
+	for _, field := range fields {
+		if _, ok := allowed[field]; !ok {
+			return nil, fmt.Errorf("%s must be one of: %s", flagName, strings.Join(passTypeIDFieldsList(), ", "))
+		}
+	}
+	return fields, nil
+}
+
+func normalizeCertificateFields(value, flagName string) ([]string, error) {
+	fields := splitCSV(value)
+	if len(fields) == 0 {
+		return nil, nil
+	}
+	allowed := map[string]struct{}{}
+	for _, field := range certificateFieldsList() {
+		allowed[field] = struct{}{}
+	}
+	for _, field := range fields {
+		if _, ok := allowed[field]; !ok {
+			return nil, fmt.Errorf("%s must be one of: %s", flagName, strings.Join(certificateFieldsList(), ", "))
+		}
+	}
+	return fields, nil
+}
+
+func normalizePassTypeIDInclude(value string) ([]string, error) {
+	return normalizeInclude(value, passTypeIDIncludeList(), "--include")
+}
+
+func normalizePassTypeIDCertificatesInclude(value string) ([]string, error) {
+	return normalizeInclude(value, passTypeIDCertificatesIncludeList(), "--include")
+}
+
+func normalizeInclude(value string, allowed []string, flagName string) ([]string, error) {
+	include := splitCSV(value)
+	if len(include) == 0 {
+		return nil, nil
+	}
+	allowedMap := map[string]struct{}{}
+	for _, option := range allowed {
+		allowedMap[option] = struct{}{}
+	}
+	for _, option := range include {
+		if _, ok := allowedMap[option]; !ok {
+			return nil, fmt.Errorf("%s must be one of: %s", flagName, strings.Join(allowed, ", "))
+		}
+	}
+	return include, nil
+}
+
+func passTypeIDFieldsList() []string {
+	return []string{"name", "identifier", "certificates"}
+}
+
+func certificateFieldsList() []string {
+	return []string{
+		"name",
+		"certificateType",
+		"displayName",
+		"serialNumber",
+		"platform",
+		"expirationDate",
+		"certificateContent",
+		"activated",
+		"passTypeId",
+	}
+}
+
+func passTypeIDIncludeList() []string {
+	return []string{"certificates"}
+}
+
+func passTypeIDCertificatesIncludeList() []string {
+	return []string{"passTypeId"}
+}
+
+func passTypeIDSortList() []string {
+	return []string{"name", "-name", "identifier", "-identifier", "id", "-id"}
+}
+
+func passTypeIDCertificatesSortList() []string {
+	return []string{
+		"displayName",
+		"-displayName",
+		"certificateType",
+		"-certificateType",
+		"serialNumber",
+		"-serialNumber",
+		"id",
+		"-id",
 	}
 }

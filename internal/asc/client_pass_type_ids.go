@@ -39,9 +39,17 @@ func (c *Client) GetPassTypeIDs(ctx context.Context, opts ...PassTypeIDsOption) 
 }
 
 // GetPassTypeID retrieves a single pass type ID by ID.
-func (c *Client) GetPassTypeID(ctx context.Context, id string) (*PassTypeIDResponse, error) {
+func (c *Client) GetPassTypeID(ctx context.Context, id string, opts ...PassTypeIDOption) (*PassTypeIDResponse, error) {
 	id = strings.TrimSpace(id)
+	query := &passTypeIDQuery{}
+	for _, opt := range opts {
+		opt(query)
+	}
+
 	path := fmt.Sprintf("/v1/passTypeIds/%s", id)
+	if queryString := buildPassTypeIDQuery(query); queryString != "" {
+		path += "?" + queryString
+	}
 	data, err := c.do(ctx, "GET", path, nil)
 	if err != nil {
 		return nil, err

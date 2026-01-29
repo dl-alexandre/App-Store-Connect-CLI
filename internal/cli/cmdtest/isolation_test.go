@@ -17,7 +17,7 @@ func TestCmdtestIsolationEnvSet(t *testing.T) {
 	if path != testConfigPath {
 		t.Fatalf("expected ASC_CONFIG_PATH %q, got %q", testConfigPath, path)
 	}
-	if strings.TrimSpace(os.Getenv("ASC_BYPASS_KEYCHAIN")) == "" {
-		t.Fatal("ASC_BYPASS_KEYCHAIN must be set for cmdtest")
+	if strings.TrimSpace(os.Getenv("ASC_BYPASS_KEYCHAIN")) != "1" {
+		t.Fatal("ASC_BYPASS_KEYCHAIN must be set to 1 for cmdtest")
 	}
 }

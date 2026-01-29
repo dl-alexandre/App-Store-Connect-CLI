@@ -23,18 +23,95 @@ func AlternativeDistributionPackageVersionsCommand() *ffcli.Command {
 		LongHelp: `Manage alternative distribution package versions.
 
 Examples:
+  asc alternative-distribution packages versions list --package-id "PACKAGE_ID"
   asc alternative-distribution packages versions get --version-id "VERSION_ID"
   asc alternative-distribution packages versions deltas --version-id "VERSION_ID"
   asc alternative-distribution packages versions variants --version-id "VERSION_ID"`,
 		FlagSet:   fs,
 		UsageFunc: DefaultUsageFunc,
 		Subcommands: []*ffcli.Command{
+			AlternativeDistributionPackageVersionsListCommand(),
 			AlternativeDistributionPackageVersionsGetCommand(),
 			AlternativeDistributionPackageVersionsDeltasCommand(),
 			AlternativeDistributionPackageVersionsVariantsCommand(),
 		},
 		Exec: func(ctx context.Context, args []string) error {
 			return flag.ErrHelp
+		},
+	}
+}
+
+// AlternativeDistributionPackageVersionsListCommand returns the package versions list subcommand.
+func AlternativeDistributionPackageVersionsListCommand() *ffcli.Command {
+	fs := flag.NewFlagSet("list", flag.ExitOnError)
+
+	packageID := fs.String("package-id", "", "Alternative distribution package ID")
+	limit := fs.Int("limit", 0, "Maximum results per page (1-200)")
+	next := fs.String("next", "", "Fetch next page using a links.next URL")
+	paginate := fs.Bool("paginate", false, "Automatically fetch all pages (aggregate results)")
+	output := fs.String("output", "json", "Output format: json (default), table, markdown")
+	pretty := fs.Bool("pretty", false, "Pretty-print JSON output")
+
+	return &ffcli.Command{
+		Name:       "list",
+		ShortUsage: "asc alternative-distribution packages versions list --package-id \"PACKAGE_ID\" [flags]",
+		ShortHelp:  "List alternative distribution package versions.",
+		LongHelp: `List alternative distribution package versions.
+
+Examples:
+  asc alternative-distribution packages versions list --package-id "PACKAGE_ID"
+  asc alternative-distribution packages versions list --package-id "PACKAGE_ID" --paginate`,
+		FlagSet:   fs,
+		UsageFunc: DefaultUsageFunc,
+		Exec: func(ctx context.Context, args []string) error {
+			trimmedID := strings.TrimSpace(*packageID)
+			if trimmedID == "" {
+				fmt.Fprintln(os.Stderr, "Error: --package-id is required")
+				return flag.ErrHelp
+			}
+			if *limit != 0 && (*limit < 1 || *limit > alternativeDistributionMaxLimit) {
+				return fmt.Errorf("alternative-distribution packages versions list: --limit must be between 1 and %d", alternativeDistributionMaxLimit)
+			}
+			if err := validateNextURL(*next); err != nil {
+				return fmt.Errorf("alternative-distribution packages versions list: %w", err)
+			}
+
+			client, err := getASCClient()
+			if err != nil {
+				return fmt.Errorf("alternative-distribution packages versions list: %w", err)
+			}
+
+			requestCtx, cancel := contextWithTimeout(ctx)
+			defer cancel()
+
+			opts := []asc.AlternativeDistributionPackageVersionsOption{
+				asc.WithAlternativeDistributionPackageVersionsLimit(*limit),
+				asc.WithAlternativeDistributionPackageVersionsNextURL(*next),
+			}
+
+			if *paginate {
+				paginateOpts := append(opts, asc.WithAlternativeDistributionPackageVersionsLimit(alternativeDistributionMaxLimit))
+				firstPage, err := client.GetAlternativeDistributionPackageVersions(requestCtx, trimmedID, paginateOpts...)
+				if err != nil {
+					return fmt.Errorf("alternative-distribution packages versions list: failed to fetch: %w", err)
+				}
+
+				resp, err := asc.PaginateAll(requestCtx, firstPage, func(ctx context.Context, nextURL string) (asc.PaginatedResponse, error) {
+					return client.GetAlternativeDistributionPackageVersions(ctx, trimmedID, asc.WithAlternativeDistributionPackageVersionsNextURL(nextURL))
+				})
+				if err != nil {
+					return fmt.Errorf("alternative-distribution packages versions list: %w", err)
+				}
+
+				return printOutput(resp, *output, *pretty)
+			}
+
+			resp, err := client.GetAlternativeDistributionPackageVersions(requestCtx, trimmedID, opts...)
+			if err != nil {
+				return fmt.Errorf("alternative-distribution packages versions list: failed to fetch: %w", err)
+			}
+
+			return printOutput(resp, *output, *pretty)
 		},
 	}
 }

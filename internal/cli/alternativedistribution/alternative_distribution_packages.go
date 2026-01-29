@@ -24,6 +24,7 @@ Examples:
   asc alternative-distribution packages get --package-id "PACKAGE_ID"
   asc alternative-distribution packages create --app-store-version-id "APP_STORE_VERSION_ID"
   asc alternative-distribution packages app-store-version --app-store-version-id "APP_STORE_VERSION_ID"
+  asc alternative-distribution packages versions list --package-id "PACKAGE_ID"
   asc alternative-distribution packages versions get --version-id "VERSION_ID"
   asc alternative-distribution packages versions deltas --version-id "VERSION_ID"
   asc alternative-distribution packages versions variants --version-id "VERSION_ID"

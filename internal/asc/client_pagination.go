@@ -150,6 +150,16 @@ func PaginateAll(ctx context.Context, firstPage PaginatedResponse, fetchNext Pag
 		result = &UserInvitationsResponse{Links: Links{}}
 	case *MarketplaceWebhooksResponse:
 		result = &MarketplaceWebhooksResponse{Links: Links{}}
+	case *AlternativeDistributionDomainsResponse:
+		result = &AlternativeDistributionDomainsResponse{Links: Links{}}
+	case *AlternativeDistributionKeysResponse:
+		result = &AlternativeDistributionKeysResponse{Links: Links{}}
+	case *AlternativeDistributionPackageVersionsResponse:
+		result = &AlternativeDistributionPackageVersionsResponse{Links: Links{}}
+	case *AlternativeDistributionPackageVariantsResponse:
+		result = &AlternativeDistributionPackageVariantsResponse{Links: Links{}}
+	case *AlternativeDistributionPackageDeltasResponse:
+		result = &AlternativeDistributionPackageDeltasResponse{Links: Links{}}
 	case *SandboxTestersResponse:
 		result = &SandboxTestersResponse{Links: Links{}}
 	case *AnalyticsReportRequestsResponse:
@@ -352,6 +362,16 @@ func typeOf(p PaginatedResponse) string {
 		return "UserInvitationsResponse"
 	case *MarketplaceWebhooksResponse:
 		return "MarketplaceWebhooksResponse"
+	case *AlternativeDistributionDomainsResponse:
+		return "AlternativeDistributionDomainsResponse"
+	case *AlternativeDistributionKeysResponse:
+		return "AlternativeDistributionKeysResponse"
+	case *AlternativeDistributionPackageVersionsResponse:
+		return "AlternativeDistributionPackageVersionsResponse"
+	case *AlternativeDistributionPackageVariantsResponse:
+		return "AlternativeDistributionPackageVariantsResponse"
+	case *AlternativeDistributionPackageDeltasResponse:
+		return "AlternativeDistributionPackageDeltasResponse"
 	case *SandboxTestersResponse:
 		return "SandboxTestersResponse"
 	case *AnalyticsReportRequestsResponse:

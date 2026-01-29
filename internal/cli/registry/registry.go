@@ -9,6 +9,7 @@ import (
 	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/accessibility"
 	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/actors"
 	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/agerating"
+	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/alternativedistribution"
 	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/analytics"
 	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/androidiosmapping"
 	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/apps"
@@ -89,6 +90,7 @@ func Subcommands(version string) []*ffcli.Command {
 		apps.AppSetupCommand(),
 		apps.AppTagsCommand(),
 		marketplace.MarketplaceCommand(),
+		alternativedistribution.Command(),
 		nominations.NominationsCommand(),
 		bundleids.BundleIDsCommand(),
 		merchantids.MerchantIDsCommand(),

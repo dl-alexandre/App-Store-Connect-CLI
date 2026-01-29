@@ -102,6 +102,31 @@ type marketplaceWebhooksQuery struct {
 	fields []string
 }
 
+type alternativeDistributionDomainsQuery struct {
+	listQuery
+	fields []string
+}
+
+type alternativeDistributionKeysQuery struct {
+	listQuery
+	fields    []string
+	existsApp *bool
+}
+
+type alternativeDistributionPackageVersionsQuery struct {
+	listQuery
+}
+
+type alternativeDistributionPackageVariantsQuery struct {
+	listQuery
+	fields []string
+}
+
+type alternativeDistributionPackageDeltasQuery struct {
+	listQuery
+	fields []string
+}
+
 type backgroundAssetsQuery struct {
 	listQuery
 	archived             []string
@@ -833,6 +858,43 @@ func buildSubscriptionOfferCodeOneTimeUseCodesQuery(query *subscriptionOfferCode
 func buildMarketplaceWebhooksQuery(query *marketplaceWebhooksQuery) string {
 	values := url.Values{}
 	addCSV(values, "fields[marketplaceWebhooks]", query.fields)
+	addLimit(values, query.limit)
+	return values.Encode()
+}
+
+func buildAlternativeDistributionDomainsQuery(query *alternativeDistributionDomainsQuery) string {
+	values := url.Values{}
+	addCSV(values, "fields[alternativeDistributionDomains]", query.fields)
+	addLimit(values, query.limit)
+	return values.Encode()
+}
+
+func buildAlternativeDistributionKeysQuery(query *alternativeDistributionKeysQuery) string {
+	values := url.Values{}
+	addCSV(values, "fields[alternativeDistributionKeys]", query.fields)
+	if query.existsApp != nil {
+		values.Set("exists[app]", strconv.FormatBool(*query.existsApp))
+	}
+	addLimit(values, query.limit)
+	return values.Encode()
+}
+
+func buildAlternativeDistributionPackageVersionsQuery(query *alternativeDistributionPackageVersionsQuery) string {
+	values := url.Values{}
+	addLimit(values, query.limit)
+	return values.Encode()
+}
+
+func buildAlternativeDistributionPackageVariantsQuery(query *alternativeDistributionPackageVariantsQuery) string {
+	values := url.Values{}
+	addCSV(values, "fields[alternativeDistributionPackageVariants]", query.fields)
+	addLimit(values, query.limit)
+	return values.Encode()
+}
+
+func buildAlternativeDistributionPackageDeltasQuery(query *alternativeDistributionPackageDeltasQuery) string {
+	values := url.Values{}
+	addCSV(values, "fields[alternativeDistributionPackageDeltas]", query.fields)
 	addLimit(values, query.limit)
 	return values.Encode()
 }

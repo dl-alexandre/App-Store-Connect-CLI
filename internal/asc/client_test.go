@@ -1301,6 +1301,92 @@ func TestBuildAndroidToIosAppMappingDetailsQuery(t *testing.T) {
 	}
 }
 
+func TestBuildAlternativeDistributionDomainsQuery(t *testing.T) {
+	query := &alternativeDistributionDomainsQuery{
+		listQuery: listQuery{limit: 20},
+		fields:    []string{"domain", "referenceName"},
+	}
+	values, err := url.ParseQuery(buildAlternativeDistributionDomainsQuery(query))
+	if err != nil {
+		t.Fatalf("ParseQuery() error: %v", err)
+	}
+	if values.Get("limit") != "20" {
+		t.Fatalf("expected limit=20, got %q", values.Get("limit"))
+	}
+	if values.Get("fields[alternativeDistributionDomains]") != "domain,referenceName" {
+		t.Fatalf("unexpected fields, got %q", values.Get("fields[alternativeDistributionDomains]"))
+	}
+}
+
+func TestBuildAlternativeDistributionKeysQuery(t *testing.T) {
+	existsApp := true
+	query := &alternativeDistributionKeysQuery{
+		listQuery: listQuery{limit: 15},
+		fields:    []string{"publicKey"},
+		existsApp: &existsApp,
+	}
+	values, err := url.ParseQuery(buildAlternativeDistributionKeysQuery(query))
+	if err != nil {
+		t.Fatalf("ParseQuery() error: %v", err)
+	}
+	if values.Get("limit") != "15" {
+		t.Fatalf("expected limit=15, got %q", values.Get("limit"))
+	}
+	if values.Get("fields[alternativeDistributionKeys]") != "publicKey" {
+		t.Fatalf("unexpected fields, got %q", values.Get("fields[alternativeDistributionKeys]"))
+	}
+	if values.Get("exists[app]") != "true" {
+		t.Fatalf("expected exists[app]=true, got %q", values.Get("exists[app]"))
+	}
+}
+
+func TestBuildAlternativeDistributionPackageVersionsQuery(t *testing.T) {
+	query := &alternativeDistributionPackageVersionsQuery{
+		listQuery: listQuery{limit: 7},
+	}
+	values, err := url.ParseQuery(buildAlternativeDistributionPackageVersionsQuery(query))
+	if err != nil {
+		t.Fatalf("ParseQuery() error: %v", err)
+	}
+	if values.Get("limit") != "7" {
+		t.Fatalf("expected limit=7, got %q", values.Get("limit"))
+	}
+}
+
+func TestBuildAlternativeDistributionPackageVariantsQuery(t *testing.T) {
+	query := &alternativeDistributionPackageVariantsQuery{
+		listQuery: listQuery{limit: 9},
+		fields:    []string{"url", "fileChecksum"},
+	}
+	values, err := url.ParseQuery(buildAlternativeDistributionPackageVariantsQuery(query))
+	if err != nil {
+		t.Fatalf("ParseQuery() error: %v", err)
+	}
+	if values.Get("limit") != "9" {
+		t.Fatalf("expected limit=9, got %q", values.Get("limit"))
+	}
+	if values.Get("fields[alternativeDistributionPackageVariants]") != "url,fileChecksum" {
+		t.Fatalf("unexpected fields, got %q", values.Get("fields[alternativeDistributionPackageVariants]"))
+	}
+}
+
+func TestBuildAlternativeDistributionPackageDeltasQuery(t *testing.T) {
+	query := &alternativeDistributionPackageDeltasQuery{
+		listQuery: listQuery{limit: 11},
+		fields:    []string{"url", "fileChecksum"},
+	}
+	values, err := url.ParseQuery(buildAlternativeDistributionPackageDeltasQuery(query))
+	if err != nil {
+		t.Fatalf("ParseQuery() error: %v", err)
+	}
+	if values.Get("limit") != "11" {
+		t.Fatalf("expected limit=11, got %q", values.Get("limit"))
+	}
+	if values.Get("fields[alternativeDistributionPackageDeltas]") != "url,fileChecksum" {
+		t.Fatalf("unexpected fields, got %q", values.Get("fields[alternativeDistributionPackageDeltas]"))
+	}
+}
+
 func TestBuildBackgroundAssetsQuery(t *testing.T) {
 	query := &backgroundAssetsQuery{
 		listQuery:            listQuery{limit: 10},

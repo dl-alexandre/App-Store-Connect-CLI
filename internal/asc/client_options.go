@@ -164,6 +164,21 @@ type AppEncryptionDeclarationsOption func(*appEncryptionDeclarationsQuery)
 // MarketplaceWebhooksOption is a functional option for marketplace webhooks.
 type MarketplaceWebhooksOption func(*marketplaceWebhooksQuery)
 
+// AlternativeDistributionDomainsOption is a functional option for alternative distribution domains.
+type AlternativeDistributionDomainsOption func(*alternativeDistributionDomainsQuery)
+
+// AlternativeDistributionKeysOption is a functional option for alternative distribution keys.
+type AlternativeDistributionKeysOption func(*alternativeDistributionKeysQuery)
+
+// AlternativeDistributionPackageVersionsOption is a functional option for package versions list endpoints.
+type AlternativeDistributionPackageVersionsOption func(*alternativeDistributionPackageVersionsQuery)
+
+// AlternativeDistributionPackageVariantsOption is a functional option for package variant list endpoints.
+type AlternativeDistributionPackageVariantsOption func(*alternativeDistributionPackageVariantsQuery)
+
+// AlternativeDistributionPackageDeltasOption is a functional option for package delta list endpoints.
+type AlternativeDistributionPackageDeltasOption func(*alternativeDistributionPackageDeltasQuery)
+
 // BackgroundAssetsOption is a functional option for background assets list endpoints.
 type BackgroundAssetsOption func(*backgroundAssetsQuery)
 
@@ -337,6 +352,131 @@ func WithMarketplaceWebhooksNextURL(next string) MarketplaceWebhooksOption {
 // WithMarketplaceWebhooksFields sets fields[marketplaceWebhooks] for webhook responses.
 func WithMarketplaceWebhooksFields(fields []string) MarketplaceWebhooksOption {
 	return func(q *marketplaceWebhooksQuery) {
+		q.fields = normalizeList(fields)
+	}
+}
+
+// WithAlternativeDistributionDomainsLimit sets the max number of domains to return.
+func WithAlternativeDistributionDomainsLimit(limit int) AlternativeDistributionDomainsOption {
+	return func(q *alternativeDistributionDomainsQuery) {
+		if limit > 0 {
+			q.limit = limit
+		}
+	}
+}
+
+// WithAlternativeDistributionDomainsNextURL uses a next page URL directly.
+func WithAlternativeDistributionDomainsNextURL(next string) AlternativeDistributionDomainsOption {
+	return func(q *alternativeDistributionDomainsQuery) {
+		if strings.TrimSpace(next) != "" {
+			q.nextURL = strings.TrimSpace(next)
+		}
+	}
+}
+
+// WithAlternativeDistributionDomainsFields sets fields[alternativeDistributionDomains] values.
+func WithAlternativeDistributionDomainsFields(fields []string) AlternativeDistributionDomainsOption {
+	return func(q *alternativeDistributionDomainsQuery) {
+		q.fields = normalizeList(fields)
+	}
+}
+
+// WithAlternativeDistributionKeysLimit sets the max number of keys to return.
+func WithAlternativeDistributionKeysLimit(limit int) AlternativeDistributionKeysOption {
+	return func(q *alternativeDistributionKeysQuery) {
+		if limit > 0 {
+			q.limit = limit
+		}
+	}
+}
+
+// WithAlternativeDistributionKeysNextURL uses a next page URL directly.
+func WithAlternativeDistributionKeysNextURL(next string) AlternativeDistributionKeysOption {
+	return func(q *alternativeDistributionKeysQuery) {
+		if strings.TrimSpace(next) != "" {
+			q.nextURL = strings.TrimSpace(next)
+		}
+	}
+}
+
+// WithAlternativeDistributionKeysFields sets fields[alternativeDistributionKeys] values.
+func WithAlternativeDistributionKeysFields(fields []string) AlternativeDistributionKeysOption {
+	return func(q *alternativeDistributionKeysQuery) {
+		q.fields = normalizeList(fields)
+	}
+}
+
+// WithAlternativeDistributionKeysExistsApp filters keys by app existence.
+func WithAlternativeDistributionKeysExistsApp(value bool) AlternativeDistributionKeysOption {
+	return func(q *alternativeDistributionKeysQuery) {
+		q.existsApp = &value
+	}
+}
+
+// WithAlternativeDistributionPackageVersionsLimit sets the max number of package versions to return.
+func WithAlternativeDistributionPackageVersionsLimit(limit int) AlternativeDistributionPackageVersionsOption {
+	return func(q *alternativeDistributionPackageVersionsQuery) {
+		if limit > 0 {
+			q.limit = limit
+		}
+	}
+}
+
+// WithAlternativeDistributionPackageVersionsNextURL uses a next page URL directly.
+func WithAlternativeDistributionPackageVersionsNextURL(next string) AlternativeDistributionPackageVersionsOption {
+	return func(q *alternativeDistributionPackageVersionsQuery) {
+		if strings.TrimSpace(next) != "" {
+			q.nextURL = strings.TrimSpace(next)
+		}
+	}
+}
+
+// WithAlternativeDistributionPackageVariantsLimit sets the max number of package variants to return.
+func WithAlternativeDistributionPackageVariantsLimit(limit int) AlternativeDistributionPackageVariantsOption {
+	return func(q *alternativeDistributionPackageVariantsQuery) {
+		if limit > 0 {
+			q.limit = limit
+		}
+	}
+}
+
+// WithAlternativeDistributionPackageVariantsNextURL uses a next page URL directly.
+func WithAlternativeDistributionPackageVariantsNextURL(next string) AlternativeDistributionPackageVariantsOption {
+	return func(q *alternativeDistributionPackageVariantsQuery) {
+		if strings.TrimSpace(next) != "" {
+			q.nextURL = strings.TrimSpace(next)
+		}
+	}
+}
+
+// WithAlternativeDistributionPackageVariantsFields sets fields[alternativeDistributionPackageVariants].
+func WithAlternativeDistributionPackageVariantsFields(fields []string) AlternativeDistributionPackageVariantsOption {
+	return func(q *alternativeDistributionPackageVariantsQuery) {
+		q.fields = normalizeList(fields)
+	}
+}
+
+// WithAlternativeDistributionPackageDeltasLimit sets the max number of package deltas to return.
+func WithAlternativeDistributionPackageDeltasLimit(limit int) AlternativeDistributionPackageDeltasOption {
+	return func(q *alternativeDistributionPackageDeltasQuery) {
+		if limit > 0 {
+			q.limit = limit
+		}
+	}
+}
+
+// WithAlternativeDistributionPackageDeltasNextURL uses a next page URL directly.
+func WithAlternativeDistributionPackageDeltasNextURL(next string) AlternativeDistributionPackageDeltasOption {
+	return func(q *alternativeDistributionPackageDeltasQuery) {
+		if strings.TrimSpace(next) != "" {
+			q.nextURL = strings.TrimSpace(next)
+		}
+	}
+}
+
+// WithAlternativeDistributionPackageDeltasFields sets fields[alternativeDistributionPackageDeltas].
+func WithAlternativeDistributionPackageDeltasFields(fields []string) AlternativeDistributionPackageDeltasOption {
+	return func(q *alternativeDistributionPackageDeltasQuery) {
 		q.fields = normalizeList(fields)
 	}
 }

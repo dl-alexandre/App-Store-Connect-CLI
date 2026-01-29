@@ -30,6 +30,7 @@ A **fast**, **lightweight**, and **AI-agent friendly** CLI for App Store Connect
   - [Devices](#devices)
   - [App Store](#app-store)
   - [App Tags](#app-tags)
+  - [Alternative Distribution](#alternative-distribution)
   - [Analytics & Sales](#analytics--sales)
   - [Finance Reports](#finance-reports)
   - [Sandbox Testers](#sandbox-testers)
@@ -381,6 +382,29 @@ asc app-tags territories-relationships --id "TAG_ID"
 
 # List tag relationships for an app
 asc app-tags relationships --app "APP_ID"
+```
+
+### Alternative Distribution
+
+```bash
+# List domains and keys
+asc alternative-distribution domains list
+asc alternative-distribution keys list
+
+# Create and delete a domain
+asc alternative-distribution domains create --domain "example.com" --reference-name "Example"
+asc alternative-distribution domains delete --domain-id "DOMAIN_ID" --confirm
+
+# Create a key and fetch the key for an app
+asc alternative-distribution keys create --app "APP_ID" --public-key-path "./key.pem"
+asc alternative-distribution keys app --app "APP_ID"
+
+# Create and fetch packages and versions
+asc alternative-distribution packages create --app-store-version-id "APP_STORE_VERSION_ID"
+asc alternative-distribution packages get --package-id "PACKAGE_ID"
+asc alternative-distribution packages versions get --version-id "VERSION_ID"
+asc alternative-distribution packages versions deltas --version-id "VERSION_ID"
+asc alternative-distribution packages versions variants --version-id "VERSION_ID"
 ```
 
 ### Analytics & Sales

@@ -1,0 +1,214 @@
+package asc
+
+import (
+	"strings"
+	"testing"
+)
+
+func TestPrintTable_AlternativeDistributionDomains(t *testing.T) {
+	resp := &AlternativeDistributionDomainsResponse{
+		Data: []Resource[AlternativeDistributionDomainAttributes]{
+			{
+				ID: "domain-1",
+				Attributes: AlternativeDistributionDomainAttributes{
+					Domain:        "example.com",
+					ReferenceName: "Example",
+					CreatedDate:   "2024-01-01T00:00:00Z",
+				},
+			},
+		},
+	}
+
+	output := captureStdout(t, func() error {
+		return PrintTable(resp)
+	})
+
+	if !strings.Contains(output, "ID") || !strings.Contains(output, "Domain") || !strings.Contains(output, "Reference Name") {
+		t.Fatalf("expected domain headers, got: %s", output)
+	}
+	if !strings.Contains(output, "domain-1") || !strings.Contains(output, "example.com") || !strings.Contains(output, "Example") {
+		t.Fatalf("expected domain values, got: %s", output)
+	}
+}
+
+func TestPrintMarkdown_AlternativeDistributionDomains(t *testing.T) {
+	resp := &AlternativeDistributionDomainsResponse{
+		Data: []Resource[AlternativeDistributionDomainAttributes]{
+			{
+				ID: "domain-1",
+				Attributes: AlternativeDistributionDomainAttributes{
+					Domain:        "example.com",
+					ReferenceName: "Example",
+					CreatedDate:   "2024-01-01T00:00:00Z",
+				},
+			},
+		},
+	}
+
+	output := captureStdout(t, func() error {
+		return PrintMarkdown(resp)
+	})
+
+	if !strings.Contains(output, "| ID | Domain | Reference Name | Created Date |") {
+		t.Fatalf("expected domain header, got: %s", output)
+	}
+	if !strings.Contains(output, "domain-1") || !strings.Contains(output, "example.com") || !strings.Contains(output, "Example") {
+		t.Fatalf("expected domain values, got: %s", output)
+	}
+}
+
+func TestPrintTable_AlternativeDistributionKeys(t *testing.T) {
+	resp := &AlternativeDistributionKeysResponse{
+		Data: []Resource[AlternativeDistributionKeyAttributes]{
+			{
+				ID: "key-1",
+				Attributes: AlternativeDistributionKeyAttributes{
+					PublicKey: "KEYDATA",
+				},
+			},
+		},
+	}
+
+	output := captureStdout(t, func() error {
+		return PrintTable(resp)
+	})
+
+	if !strings.Contains(output, "ID") || !strings.Contains(output, "Public Key") {
+		t.Fatalf("expected key headers, got: %s", output)
+	}
+	if !strings.Contains(output, "key-1") || !strings.Contains(output, "KEYDATA") {
+		t.Fatalf("expected key values, got: %s", output)
+	}
+}
+
+func TestPrintMarkdown_AlternativeDistributionKeys(t *testing.T) {
+	resp := &AlternativeDistributionKeysResponse{
+		Data: []Resource[AlternativeDistributionKeyAttributes]{
+			{
+				ID: "key-1",
+				Attributes: AlternativeDistributionKeyAttributes{
+					PublicKey: "KEYDATA",
+				},
+			},
+		},
+	}
+
+	output := captureStdout(t, func() error {
+		return PrintMarkdown(resp)
+	})
+
+	if !strings.Contains(output, "| ID | Public Key |") {
+		t.Fatalf("expected key header, got: %s", output)
+	}
+	if !strings.Contains(output, "key-1") || !strings.Contains(output, "KEYDATA") {
+		t.Fatalf("expected key values, got: %s", output)
+	}
+}
+
+func TestPrintTable_AlternativeDistributionPackageVariants(t *testing.T) {
+	resp := &AlternativeDistributionPackageVariantsResponse{
+		Data: []Resource[AlternativeDistributionPackageVariantAttributes]{
+			{
+				ID: "variant-1",
+				Attributes: AlternativeDistributionPackageVariantAttributes{
+					URL:                            "https://example.com/variant",
+					URLExpirationDate:              "2024-01-02T00:00:00Z",
+					AlternativeDistributionKeyBlob: "BLOB",
+					FileChecksum:                   "checksum",
+				},
+			},
+		},
+	}
+
+	output := captureStdout(t, func() error {
+		return PrintTable(resp)
+	})
+
+	if !strings.Contains(output, "ID") || !strings.Contains(output, "URL") || !strings.Contains(output, "Key Blob") {
+		t.Fatalf("expected variant headers, got: %s", output)
+	}
+	if !strings.Contains(output, "variant-1") || !strings.Contains(output, "https://example.com/variant") {
+		t.Fatalf("expected variant values, got: %s", output)
+	}
+}
+
+func TestPrintMarkdown_AlternativeDistributionPackageVariants(t *testing.T) {
+	resp := &AlternativeDistributionPackageVariantsResponse{
+		Data: []Resource[AlternativeDistributionPackageVariantAttributes]{
+			{
+				ID: "variant-1",
+				Attributes: AlternativeDistributionPackageVariantAttributes{
+					URL:                            "https://example.com/variant",
+					URLExpirationDate:              "2024-01-02T00:00:00Z",
+					AlternativeDistributionKeyBlob: "BLOB",
+					FileChecksum:                   "checksum",
+				},
+			},
+		},
+	}
+
+	output := captureStdout(t, func() error {
+		return PrintMarkdown(resp)
+	})
+
+	if !strings.Contains(output, "| ID | URL | URL Expiration Date | Key Blob | File Checksum |") {
+		t.Fatalf("expected variant header, got: %s", output)
+	}
+	if !strings.Contains(output, "variant-1") || !strings.Contains(output, "https://example.com/variant") {
+		t.Fatalf("expected variant values, got: %s", output)
+	}
+}
+
+func TestPrintTable_AlternativeDistributionPackageDeltas(t *testing.T) {
+	resp := &AlternativeDistributionPackageDeltasResponse{
+		Data: []Resource[AlternativeDistributionPackageDeltaAttributes]{
+			{
+				ID: "delta-1",
+				Attributes: AlternativeDistributionPackageDeltaAttributes{
+					URL:                            "https://example.com/delta",
+					URLExpirationDate:              "2024-01-03T00:00:00Z",
+					AlternativeDistributionKeyBlob: "BLOB",
+					FileChecksum:                   "checksum",
+				},
+			},
+		},
+	}
+
+	output := captureStdout(t, func() error {
+		return PrintTable(resp)
+	})
+
+	if !strings.Contains(output, "ID") || !strings.Contains(output, "URL") || !strings.Contains(output, "Key Blob") {
+		t.Fatalf("expected delta headers, got: %s", output)
+	}
+	if !strings.Contains(output, "delta-1") || !strings.Contains(output, "https://example.com/delta") {
+		t.Fatalf("expected delta values, got: %s", output)
+	}
+}
+
+func TestPrintMarkdown_AlternativeDistributionPackageDeltas(t *testing.T) {
+	resp := &AlternativeDistributionPackageDeltasResponse{
+		Data: []Resource[AlternativeDistributionPackageDeltaAttributes]{
+			{
+				ID: "delta-1",
+				Attributes: AlternativeDistributionPackageDeltaAttributes{
+					URL:                            "https://example.com/delta",
+					URLExpirationDate:              "2024-01-03T00:00:00Z",
+					AlternativeDistributionKeyBlob: "BLOB",
+					FileChecksum:                   "checksum",
+				},
+			},
+		},
+	}
+
+	output := captureStdout(t, func() error {
+		return PrintMarkdown(resp)
+	})
+
+	if !strings.Contains(output, "| ID | URL | URL Expiration Date | Key Blob | File Checksum |") {
+		t.Fatalf("expected delta header, got: %s", output)
+	}
+	if !strings.Contains(output, "delta-1") || !strings.Contains(output, "https://example.com/delta") {
+		t.Fatalf("expected delta values, got: %s", output)
+	}
+}

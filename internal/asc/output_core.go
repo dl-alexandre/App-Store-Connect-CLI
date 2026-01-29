@@ -389,8 +389,6 @@ func PrintMarkdown(data interface{}) error {
 		return printBetaBuildLocalizationDeleteResultMarkdown(v)
 	case *BetaTesterInvitationResult:
 		return printBetaTesterInvitationResultMarkdown(v)
-	case *SandboxTesterDeleteResult:
-		return printSandboxTesterDeleteResultMarkdown(v)
 	case *SandboxTesterClearHistoryResult:
 		return printSandboxTesterClearHistoryResultMarkdown(v)
 	case *BundleIDDeleteResult:
@@ -831,8 +829,6 @@ func PrintTable(data interface{}) error {
 		return printBetaBuildLocalizationDeleteResultTable(v)
 	case *BetaTesterInvitationResult:
 		return printBetaTesterInvitationResultTable(v)
-	case *SandboxTesterDeleteResult:
-		return printSandboxTesterDeleteResultTable(v)
 	case *SandboxTesterClearHistoryResult:
 		return printSandboxTesterClearHistoryResultTable(v)
 	case *BundleIDDeleteResult:

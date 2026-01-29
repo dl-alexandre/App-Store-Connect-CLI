@@ -7,8 +7,6 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"time"
-	"unicode"
 
 	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/asc"
 )
@@ -22,47 +20,6 @@ func validateSandboxEmail(value string) error {
 		return fmt.Errorf("--email must be a valid email address")
 	}
 	return nil
-}
-
-func validateSandboxPassword(value string) error {
-	trimmed := strings.TrimSpace(value)
-	if len(trimmed) < 8 {
-		return fmt.Errorf("--password must be at least 8 characters")
-	}
-	var hasUpper, hasLower, hasDigit bool
-	for _, r := range trimmed {
-		switch {
-		case unicode.IsUpper(r):
-			hasUpper = true
-		case unicode.IsLower(r):
-			hasLower = true
-		case unicode.IsDigit(r):
-			hasDigit = true
-		}
-	}
-	if !hasUpper || !hasLower || !hasDigit {
-		return fmt.Errorf("--password must include uppercase, lowercase, and a number")
-	}
-	return nil
-}
-
-func validateSandboxSecret(flagName, value string) error {
-	if len(strings.TrimSpace(value)) < 6 {
-		return fmt.Errorf("%s must be at least 6 characters", flagName)
-	}
-	return nil
-}
-
-func normalizeSandboxBirthDate(value string) (string, error) {
-	trimmed := strings.TrimSpace(value)
-	if trimmed == "" {
-		return "", fmt.Errorf("--birth-date is required")
-	}
-	parsed, err := time.Parse("2006-01-02", trimmed)
-	if err != nil {
-		return "", fmt.Errorf("--birth-date must be in YYYY-MM-DD format")
-	}
-	return parsed.Format("2006-01-02"), nil
 }
 
 func normalizeSandboxTerritory(value string) (string, error) {

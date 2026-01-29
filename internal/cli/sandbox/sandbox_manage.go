@@ -10,6 +10,7 @@ import (
 	"github.com/peterbourgon/ff/v3/ffcli"
 
 	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/asc"
+	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/shared"
 )
 
 // SandboxGetCommand returns the sandbox get subcommand.
@@ -145,7 +146,7 @@ func SandboxUpdateCommand() *ffcli.Command {
 	email := fs.String("email", "", "Tester email address")
 	territory := fs.String("territory", "", "App Store territory code (e.g., USA, JPN)")
 	subscriptionRenewalRate := fs.String("subscription-renewal-rate", "", "Subscription renewal rate (MONTHLY_RENEWAL_EVERY_ONE_HOUR, MONTHLY_RENEWAL_EVERY_THIRTY_MINUTES, MONTHLY_RENEWAL_EVERY_FIFTEEN_MINUTES, MONTHLY_RENEWAL_EVERY_FIVE_MINUTES, MONTHLY_RENEWAL_EVERY_THREE_MINUTES)")
-	var interruptPurchases optionalBool
+	var interruptPurchases shared.OptionalBool
 	fs.Var(&interruptPurchases, "interrupt-purchases", "Interrupt purchases (true/false)")
 	output := fs.String("output", "json", "Output format: json (default), table, markdown")
 	pretty := fs.Bool("pretty", false, "Pretty-print JSON output")
@@ -182,7 +183,7 @@ Examples:
 				return fmt.Errorf("sandbox update: %w", err)
 			}
 
-			if !interruptPurchases.set && normalizedTerritory == "" && normalizedRate == "" {
+			if !interruptPurchases.IsSet() && normalizedTerritory == "" && normalizedRate == "" {
 				fmt.Fprintln(os.Stderr, "Error: --territory, --interrupt-purchases, or --subscription-renewal-rate is required")
 				return flag.ErrHelp
 			}
@@ -208,8 +209,8 @@ Examples:
 				territoryValue := normalizedTerritory
 				attrs.Territory = &territoryValue
 			}
-			if interruptPurchases.set {
-				interruptValue := interruptPurchases.value
+			if interruptPurchases.IsSet() {
+				interruptValue := interruptPurchases.Value()
 				attrs.InterruptPurchases = &interruptValue
 			}
 			if normalizedRate != "" {

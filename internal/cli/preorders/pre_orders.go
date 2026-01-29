@@ -12,6 +12,7 @@ import (
 	"github.com/peterbourgon/ff/v3/ffcli"
 
 	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/asc"
+	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/shared"
 )
 
 // PreOrdersCommand returns the pre-orders command group.
@@ -140,7 +141,7 @@ func PreOrdersEnableCommand() *ffcli.Command {
 	appID := fs.String("app", "", "App Store Connect app ID (or ASC_APP_ID)")
 	territory := fs.String("territory", "", "Territory IDs (comma-separated, e.g., USA,GBR)")
 	releaseDate := fs.String("release-date", "", "Release date (YYYY-MM-DD)")
-	var availableInNewTerritories optionalBool
+	var availableInNewTerritories shared.OptionalBool
 	fs.Var(&availableInNewTerritories, "available-in-new-territories", "Set available-in-new-territories: true or false")
 	output := fs.String("output", "json", "Output format: json (default), table, markdown")
 	pretty := fs.Bool("pretty", false, "Pretty-print JSON output")
@@ -169,7 +170,7 @@ Examples:
 				fmt.Fprintln(os.Stderr, "Error: --release-date is required")
 				return flag.ErrHelp
 			}
-			if !availableInNewTerritories.set {
+			if !availableInNewTerritories.IsSet() {
 				fmt.Fprintln(os.Stderr, "Error: --available-in-new-territories is required")
 				return flag.ErrHelp
 			}
@@ -204,7 +205,7 @@ Examples:
 			if availabilityID == "" {
 				return fmt.Errorf("pre-orders enable: app availability ID missing from response")
 			}
-			availableInNew := availableInNewTerritories.value
+			availableInNew := availableInNewTerritories.Value()
 			createResp, err := client.CreateAppAvailabilityV2(requestCtx, resolvedAppID, asc.AppAvailabilityV2CreateAttributes{
 				AvailableInNewTerritories: &availableInNew,
 			})

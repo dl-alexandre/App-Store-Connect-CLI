@@ -10,6 +10,7 @@ import (
 	"github.com/peterbourgon/ff/v3/ffcli"
 
 	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/asc"
+	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/shared"
 )
 
 // PromotedPurchasesCommand returns the promoted purchases command with subcommands.
@@ -173,9 +174,9 @@ func PromotedPurchasesCreateCommand() *ffcli.Command {
 	appID := fs.String("app", "", "App Store Connect app ID (or ASC_APP_ID)")
 	productID := fs.String("product-id", "", "Product ID (subscription or in-app purchase ID)")
 	productType := fs.String("product-type", "", "Product type: SUBSCRIPTION or IN_APP_PURCHASE")
-	var visibleForAllUsers optionalBool
+	var visibleForAllUsers shared.OptionalBool
 	fs.Var(&visibleForAllUsers, "visible-for-all-users", "Visible for all users: true or false")
-	var enabled optionalBool
+	var enabled shared.OptionalBool
 	fs.Var(&enabled, "enabled", "Enable or disable the promoted purchase")
 	output := fs.String("output", "json", "Output format: json (default), table, markdown")
 	pretty := fs.Bool("pretty", false, "Pretty-print JSON output")
@@ -215,7 +216,7 @@ Examples:
 				return flag.ErrHelp
 			}
 
-			if !visibleForAllUsers.set {
+			if !visibleForAllUsers.IsSet() {
 				fmt.Fprintln(os.Stderr, "Error: --visible-for-all-users is required")
 				return flag.ErrHelp
 			}
@@ -229,10 +230,10 @@ Examples:
 			defer cancel()
 
 			attrs := asc.PromotedPurchaseCreateAttributes{
-				VisibleForAllUsers: visibleForAllUsers.value,
+				VisibleForAllUsers: visibleForAllUsers.Value(),
 			}
-			if enabled.set {
-				enabledValue := enabled.value
+			if enabled.IsSet() {
+				enabledValue := enabled.Value()
 				attrs.Enabled = &enabledValue
 			}
 
@@ -278,9 +279,9 @@ func PromotedPurchasesUpdateCommand() *ffcli.Command {
 	fs := flag.NewFlagSet("update", flag.ExitOnError)
 
 	id := fs.String("promoted-purchase-id", "", "Promoted purchase ID")
-	var visibleForAllUsers optionalBool
+	var visibleForAllUsers shared.OptionalBool
 	fs.Var(&visibleForAllUsers, "visible-for-all-users", "Visible for all users: true or false")
-	var enabled optionalBool
+	var enabled shared.OptionalBool
 	fs.Var(&enabled, "enabled", "Enable or disable the promoted purchase")
 	output := fs.String("output", "json", "Output format: json (default), table, markdown")
 	pretty := fs.Bool("pretty", false, "Pretty-print JSON output")
@@ -302,7 +303,7 @@ Examples:
 				fmt.Fprintln(os.Stderr, "Error: --promoted-purchase-id is required")
 				return flag.ErrHelp
 			}
-			if !visibleForAllUsers.set && !enabled.set {
+			if !visibleForAllUsers.IsSet() && !enabled.IsSet() {
 				fmt.Fprintln(os.Stderr, "Error: at least one update flag is required")
 				return flag.ErrHelp
 			}
@@ -316,12 +317,12 @@ Examples:
 			defer cancel()
 
 			attrs := asc.PromotedPurchaseUpdateAttributes{}
-			if visibleForAllUsers.set {
-				value := visibleForAllUsers.value
+			if visibleForAllUsers.IsSet() {
+				value := visibleForAllUsers.Value()
 				attrs.VisibleForAllUsers = &value
 			}
-			if enabled.set {
-				value := enabled.value
+			if enabled.IsSet() {
+				value := enabled.Value()
 				attrs.Enabled = &value
 			}
 

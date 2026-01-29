@@ -1,6 +1,10 @@
 package sandbox
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/shared"
+)
 
 func TestValidateSandboxEmail(t *testing.T) {
 	if err := validateSandboxEmail("tester@example.com"); err != nil {
@@ -80,14 +84,14 @@ func TestNormalizeSandboxRenewalRate(t *testing.T) {
 }
 
 func TestOptionalBool(t *testing.T) {
-	var value optionalBool
-	if value.set {
+	var value shared.OptionalBool
+	if value.IsSet() {
 		t.Fatalf("expected unset optionalBool by default")
 	}
 	if err := value.Set("true"); err != nil {
 		t.Fatalf("expected Set to succeed, got %v", err)
 	}
-	if !value.set || !value.value {
+	if !value.IsSet() || !value.Value() {
 		t.Fatalf("expected optionalBool to be set to true")
 	}
 }

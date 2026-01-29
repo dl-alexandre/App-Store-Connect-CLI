@@ -5,39 +5,12 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"strconv"
 	"strings"
 
 	"github.com/peterbourgon/ff/v3/ffcli"
 
 	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/asc"
 )
-
-type optionalBool struct {
-	set   bool
-	value bool
-}
-
-func (b *optionalBool) Set(value string) error {
-	parsed, err := strconv.ParseBool(value)
-	if err != nil {
-		return fmt.Errorf("must be true or false")
-	}
-	b.value = parsed
-	b.set = true
-	return nil
-}
-
-func (b *optionalBool) String() string {
-	if !b.set {
-		return ""
-	}
-	return strconv.FormatBool(b.value)
-}
-
-func (b *optionalBool) IsBoolFlag() bool {
-	return true
-}
 
 // AvailabilitySetCommandConfig configures the availability set command.
 type AvailabilitySetCommandConfig struct {
@@ -56,9 +29,9 @@ func NewAvailabilitySetCommand(config AvailabilitySetCommandConfig) *ffcli.Comma
 
 	appID := fs.String("app", "", "App Store Connect app ID (or ASC_APP_ID)")
 	territory := fs.String("territory", "", "Territory IDs (comma-separated, e.g., USA,GBR)")
-	var available optionalBool
+	var available OptionalBool
 	fs.Var(&available, "available", "Set availability: true or false")
-	var availableInNewTerritories optionalBool
+	var availableInNewTerritories OptionalBool
 	if config.IncludeAvailableInNewTerritories {
 		fs.Var(&availableInNewTerritories, "available-in-new-territories", "Set availability for new territories: true or false")
 	}
@@ -82,11 +55,11 @@ func NewAvailabilitySetCommand(config AvailabilitySetCommandConfig) *ffcli.Comma
 				fmt.Fprintln(os.Stderr, "Error: --territory is required")
 				return flag.ErrHelp
 			}
-			if !available.set {
+			if !available.IsSet() {
 				fmt.Fprintln(os.Stderr, "Error: --available is required (true or false)")
 				return flag.ErrHelp
 			}
-			if config.IncludeAvailableInNewTerritories && !availableInNewTerritories.set {
+			if config.IncludeAvailableInNewTerritories && !availableInNewTerritories.IsSet() {
 				fmt.Fprintln(os.Stderr, "Error: --available-in-new-territories is required (true or false)")
 				return flag.ErrHelp
 			}
@@ -109,7 +82,7 @@ func NewAvailabilitySetCommand(config AvailabilitySetCommandConfig) *ffcli.Comma
 			for _, territoryID := range territories {
 				availabilities = append(availabilities, asc.TerritoryAvailabilityCreate{
 					TerritoryID: territoryID,
-					Available:   available.value,
+					Available:   available.Value(),
 				})
 			}
 
@@ -117,7 +90,8 @@ func NewAvailabilitySetCommand(config AvailabilitySetCommandConfig) *ffcli.Comma
 				TerritoryAvailabilities: availabilities,
 			}
 			if config.IncludeAvailableInNewTerritories {
-				attributes.AvailableInNewTerritories = &availableInNewTerritories.value
+				availableInNewTerritoriesValue := availableInNewTerritories.Value()
+				attributes.AvailableInNewTerritories = &availableInNewTerritoriesValue
 			}
 
 			resp, err := client.CreateAppAvailabilityV2(requestCtx, resolvedAppID, attributes)

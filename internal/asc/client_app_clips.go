@@ -1709,27 +1709,6 @@ func (c *Client) GetBetaAppClipInvocationLocalizations(ctx context.Context, invo
 	return resp, nil
 }
 
-// GetBetaAppClipInvocationLocalization retrieves a localization by ID.
-func (c *Client) GetBetaAppClipInvocationLocalization(ctx context.Context, localizationID string) (*BetaAppClipInvocationLocalizationResponse, error) {
-	localizationID = strings.TrimSpace(localizationID)
-	if localizationID == "" {
-		return nil, fmt.Errorf("localizationID is required")
-	}
-
-	path := fmt.Sprintf("/v1/betaAppClipInvocationLocalizations/%s", localizationID)
-	data, err := c.do(ctx, http.MethodGet, path, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	var response BetaAppClipInvocationLocalizationResponse
-	if err := json.Unmarshal(data, &response); err != nil {
-		return nil, fmt.Errorf("failed to parse response: %w", err)
-	}
-
-	return &response, nil
-}
-
 // CreateBetaAppClipInvocationLocalization creates a localization.
 func (c *Client) CreateBetaAppClipInvocationLocalization(ctx context.Context, invocationID string, attrs BetaAppClipInvocationLocalizationCreateAttributes) (*BetaAppClipInvocationLocalizationResponse, error) {
 	invocationID = strings.TrimSpace(invocationID)

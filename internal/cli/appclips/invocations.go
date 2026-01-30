@@ -95,6 +95,7 @@ Examples:
 				firstPage, err := client.GetBuildBundleBetaAppClipInvocations(requestCtx, buildBundleValue, paginateOpts...)
 				if err != nil {
 					if asc.IsNotFound(err) {
+						fmt.Fprintln(os.Stderr, "No invocations found.")
 						empty := &asc.BetaAppClipInvocationsResponse{Data: []asc.Resource[asc.BetaAppClipInvocationAttributes]{}}
 						return printOutput(empty, *output, *pretty)
 					}
@@ -114,6 +115,7 @@ Examples:
 			resp, err := client.GetBuildBundleBetaAppClipInvocations(requestCtx, buildBundleValue, opts...)
 			if err != nil {
 				if asc.IsNotFound(err) {
+					fmt.Fprintln(os.Stderr, "No invocations found.")
 					empty := &asc.BetaAppClipInvocationsResponse{Data: []asc.Resource[asc.BetaAppClipInvocationAttributes]{}}
 					return printOutput(empty, *output, *pretty)
 				}

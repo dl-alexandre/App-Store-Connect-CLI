@@ -29,7 +29,6 @@ Examples:
 		UsageFunc: DefaultUsageFunc,
 		Subcommands: []*ffcli.Command{
 			AppClipInvocationLocalizationsListCommand(),
-			AppClipInvocationLocalizationsGetCommand(),
 			AppClipInvocationLocalizationsCreateCommand(),
 			AppClipInvocationLocalizationsUpdateCommand(),
 			AppClipInvocationLocalizationsDeleteCommand(),
@@ -85,49 +84,6 @@ Examples:
 					return printOutput(empty, *output, *pretty)
 				}
 				return fmt.Errorf("app-clips invocations localizations list: failed to fetch: %w", err)
-			}
-
-			return printOutput(resp, *output, *pretty)
-		},
-	}
-}
-
-// AppClipInvocationLocalizationsGetCommand gets a localization by ID.
-func AppClipInvocationLocalizationsGetCommand() *ffcli.Command {
-	fs := flag.NewFlagSet("get", flag.ExitOnError)
-
-	localizationID := fs.String("localization-id", "", "Localization ID")
-	output := fs.String("output", "json", "Output format: json (default), table, markdown")
-	pretty := fs.Bool("pretty", false, "Pretty-print JSON output")
-
-	return &ffcli.Command{
-		Name:       "get",
-		ShortUsage: "asc app-clips invocations localizations get --localization-id \"LOC_ID\"",
-		ShortHelp:  "Get a beta App Clip invocation localization by ID.",
-		LongHelp: `Get a beta App Clip invocation localization by ID.
-
-Examples:
-  asc app-clips invocations localizations get --localization-id "LOC_ID"`,
-		FlagSet:   fs,
-		UsageFunc: DefaultUsageFunc,
-		Exec: func(ctx context.Context, args []string) error {
-			locValue := strings.TrimSpace(*localizationID)
-			if locValue == "" {
-				fmt.Fprintln(os.Stderr, "Error: --localization-id is required")
-				return flag.ErrHelp
-			}
-
-			client, err := getASCClient()
-			if err != nil {
-				return fmt.Errorf("app-clips invocations localizations get: %w", err)
-			}
-
-			requestCtx, cancel := contextWithTimeout(ctx)
-			defer cancel()
-
-			resp, err := client.GetBetaAppClipInvocationLocalization(requestCtx, locValue)
-			if err != nil {
-				return fmt.Errorf("app-clips invocations localizations get: failed to fetch: %w", err)
 			}
 
 			return printOutput(resp, *output, *pretty)

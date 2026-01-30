@@ -41,6 +41,12 @@ type GameCenterAchievementRelationships struct {
 	GameCenterDetail *Relationship `json:"gameCenterDetail"`
 }
 
+// GameCenterAchievementV2Relationships describes relationships for v2 achievements.
+type GameCenterAchievementV2Relationships struct {
+	GameCenterDetail *Relationship `json:"gameCenterDetail,omitempty"`
+	GameCenterGroup  *Relationship `json:"gameCenterGroup,omitempty"`
+}
+
 // GameCenterAchievementCreateData is the data portion of an achievement create request.
 type GameCenterAchievementCreateData struct {
 	Type          ResourceType                          `json:"type"`
@@ -51,6 +57,18 @@ type GameCenterAchievementCreateData struct {
 // GameCenterAchievementCreateRequest is a request to create an achievement.
 type GameCenterAchievementCreateRequest struct {
 	Data GameCenterAchievementCreateData `json:"data"`
+}
+
+// GameCenterAchievementV2CreateData is the data portion of a v2 achievement create request.
+type GameCenterAchievementV2CreateData struct {
+	Type          ResourceType                          `json:"type"`
+	Attributes    GameCenterAchievementCreateAttributes `json:"attributes"`
+	Relationships *GameCenterAchievementV2Relationships `json:"relationships,omitempty"`
+}
+
+// GameCenterAchievementV2CreateRequest is a request to create a v2 achievement.
+type GameCenterAchievementV2CreateRequest struct {
+	Data GameCenterAchievementV2CreateData `json:"data"`
 }
 
 // GameCenterAchievementUpdateData is the data portion of an achievement update request.

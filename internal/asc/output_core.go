@@ -57,6 +57,8 @@ func PrintMarkdown(data interface{}) error {
 		return printReviewsMarkdown(v)
 	case *CustomerReviewSummarizationsResponse:
 		return printCustomerReviewSummarizationsMarkdown(v)
+	case *CustomerReviewResponse:
+		return printReviewsMarkdown(&ReviewsResponse{Data: []Resource[ReviewAttributes]{v.Data}})
 	case *AppsResponse:
 		return printAppsMarkdown(v)
 	case *AppClipsResponse:
@@ -81,6 +83,8 @@ func PrintMarkdown(data interface{}) error {
 		return printAppClipDefaultExperienceLocalizationsMarkdown(v)
 	case *AppClipDefaultExperienceLocalizationResponse:
 		return printAppClipDefaultExperienceLocalizationsMarkdown(&AppClipDefaultExperienceLocalizationsResponse{Data: []Resource[AppClipDefaultExperienceLocalizationAttributes]{v.Data}})
+	case *AppClipHeaderImageResponse:
+		return printAppClipHeaderImageMarkdown(v)
 	case *AppClipAdvancedExperiencesResponse:
 		return printAppClipAdvancedExperiencesMarkdown(v)
 	case *AppClipAdvancedExperienceResponse:
@@ -315,6 +319,8 @@ func PrintMarkdown(data interface{}) error {
 		return printWinBackOfferPricesMarkdown(v)
 	case *AppStoreVersionsResponse:
 		return printAppStoreVersionsMarkdown(v)
+	case *AppStoreVersionResponse:
+		return printAppStoreVersionsMarkdown(&AppStoreVersionsResponse{Data: []Resource[AppStoreVersionAttributes]{v.Data}})
 	case *PreReleaseVersionsResponse:
 		return printPreReleaseVersionsMarkdown(v)
 	case *BuildResponse:
@@ -935,6 +941,8 @@ func PrintTable(data interface{}) error {
 		return printReviewsTable(v)
 	case *CustomerReviewSummarizationsResponse:
 		return printCustomerReviewSummarizationsTable(v)
+	case *CustomerReviewResponse:
+		return printReviewsTable(&ReviewsResponse{Data: []Resource[ReviewAttributes]{v.Data}})
 	case *AppsResponse:
 		return printAppsTable(v)
 	case *AppClipsResponse:
@@ -959,6 +967,8 @@ func PrintTable(data interface{}) error {
 		return printAppClipDefaultExperienceLocalizationsTable(v)
 	case *AppClipDefaultExperienceLocalizationResponse:
 		return printAppClipDefaultExperienceLocalizationsTable(&AppClipDefaultExperienceLocalizationsResponse{Data: []Resource[AppClipDefaultExperienceLocalizationAttributes]{v.Data}})
+	case *AppClipHeaderImageResponse:
+		return printAppClipHeaderImageTable(v)
 	case *AppClipAdvancedExperiencesResponse:
 		return printAppClipAdvancedExperiencesTable(v)
 	case *AppClipAdvancedExperienceResponse:
@@ -1193,6 +1203,8 @@ func PrintTable(data interface{}) error {
 		return printWinBackOfferPricesTable(v)
 	case *AppStoreVersionsResponse:
 		return printAppStoreVersionsTable(v)
+	case *AppStoreVersionResponse:
+		return printAppStoreVersionsTable(&AppStoreVersionsResponse{Data: []Resource[AppStoreVersionAttributes]{v.Data}})
 	case *PreReleaseVersionsResponse:
 		return printPreReleaseVersionsTable(v)
 	case *BuildResponse:

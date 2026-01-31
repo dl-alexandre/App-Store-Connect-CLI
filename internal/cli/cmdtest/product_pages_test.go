@@ -181,6 +181,45 @@ func TestProductPagesCustomPagesListRejectsInvalidNextURL(t *testing.T) {
 	}
 }
 
+func TestProductPagesExperimentTreatmentLocalizationMediaSetsValidationErrors(t *testing.T) {
+	tests := []struct {
+		name string
+		args []string
+	}{
+		{
+			name: "treatment localization preview sets list missing localization",
+			args: []string{"product-pages", "experiments", "treatments", "localizations", "preview-sets", "list"},
+		},
+		{
+			name: "treatment localization screenshot sets list missing localization",
+			args: []string{"product-pages", "experiments", "treatments", "localizations", "screenshot-sets", "list"},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			root := RootCommand("1.2.3")
+
+			stdout, stderr := captureOutput(t, func() {
+				if err := root.Parse(test.args); err != nil {
+					t.Fatalf("parse error: %v", err)
+				}
+				err := root.Run(context.Background())
+				if !errors.Is(err, flag.ErrHelp) {
+					t.Fatalf("expected ErrHelp, got %v", err)
+				}
+			})
+
+			if stdout != "" {
+				t.Fatalf("expected empty stdout, got %q", stdout)
+			}
+			if stderr == "" {
+				t.Fatalf("expected stderr output")
+			}
+		})
+	}
+}
+
 func TestProductPagesCustomPagesLocalizationsPreviewSetsListRejectsInvalidLimit(t *testing.T) {
 	root := RootCommand("1.2.3")
 

@@ -85,6 +85,8 @@ func PrintMarkdown(data interface{}) error {
 		return printAppClipDefaultExperienceLocalizationsMarkdown(&AppClipDefaultExperienceLocalizationsResponse{Data: []Resource[AppClipDefaultExperienceLocalizationAttributes]{v.Data}})
 	case *AppClipHeaderImageResponse:
 		return printAppClipHeaderImageMarkdown(v)
+	case *AppClipAdvancedExperienceImageResponse:
+		return printAppClipAdvancedExperienceImageMarkdown(v)
 	case *AppClipAdvancedExperiencesResponse:
 		return printAppClipAdvancedExperiencesMarkdown(v)
 	case *AppClipAdvancedExperienceResponse:
@@ -1011,6 +1013,8 @@ func PrintTable(data interface{}) error {
 		return printAppClipDefaultExperienceLocalizationsTable(&AppClipDefaultExperienceLocalizationsResponse{Data: []Resource[AppClipDefaultExperienceLocalizationAttributes]{v.Data}})
 	case *AppClipHeaderImageResponse:
 		return printAppClipHeaderImageTable(v)
+	case *AppClipAdvancedExperienceImageResponse:
+		return printAppClipAdvancedExperienceImageTable(v)
 	case *AppClipAdvancedExperiencesResponse:
 		return printAppClipAdvancedExperiencesTable(v)
 	case *AppClipAdvancedExperienceResponse:

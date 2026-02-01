@@ -23,16 +23,61 @@ func AppClipHeaderImagesCommand() *ffcli.Command {
 		LongHelp: `Manage App Clip header images.
 
 Examples:
+  asc app-clips header-images get --id "IMAGE_ID"
   asc app-clips header-images create --localization-id "LOC_ID" --file path/to/image.png
   asc app-clips header-images delete --id "IMAGE_ID" --confirm`,
 		FlagSet:   fs,
 		UsageFunc: DefaultUsageFunc,
 		Subcommands: []*ffcli.Command{
+			AppClipHeaderImagesGetCommand(),
 			AppClipHeaderImagesCreateCommand(),
 			AppClipHeaderImagesDeleteCommand(),
 		},
 		Exec: func(ctx context.Context, args []string) error {
 			return flag.ErrHelp
+		},
+	}
+}
+
+// AppClipHeaderImagesGetCommand retrieves a header image by ID.
+func AppClipHeaderImagesGetCommand() *ffcli.Command {
+	fs := flag.NewFlagSet("get", flag.ExitOnError)
+
+	imageID := fs.String("id", "", "Header image ID")
+	output := fs.String("output", "json", "Output format: json (default), table, markdown")
+	pretty := fs.Bool("pretty", false, "Pretty-print JSON output")
+
+	return &ffcli.Command{
+		Name:       "get",
+		ShortUsage: "asc app-clips header-images get --id \"IMAGE_ID\"",
+		ShortHelp:  "Get a header image by ID.",
+		LongHelp: `Get a header image by ID.
+
+Examples:
+  asc app-clips header-images get --id "IMAGE_ID"`,
+		FlagSet:   fs,
+		UsageFunc: DefaultUsageFunc,
+		Exec: func(ctx context.Context, args []string) error {
+			idValue := strings.TrimSpace(*imageID)
+			if idValue == "" {
+				fmt.Fprintln(os.Stderr, "Error: --id is required")
+				return flag.ErrHelp
+			}
+
+			client, err := getASCClient()
+			if err != nil {
+				return fmt.Errorf("app-clips header-images get: %w", err)
+			}
+
+			requestCtx, cancel := contextWithTimeout(ctx)
+			defer cancel()
+
+			resp, err := client.GetAppClipHeaderImage(requestCtx, idValue)
+			if err != nil {
+				return fmt.Errorf("app-clips header-images get: failed to fetch: %w", err)
+			}
+
+			return printOutput(resp, *output, *pretty)
 		},
 	}
 }

@@ -126,6 +126,22 @@ func (c *Client) GetAppScreenshotSets(ctx context.Context, localizationID string
 	return &response, nil
 }
 
+// GetAppScreenshotSet retrieves a screenshot set by ID.
+func (c *Client) GetAppScreenshotSet(ctx context.Context, setID string) (*AppScreenshotSetResponse, error) {
+	path := fmt.Sprintf("/v1/appScreenshotSets/%s", setID)
+	data, err := c.do(ctx, "GET", path, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var response AppScreenshotSetResponse
+	if err := json.Unmarshal(data, &response); err != nil {
+		return nil, fmt.Errorf("failed to parse response: %w", err)
+	}
+
+	return &response, nil
+}
+
 // CreateAppScreenshotSet creates a screenshot set for a localization.
 func (c *Client) CreateAppScreenshotSet(ctx context.Context, localizationID string, displayType string) (*AppScreenshotSetResponse, error) {
 	payload := AppScreenshotSetCreateRequest{
@@ -285,6 +301,22 @@ func (c *Client) GetAppPreviewSets(ctx context.Context, localizationID string) (
 	}
 
 	var response AppPreviewSetsResponse
+	if err := json.Unmarshal(data, &response); err != nil {
+		return nil, fmt.Errorf("failed to parse response: %w", err)
+	}
+
+	return &response, nil
+}
+
+// GetAppPreviewSet retrieves a preview set by ID.
+func (c *Client) GetAppPreviewSet(ctx context.Context, setID string) (*AppPreviewSetResponse, error) {
+	path := fmt.Sprintf("/v1/appPreviewSets/%s", setID)
+	data, err := c.do(ctx, "GET", path, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var response AppPreviewSetResponse
 	if err := json.Unmarshal(data, &response); err != nil {
 		return nil, fmt.Errorf("failed to parse response: %w", err)
 	}

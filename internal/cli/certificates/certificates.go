@@ -30,6 +30,8 @@ Examples:
   asc certificates list --certificate-type IOS_DISTRIBUTION
   asc certificates get --id "CERT_ID" --include passTypeId
   asc certificates create --certificate-type IOS_DISTRIBUTION --csr "./cert.csr"
+  asc certificates update --id "CERT_ID" --activated true
+  asc certificates update --id "CERT_ID" --activated false
   asc certificates revoke --id "CERT_ID" --confirm
   asc certificates relationships pass-type-id --id "CERT_ID"`,
 		FlagSet:   fs,
@@ -38,6 +40,7 @@ Examples:
 			CertificatesListCommand(),
 			CertificatesGetCommand(),
 			CertificatesCreateCommand(),
+			CertificatesUpdateCommand(),
 			CertificatesRevokeCommand(),
 			CertificatesRelationshipsCommand(),
 		},
@@ -225,6 +228,62 @@ Examples:
 			resp, err := client.CreateCertificate(requestCtx, csrContent, certificateValue)
 			if err != nil {
 				return fmt.Errorf("certificates create: failed to create: %w", err)
+			}
+
+			return printOutput(resp, *output, *pretty)
+		},
+	}
+}
+
+// CertificatesUpdateCommand returns the certificates update subcommand.
+func CertificatesUpdateCommand() *ffcli.Command {
+	fs := flag.NewFlagSet("update", flag.ExitOnError)
+
+	id := fs.String("id", "", "Certificate ID")
+	activated := fs.String("activated", "", "Set activated (true/false)")
+	output := fs.String("output", "json", "Output format: json (default), table, markdown")
+	pretty := fs.Bool("pretty", false, "Pretty-print JSON output")
+
+	return &ffcli.Command{
+		Name:       "update",
+		ShortUsage: "asc certificates update --id \"CERT_ID\" --activated true",
+		ShortHelp:  "Update a signing certificate.",
+		LongHelp: `Update a signing certificate.
+
+Examples:
+  asc certificates update --id "CERT_ID" --activated true
+  asc certificates update --id "CERT_ID" --activated false`,
+		FlagSet:   fs,
+		UsageFunc: DefaultUsageFunc,
+		Exec: func(ctx context.Context, args []string) error {
+			idValue := strings.TrimSpace(*id)
+			if idValue == "" {
+				fmt.Fprintln(os.Stderr, "Error: --id is required")
+				return flag.ErrHelp
+			}
+
+			activatedValue, err := parseOptionalBoolFlag("--activated", *activated)
+			if err != nil {
+				return fmt.Errorf("certificates update: %w", err)
+			}
+			if activatedValue == nil {
+				fmt.Fprintln(os.Stderr, "Error: --activated is required")
+				return flag.ErrHelp
+			}
+
+			client, err := getASCClient()
+			if err != nil {
+				return fmt.Errorf("certificates update: %w", err)
+			}
+
+			requestCtx, cancel := contextWithTimeout(ctx)
+			defer cancel()
+
+			resp, err := client.UpdateCertificate(requestCtx, idValue, asc.CertificateUpdateAttributes{
+				Activated: activatedValue,
+			})
+			if err != nil {
+				return fmt.Errorf("certificates update: failed to update: %w", err)
 			}
 
 			return printOutput(resp, *output, *pretty)

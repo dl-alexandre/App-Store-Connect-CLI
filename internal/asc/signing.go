@@ -108,6 +108,7 @@ type CertificateAttributes struct {
 	Platform           string `json:"platform,omitempty"`
 	ExpirationDate     string `json:"expirationDate,omitempty"`
 	CertificateContent string `json:"certificateContent,omitempty"`
+	Activated          *bool  `json:"activated,omitempty"`
 }
 
 // CertificateCreateAttributes describes attributes for creating a certificate.
@@ -125,6 +126,23 @@ type CertificateCreateData struct {
 // CertificateCreateRequest is a request to create a certificate.
 type CertificateCreateRequest struct {
 	Data CertificateCreateData `json:"data"`
+}
+
+// CertificateUpdateAttributes describes attributes for updating a certificate.
+type CertificateUpdateAttributes struct {
+	Activated *bool `json:"activated,omitempty"`
+}
+
+// CertificateUpdateData is the data portion of a certificate update request.
+type CertificateUpdateData struct {
+	Type       ResourceType                 `json:"type"`
+	ID         string                       `json:"id"`
+	Attributes *CertificateUpdateAttributes `json:"attributes,omitempty"`
+}
+
+// CertificateUpdateRequest is a request to update a certificate.
+type CertificateUpdateRequest struct {
+	Data CertificateUpdateData `json:"data"`
 }
 
 // CertificatesResponse is the response from certificates list endpoint.

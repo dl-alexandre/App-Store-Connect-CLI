@@ -5708,6 +5708,42 @@ func TestCreateCertificate_SendsRequest(t *testing.T) {
 	}
 }
 
+func TestUpdateCertificate_SendsRequest(t *testing.T) {
+	response := jsonResponse(http.StatusOK, `{"data":{"type":"certificates","id":"c1","attributes":{"name":"Cert","certificateType":"IOS_DISTRIBUTION","activated":true}}}`)
+	client := newTestClient(t, func(req *http.Request) {
+		if req.Method != http.MethodPatch {
+			t.Fatalf("expected PATCH, got %s", req.Method)
+		}
+		if req.URL.Path != "/v1/certificates/c1" {
+			t.Fatalf("expected path /v1/certificates/c1, got %s", req.URL.Path)
+		}
+		body, err := io.ReadAll(req.Body)
+		if err != nil {
+			t.Fatalf("read body error: %v", err)
+		}
+		var payload CertificateUpdateRequest
+		if err := json.Unmarshal(body, &payload); err != nil {
+			t.Fatalf("decode body error: %v", err)
+		}
+		if payload.Data.Type != ResourceTypeCertificates {
+			t.Fatalf("expected type certificates, got %q", payload.Data.Type)
+		}
+		if payload.Data.ID != "c1" {
+			t.Fatalf("expected id c1, got %q", payload.Data.ID)
+		}
+		if payload.Data.Attributes == nil || payload.Data.Attributes.Activated == nil || !*payload.Data.Attributes.Activated {
+			t.Fatalf("expected activated true, got %+v", payload.Data.Attributes)
+		}
+		assertAuthorized(t, req)
+	}, response)
+
+	activated := true
+	attrs := CertificateUpdateAttributes{Activated: &activated}
+	if _, err := client.UpdateCertificate(context.Background(), "c1", attrs); err != nil {
+		t.Fatalf("UpdateCertificate() error: %v", err)
+	}
+}
+
 func TestGetCertificate_SendsRequest(t *testing.T) {
 	response := jsonResponse(http.StatusOK, `{"data":{"type":"certificates","id":"c1","attributes":{"name":"Cert","certificateType":"IOS_DISTRIBUTION"}}}`)
 	client := newTestClient(t, func(req *http.Request) {

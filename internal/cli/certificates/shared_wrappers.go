@@ -36,3 +36,7 @@ func splitCSVUpper(value string) []string {
 func splitCSV(value string) []string {
 	return shared.SplitCSV(value)
 }
+
+func parseOptionalBoolFlag(name, value string) (*bool, error) {
+	return shared.ParseOptionalBoolFlag(name, value)
+}

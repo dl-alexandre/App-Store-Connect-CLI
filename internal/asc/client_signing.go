@@ -281,6 +281,35 @@ func (c *Client) CreateCertificate(ctx context.Context, csrContent string, certT
 	return &response, nil
 }
 
+// UpdateCertificate updates a certificate's attributes.
+func (c *Client) UpdateCertificate(ctx context.Context, id string, attrs CertificateUpdateAttributes) (*CertificateResponse, error) {
+	id = strings.TrimSpace(id)
+	request := CertificateUpdateRequest{
+		Data: CertificateUpdateData{
+			Type:       ResourceTypeCertificates,
+			ID:         id,
+			Attributes: &attrs,
+		},
+	}
+
+	body, err := BuildRequestBody(request)
+	if err != nil {
+		return nil, err
+	}
+
+	data, err := c.do(ctx, "PATCH", fmt.Sprintf("/v1/certificates/%s", id), body)
+	if err != nil {
+		return nil, err
+	}
+
+	var response CertificateResponse
+	if err := json.Unmarshal(data, &response); err != nil {
+		return nil, fmt.Errorf("failed to parse response: %w", err)
+	}
+
+	return &response, nil
+}
+
 // RevokeCertificate revokes a certificate by ID.
 func (c *Client) RevokeCertificate(ctx context.Context, id string) error {
 	id = strings.TrimSpace(id)

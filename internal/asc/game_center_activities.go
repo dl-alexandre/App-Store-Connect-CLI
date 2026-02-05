@@ -7,36 +7,36 @@ import (
 
 // GameCenterActivityAttributes represents a Game Center activity resource.
 type GameCenterActivityAttributes struct {
-	ReferenceName      string            `json:"referenceName"`
-	VendorIdentifier   string            `json:"vendorIdentifier"`
-	PlayStyle          string            `json:"playStyle,omitempty"`
-	MinimumPlayersCount int              `json:"minimumPlayersCount,omitempty"`
-	MaximumPlayersCount int              `json:"maximumPlayersCount,omitempty"`
-	SupportsPartyCode  bool              `json:"supportsPartyCode,omitempty"`
-	Archived           bool              `json:"archived,omitempty"`
-	Properties         map[string]string `json:"properties,omitempty"`
+	ReferenceName       string            `json:"referenceName"`
+	VendorIdentifier    string            `json:"vendorIdentifier"`
+	PlayStyle           string            `json:"playStyle,omitempty"`
+	MinimumPlayersCount int               `json:"minimumPlayersCount,omitempty"`
+	MaximumPlayersCount int               `json:"maximumPlayersCount,omitempty"`
+	SupportsPartyCode   bool              `json:"supportsPartyCode,omitempty"`
+	Archived            bool              `json:"archived,omitempty"`
+	Properties          map[string]string `json:"properties,omitempty"`
 }
 
 // GameCenterActivityCreateAttributes describes attributes for creating an activity.
 type GameCenterActivityCreateAttributes struct {
-	ReferenceName      string            `json:"referenceName"`
-	VendorIdentifier   string            `json:"vendorIdentifier"`
-	PlayStyle          *string           `json:"playStyle,omitempty"`
-	MinimumPlayersCount *int             `json:"minimumPlayersCount,omitempty"`
-	MaximumPlayersCount *int             `json:"maximumPlayersCount,omitempty"`
-	SupportsPartyCode  *bool             `json:"supportsPartyCode,omitempty"`
-	Properties         map[string]string `json:"properties,omitempty"`
+	ReferenceName       string            `json:"referenceName"`
+	VendorIdentifier    string            `json:"vendorIdentifier"`
+	PlayStyle           *string           `json:"playStyle,omitempty"`
+	MinimumPlayersCount *int              `json:"minimumPlayersCount,omitempty"`
+	MaximumPlayersCount *int              `json:"maximumPlayersCount,omitempty"`
+	SupportsPartyCode   *bool             `json:"supportsPartyCode,omitempty"`
+	Properties          map[string]string `json:"properties,omitempty"`
 }
 
 // GameCenterActivityUpdateAttributes describes attributes for updating an activity.
 type GameCenterActivityUpdateAttributes struct {
-	ReferenceName      *string           `json:"referenceName,omitempty"`
-	PlayStyle          *string           `json:"playStyle,omitempty"`
-	MinimumPlayersCount *int             `json:"minimumPlayersCount,omitempty"`
-	MaximumPlayersCount *int             `json:"maximumPlayersCount,omitempty"`
-	SupportsPartyCode  *bool             `json:"supportsPartyCode,omitempty"`
-	Archived           *bool             `json:"archived,omitempty"`
-	Properties         map[string]string `json:"properties,omitempty"`
+	ReferenceName       *string           `json:"referenceName,omitempty"`
+	PlayStyle           *string           `json:"playStyle,omitempty"`
+	MinimumPlayersCount *int              `json:"minimumPlayersCount,omitempty"`
+	MaximumPlayersCount *int              `json:"maximumPlayersCount,omitempty"`
+	SupportsPartyCode   *bool             `json:"supportsPartyCode,omitempty"`
+	Archived            *bool             `json:"archived,omitempty"`
+	Properties          map[string]string `json:"properties,omitempty"`
 }
 
 // GameCenterActivityRelationships describes relationships for activities.
@@ -47,9 +47,9 @@ type GameCenterActivityRelationships struct {
 
 // GameCenterActivityCreateData is the data portion of an activity create request.
 type GameCenterActivityCreateData struct {
-	Type          ResourceType                      `json:"type"`
+	Type          ResourceType                       `json:"type"`
 	Attributes    GameCenterActivityCreateAttributes `json:"attributes"`
-	Relationships *GameCenterActivityRelationships  `json:"relationships,omitempty"`
+	Relationships *GameCenterActivityRelationships   `json:"relationships,omitempty"`
 }
 
 // GameCenterActivityCreateRequest is a request to create an activity.
@@ -59,8 +59,8 @@ type GameCenterActivityCreateRequest struct {
 
 // GameCenterActivityUpdateData is the data portion of an activity update request.
 type GameCenterActivityUpdateData struct {
-	Type       ResourceType                       `json:"type"`
-	ID         string                             `json:"id"`
+	Type       ResourceType                        `json:"type"`
+	ID         string                              `json:"id"`
 	Attributes *GameCenterActivityUpdateAttributes `json:"attributes,omitempty"`
 }
 
@@ -114,9 +114,9 @@ func buildGCActivitiesQuery(query *gcActivitiesQuery) string {
 
 // GameCenterActivityVersionAttributes represents a Game Center activity version resource.
 type GameCenterActivityVersionAttributes struct {
-	Version    int                 `json:"version,omitempty"`
-	State      GameCenterVersionState `json:"state,omitempty"`
-	FallbackURL string             `json:"fallbackUrl,omitempty"`
+	Version     int                    `json:"version,omitempty"`
+	State       GameCenterVersionState `json:"state,omitempty"`
+	FallbackURL string                 `json:"fallbackUrl,omitempty"`
 }
 
 // GameCenterActivityVersionRelationships describes relationships for activity versions.
@@ -131,9 +131,9 @@ type GameCenterActivityVersionCreateAttributes struct {
 
 // GameCenterActivityVersionCreateData is the data portion of a version create request.
 type GameCenterActivityVersionCreateData struct {
-	Type          ResourceType                           `json:"type"`
+	Type          ResourceType                               `json:"type"`
 	Attributes    *GameCenterActivityVersionCreateAttributes `json:"attributes,omitempty"`
-	Relationships *GameCenterActivityVersionRelationships `json:"relationships,omitempty"`
+	Relationships *GameCenterActivityVersionRelationships    `json:"relationships,omitempty"`
 }
 
 // GameCenterActivityVersionCreateRequest is a request to create an activity version.
@@ -148,8 +148,8 @@ type GameCenterActivityVersionUpdateAttributes struct {
 
 // GameCenterActivityVersionUpdateData is the data portion of a version update request.
 type GameCenterActivityVersionUpdateData struct {
-	Type       ResourceType                             `json:"type"`
-	ID         string                                   `json:"id"`
+	Type       ResourceType                               `json:"type"`
+	ID         string                                     `json:"id"`
 	Attributes *GameCenterActivityVersionUpdateAttributes `json:"attributes,omitempty"`
 }
 
@@ -222,9 +222,9 @@ type GameCenterActivityLocalizationRelationships struct {
 
 // GameCenterActivityLocalizationCreateData is the data portion of a localization create request.
 type GameCenterActivityLocalizationCreateData struct {
-	Type          ResourceType                                 `json:"type"`
+	Type          ResourceType                                   `json:"type"`
 	Attributes    GameCenterActivityLocalizationCreateAttributes `json:"attributes"`
-	Relationships *GameCenterActivityLocalizationRelationships  `json:"relationships,omitempty"`
+	Relationships *GameCenterActivityLocalizationRelationships   `json:"relationships,omitempty"`
 }
 
 // GameCenterActivityLocalizationCreateRequest is a request to create a localization.
@@ -234,8 +234,8 @@ type GameCenterActivityLocalizationCreateRequest struct {
 
 // GameCenterActivityLocalizationUpdateData is the data portion of a localization update request.
 type GameCenterActivityLocalizationUpdateData struct {
-	Type       ResourceType                                  `json:"type"`
-	ID         string                                        `json:"id"`
+	Type       ResourceType                                    `json:"type"`
+	ID         string                                          `json:"id"`
 	Attributes *GameCenterActivityLocalizationUpdateAttributes `json:"attributes,omitempty"`
 }
 
@@ -314,9 +314,9 @@ type GameCenterActivityImageRelationships struct {
 
 // GameCenterActivityImageCreateData is the data portion of an image create request.
 type GameCenterActivityImageCreateData struct {
-	Type          ResourceType                       `json:"type"`
+	Type          ResourceType                            `json:"type"`
 	Attributes    GameCenterActivityImageCreateAttributes `json:"attributes"`
-	Relationships *GameCenterActivityImageRelationships  `json:"relationships"`
+	Relationships *GameCenterActivityImageRelationships   `json:"relationships"`
 }
 
 // GameCenterActivityImageCreateRequest is a request to reserve an image upload.
@@ -326,8 +326,8 @@ type GameCenterActivityImageCreateRequest struct {
 
 // GameCenterActivityImageUpdateData is the data portion of an image update (commit) request.
 type GameCenterActivityImageUpdateData struct {
-	Type       ResourceType                        `json:"type"`
-	ID         string                              `json:"id"`
+	Type       ResourceType                             `json:"type"`
+	ID         string                                   `json:"id"`
 	Attributes *GameCenterActivityImageUpdateAttributes `json:"attributes,omitempty"`
 }
 
@@ -368,7 +368,7 @@ type GameCenterActivityVersionReleaseRelationships struct {
 
 // GameCenterActivityVersionReleaseCreateData is the data portion of a release create request.
 type GameCenterActivityVersionReleaseCreateData struct {
-	Type          ResourceType                                  `json:"type"`
+	Type          ResourceType                                   `json:"type"`
 	Relationships *GameCenterActivityVersionReleaseRelationships `json:"relationships,omitempty"`
 }
 

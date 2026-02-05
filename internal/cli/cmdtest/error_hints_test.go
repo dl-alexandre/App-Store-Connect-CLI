@@ -34,4 +34,3 @@ func TestRunPrintsHintForMissingAuth(t *testing.T) {
 		t.Fatalf("expected auth hint, got %q", stderr)
 	}
 }
-

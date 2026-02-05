@@ -34,8 +34,8 @@ var subscriptionGracePeriodDurationValues = []string{
 }
 
 var subscriptionGracePeriodDurationMap = map[string]string{
-	string(asc.SubscriptionGracePeriodDurationThreeDays):      string(asc.SubscriptionGracePeriodDurationThreeDays),
-	string(asc.SubscriptionGracePeriodDurationSixteenDays):    string(asc.SubscriptionGracePeriodDurationSixteenDays),
+	string(asc.SubscriptionGracePeriodDurationThreeDays):       string(asc.SubscriptionGracePeriodDurationThreeDays),
+	string(asc.SubscriptionGracePeriodDurationSixteenDays):     string(asc.SubscriptionGracePeriodDurationSixteenDays),
 	string(asc.SubscriptionGracePeriodDurationTwentyEightDays): string(asc.SubscriptionGracePeriodDurationTwentyEightDays),
 	"DAY_3":  "DAY_3",
 	"DAY_16": "DAY_16",

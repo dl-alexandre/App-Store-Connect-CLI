@@ -8,13 +8,13 @@ import (
 
 // GameCenterMatchmakingQueueAttributes represents a matchmaking queue resource.
 type GameCenterMatchmakingQueueAttributes struct {
-	ReferenceName             string   `json:"referenceName"`
+	ReferenceName               string   `json:"referenceName"`
 	ClassicMatchmakingBundleIDs []string `json:"classicMatchmakingBundleIds,omitempty"`
 }
 
 // GameCenterMatchmakingQueueCreateAttributes describes attributes for creating a queue.
 type GameCenterMatchmakingQueueCreateAttributes struct {
-	ReferenceName             string   `json:"referenceName"`
+	ReferenceName               string   `json:"referenceName"`
 	ClassicMatchmakingBundleIDs []string `json:"classicMatchmakingBundleIds,omitempty"`
 }
 
@@ -31,9 +31,9 @@ type GameCenterMatchmakingQueueRelationships struct {
 
 // GameCenterMatchmakingQueueCreateData is the data portion of a queue create request.
 type GameCenterMatchmakingQueueCreateData struct {
-	Type          ResourceType                            `json:"type"`
+	Type          ResourceType                               `json:"type"`
 	Attributes    GameCenterMatchmakingQueueCreateAttributes `json:"attributes"`
-	Relationships *GameCenterMatchmakingQueueRelationships `json:"relationships,omitempty"`
+	Relationships *GameCenterMatchmakingQueueRelationships   `json:"relationships,omitempty"`
 }
 
 // GameCenterMatchmakingQueueCreateRequest is a request to create a queue.
@@ -43,10 +43,10 @@ type GameCenterMatchmakingQueueCreateRequest struct {
 
 // GameCenterMatchmakingQueueUpdateData is the data portion of a queue update request.
 type GameCenterMatchmakingQueueUpdateData struct {
-	Type          ResourceType                            `json:"type"`
-	ID            string                                  `json:"id"`
+	Type          ResourceType                                `json:"type"`
+	ID            string                                      `json:"id"`
 	Attributes    *GameCenterMatchmakingQueueUpdateAttributes `json:"attributes,omitempty"`
-	Relationships *GameCenterMatchmakingQueueRelationships `json:"relationships,omitempty"`
+	Relationships *GameCenterMatchmakingQueueRelationships    `json:"relationships,omitempty"`
 }
 
 // GameCenterMatchmakingQueueUpdateRequest is a request to update a queue.
@@ -99,18 +99,18 @@ func buildGCMatchmakingQueuesQuery(query *gcMatchmakingQueuesQuery) string {
 
 // GameCenterMatchmakingRuleSetAttributes represents a matchmaking rule set resource.
 type GameCenterMatchmakingRuleSetAttributes struct {
-	ReferenceName      string `json:"referenceName"`
+	ReferenceName       string `json:"referenceName"`
 	RuleLanguageVersion int    `json:"ruleLanguageVersion"`
-	MinPlayers         int    `json:"minPlayers"`
-	MaxPlayers         int    `json:"maxPlayers"`
+	MinPlayers          int    `json:"minPlayers"`
+	MaxPlayers          int    `json:"maxPlayers"`
 }
 
 // GameCenterMatchmakingRuleSetCreateAttributes describes attributes for creating a rule set.
 type GameCenterMatchmakingRuleSetCreateAttributes struct {
-	ReferenceName      string `json:"referenceName"`
+	ReferenceName       string `json:"referenceName"`
 	RuleLanguageVersion int    `json:"ruleLanguageVersion"`
-	MinPlayers         int    `json:"minPlayers"`
-	MaxPlayers         int    `json:"maxPlayers"`
+	MinPlayers          int    `json:"minPlayers"`
+	MaxPlayers          int    `json:"maxPlayers"`
 }
 
 // GameCenterMatchmakingRuleSetUpdateAttributes describes attributes for updating a rule set.
@@ -121,7 +121,7 @@ type GameCenterMatchmakingRuleSetUpdateAttributes struct {
 
 // GameCenterMatchmakingRuleSetCreateData is the data portion of a rule set create request.
 type GameCenterMatchmakingRuleSetCreateData struct {
-	Type       ResourceType                                `json:"type"`
+	Type       ResourceType                                 `json:"type"`
 	Attributes GameCenterMatchmakingRuleSetCreateAttributes `json:"attributes"`
 }
 
@@ -132,8 +132,8 @@ type GameCenterMatchmakingRuleSetCreateRequest struct {
 
 // GameCenterMatchmakingRuleSetUpdateData is the data portion of a rule set update request.
 type GameCenterMatchmakingRuleSetUpdateData struct {
-	Type       ResourceType                                 `json:"type"`
-	ID         string                                       `json:"id"`
+	Type       ResourceType                                  `json:"type"`
+	ID         string                                        `json:"id"`
 	Attributes *GameCenterMatchmakingRuleSetUpdateAttributes `json:"attributes,omitempty"`
 }
 
@@ -217,9 +217,9 @@ type GameCenterMatchmakingRuleRelationships struct {
 
 // GameCenterMatchmakingRuleCreateData is the data portion of a rule create request.
 type GameCenterMatchmakingRuleCreateData struct {
-	Type          ResourceType                          `json:"type"`
+	Type          ResourceType                              `json:"type"`
 	Attributes    GameCenterMatchmakingRuleCreateAttributes `json:"attributes"`
-	Relationships *GameCenterMatchmakingRuleRelationships `json:"relationships,omitempty"`
+	Relationships *GameCenterMatchmakingRuleRelationships   `json:"relationships,omitempty"`
 }
 
 // GameCenterMatchmakingRuleCreateRequest is a request to create a rule.
@@ -229,8 +229,8 @@ type GameCenterMatchmakingRuleCreateRequest struct {
 
 // GameCenterMatchmakingRuleUpdateData is the data portion of a rule update request.
 type GameCenterMatchmakingRuleUpdateData struct {
-	Type       ResourceType                           `json:"type"`
-	ID         string                                 `json:"id"`
+	Type       ResourceType                               `json:"type"`
+	ID         string                                     `json:"id"`
 	Attributes *GameCenterMatchmakingRuleUpdateAttributes `json:"attributes,omitempty"`
 }
 
@@ -309,9 +309,9 @@ type GameCenterMatchmakingTeamRelationships struct {
 
 // GameCenterMatchmakingTeamCreateData is the data portion of a team create request.
 type GameCenterMatchmakingTeamCreateData struct {
-	Type          ResourceType                          `json:"type"`
+	Type          ResourceType                              `json:"type"`
 	Attributes    GameCenterMatchmakingTeamCreateAttributes `json:"attributes"`
-	Relationships *GameCenterMatchmakingTeamRelationships `json:"relationships,omitempty"`
+	Relationships *GameCenterMatchmakingTeamRelationships   `json:"relationships,omitempty"`
 }
 
 // GameCenterMatchmakingTeamCreateRequest is a request to create a team.
@@ -321,8 +321,8 @@ type GameCenterMatchmakingTeamCreateRequest struct {
 
 // GameCenterMatchmakingTeamUpdateData is the data portion of a team update request.
 type GameCenterMatchmakingTeamUpdateData struct {
-	Type       ResourceType                           `json:"type"`
-	ID         string                                 `json:"id"`
+	Type       ResourceType                               `json:"type"`
+	ID         string                                     `json:"id"`
 	Attributes *GameCenterMatchmakingTeamUpdateAttributes `json:"attributes,omitempty"`
 }
 
@@ -376,9 +376,9 @@ func buildGCMatchmakingTeamsQuery(query *gcMatchmakingTeamsQuery) string {
 
 // GameCenterMetricsDataPoint represents a metrics data point.
 type GameCenterMetricsDataPoint struct {
-	Start  string                 `json:"start,omitempty"`
-	End    string                 `json:"end,omitempty"`
-	Values map[string]any         `json:"values,omitempty"`
+	Start  string         `json:"start,omitempty"`
+	End    string         `json:"end,omitempty"`
+	Values map[string]any `json:"values,omitempty"`
 }
 
 // GameCenterMetricsDimension represents a metrics dimension entry.
@@ -439,11 +439,11 @@ type GCMatchmakingMetricsOption func(*gcMatchmakingMetricsQuery)
 
 type gcMatchmakingMetricsQuery struct {
 	listQuery
-	granularity                 string
-	sort                        []string
-	groupBy                     []string
-	filterResult                string
-	filterGameCenterDetail      string
+	granularity                      string
+	sort                             []string
+	groupBy                          []string
+	filterResult                     string
+	filterGameCenterDetail           string
 	filterGameCenterMatchmakingQueue string
 }
 

@@ -35,10 +35,10 @@ type InAppPurchaseV2Attributes struct {
 
 // InAppPurchaseAttributes represents a legacy in-app purchase resource.
 type InAppPurchaseAttributes struct {
-	ReferenceName    string `json:"referenceName"`
-	ProductID        string `json:"productId"`
+	ReferenceName     string `json:"referenceName"`
+	ProductID         string `json:"productId"`
 	InAppPurchaseType string `json:"inAppPurchaseType"`
-	State            string `json:"state,omitempty"`
+	State             string `json:"state,omitempty"`
 }
 
 // InAppPurchaseV2CreateAttributes describes attributes for creating an IAP.

@@ -34,4 +34,3 @@ func TestResolveRetryLogEnabled_EnvBeatsConfig(t *testing.T) {
 		t.Fatal("expected ASC_RETRY_LOG to enable retry logging")
 	}
 }
-

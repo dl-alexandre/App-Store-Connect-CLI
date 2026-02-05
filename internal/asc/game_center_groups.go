@@ -22,7 +22,7 @@ type GameCenterGroupUpdateAttributes struct {
 
 // GameCenterGroupCreateData is the data portion of a group create request.
 type GameCenterGroupCreateData struct {
-	Type       ResourceType                 `json:"type"`
+	Type       ResourceType                     `json:"type"`
 	Attributes *GameCenterGroupCreateAttributes `json:"attributes,omitempty"`
 }
 
@@ -33,8 +33,8 @@ type GameCenterGroupCreateRequest struct {
 
 // GameCenterGroupUpdateData is the data portion of a group update request.
 type GameCenterGroupUpdateData struct {
-	Type       ResourceType                 `json:"type"`
-	ID         string                       `json:"id"`
+	Type       ResourceType                     `json:"type"`
+	ID         string                           `json:"id"`
 	Attributes *GameCenterGroupUpdateAttributes `json:"attributes,omitempty"`
 }
 

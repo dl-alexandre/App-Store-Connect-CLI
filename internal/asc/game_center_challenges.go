@@ -45,9 +45,9 @@ type GameCenterChallengeUpdateRelationships struct {
 
 // GameCenterChallengeCreateData is the data portion of a challenge create request.
 type GameCenterChallengeCreateData struct {
-	Type          ResourceType                     `json:"type"`
+	Type          ResourceType                        `json:"type"`
 	Attributes    GameCenterChallengeCreateAttributes `json:"attributes"`
-	Relationships *GameCenterChallengeRelationships `json:"relationships,omitempty"`
+	Relationships *GameCenterChallengeRelationships   `json:"relationships,omitempty"`
 }
 
 // GameCenterChallengeCreateRequest is a request to create a challenge.
@@ -57,9 +57,9 @@ type GameCenterChallengeCreateRequest struct {
 
 // GameCenterChallengeUpdateData is the data portion of a challenge update request.
 type GameCenterChallengeUpdateData struct {
-	Type          ResourceType                        `json:"type"`
-	ID            string                              `json:"id"`
-	Attributes    *GameCenterChallengeUpdateAttributes `json:"attributes,omitempty"`
+	Type          ResourceType                            `json:"type"`
+	ID            string                                  `json:"id"`
+	Attributes    *GameCenterChallengeUpdateAttributes    `json:"attributes,omitempty"`
 	Relationships *GameCenterChallengeUpdateRelationships `json:"relationships,omitempty"`
 }
 
@@ -113,7 +113,7 @@ func buildGCChallengesQuery(query *gcChallengesQuery) string {
 
 // GameCenterChallengeVersionAttributes represents a Game Center challenge version resource.
 type GameCenterChallengeVersionAttributes struct {
-	Version int                 `json:"version,omitempty"`
+	Version int                    `json:"version,omitempty"`
 	State   GameCenterVersionState `json:"state,omitempty"`
 }
 
@@ -124,7 +124,7 @@ type GameCenterChallengeVersionRelationships struct {
 
 // GameCenterChallengeVersionCreateData is the data portion of a version create request.
 type GameCenterChallengeVersionCreateData struct {
-	Type          ResourceType                          `json:"type"`
+	Type          ResourceType                             `json:"type"`
 	Relationships *GameCenterChallengeVersionRelationships `json:"relationships,omitempty"`
 }
 
@@ -197,9 +197,9 @@ type GameCenterChallengeLocalizationRelationships struct {
 
 // GameCenterChallengeLocalizationCreateData is the data portion of a localization create request.
 type GameCenterChallengeLocalizationCreateData struct {
-	Type          ResourceType                                  `json:"type"`
+	Type          ResourceType                                    `json:"type"`
 	Attributes    GameCenterChallengeLocalizationCreateAttributes `json:"attributes"`
-	Relationships *GameCenterChallengeLocalizationRelationships  `json:"relationships,omitempty"`
+	Relationships *GameCenterChallengeLocalizationRelationships   `json:"relationships,omitempty"`
 }
 
 // GameCenterChallengeLocalizationCreateRequest is a request to create a localization.
@@ -209,8 +209,8 @@ type GameCenterChallengeLocalizationCreateRequest struct {
 
 // GameCenterChallengeLocalizationUpdateData is the data portion of a localization update request.
 type GameCenterChallengeLocalizationUpdateData struct {
-	Type       ResourceType                                   `json:"type"`
-	ID         string                                         `json:"id"`
+	Type       ResourceType                                     `json:"type"`
+	ID         string                                           `json:"id"`
 	Attributes *GameCenterChallengeLocalizationUpdateAttributes `json:"attributes,omitempty"`
 }
 
@@ -289,9 +289,9 @@ type GameCenterChallengeImageRelationships struct {
 
 // GameCenterChallengeImageCreateData is the data portion of an image create request.
 type GameCenterChallengeImageCreateData struct {
-	Type          ResourceType                         `json:"type"`
+	Type          ResourceType                             `json:"type"`
 	Attributes    GameCenterChallengeImageCreateAttributes `json:"attributes"`
-	Relationships *GameCenterChallengeImageRelationships  `json:"relationships"`
+	Relationships *GameCenterChallengeImageRelationships   `json:"relationships"`
 }
 
 // GameCenterChallengeImageCreateRequest is a request to reserve an image upload.
@@ -301,8 +301,8 @@ type GameCenterChallengeImageCreateRequest struct {
 
 // GameCenterChallengeImageUpdateData is the data portion of an image update (commit) request.
 type GameCenterChallengeImageUpdateData struct {
-	Type       ResourceType                          `json:"type"`
-	ID         string                                `json:"id"`
+	Type       ResourceType                              `json:"type"`
+	ID         string                                    `json:"id"`
 	Attributes *GameCenterChallengeImageUpdateAttributes `json:"attributes,omitempty"`
 }
 
@@ -343,7 +343,7 @@ type GameCenterChallengeVersionReleaseRelationships struct {
 
 // GameCenterChallengeVersionReleaseCreateData is the data portion of a release create request.
 type GameCenterChallengeVersionReleaseCreateData struct {
-	Type          ResourceType                                  `json:"type"`
+	Type          ResourceType                                    `json:"type"`
 	Relationships *GameCenterChallengeVersionReleaseRelationships `json:"relationships,omitempty"`
 }
 

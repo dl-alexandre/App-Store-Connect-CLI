@@ -20,11 +20,11 @@ type AppEventLocalizationDeleteResult struct {
 
 // AppEventSubmissionResult represents CLI output for app event submissions.
 type AppEventSubmissionResult struct {
-	SubmissionID string  `json:"submissionId"`
-	ItemID       string  `json:"itemId,omitempty"`
-	EventID      string  `json:"eventId"`
-	AppID        string  `json:"appId"`
-	Platform     string  `json:"platform,omitempty"`
+	SubmissionID  string  `json:"submissionId"`
+	ItemID        string  `json:"itemId,omitempty"`
+	EventID       string  `json:"eventId"`
+	AppID         string  `json:"appId"`
+	Platform      string  `json:"platform,omitempty"`
 	SubmittedDate *string `json:"submittedDate,omitempty"`
 }
 

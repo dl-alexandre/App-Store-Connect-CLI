@@ -2,8 +2,8 @@ package asc
 
 // BetaRecruitmentCriteriaAttributes describes beta recruitment criteria metadata.
 type BetaRecruitmentCriteriaAttributes struct {
-	LastModifiedDate              string                       `json:"lastModifiedDate,omitempty"`
-	DeviceFamilyOsVersionFilters  []DeviceFamilyOsVersionFilter `json:"deviceFamilyOsVersionFilters,omitempty"`
+	LastModifiedDate             string                        `json:"lastModifiedDate,omitempty"`
+	DeviceFamilyOsVersionFilters []DeviceFamilyOsVersionFilter `json:"deviceFamilyOsVersionFilters,omitempty"`
 }
 
 // BetaRecruitmentCriteriaCreateAttributes describes create attributes.
@@ -40,9 +40,9 @@ type BetaRecruitmentCriteriaRelationships struct {
 
 // BetaRecruitmentCriteriaCreateData is the data portion of a criteria create request.
 type BetaRecruitmentCriteriaCreateData struct {
-	Type          ResourceType                          `json:"type"`
+	Type          ResourceType                            `json:"type"`
 	Attributes    BetaRecruitmentCriteriaCreateAttributes `json:"attributes"`
-	Relationships *BetaRecruitmentCriteriaRelationships `json:"relationships"`
+	Relationships *BetaRecruitmentCriteriaRelationships   `json:"relationships"`
 }
 
 // BetaRecruitmentCriteriaCreateRequest is a request to create beta recruitment criteria.
@@ -52,9 +52,9 @@ type BetaRecruitmentCriteriaCreateRequest struct {
 
 // BetaRecruitmentCriteriaUpdateData is the data portion of a criteria update request.
 type BetaRecruitmentCriteriaUpdateData struct {
-	Type          ResourceType                          `json:"type"`
-	ID            string                                `json:"id"`
-	Attributes    *BetaRecruitmentCriteriaUpdateAttributes `json:"attributes,omitempty"`
+	Type       ResourceType                             `json:"type"`
+	ID         string                                   `json:"id"`
+	Attributes *BetaRecruitmentCriteriaUpdateAttributes `json:"attributes,omitempty"`
 }
 
 // BetaRecruitmentCriteriaUpdateRequest is a request to update beta recruitment criteria.
@@ -75,6 +75,7 @@ type BetaRecruitmentCriterionOptionDeviceFamily struct {
 	DeviceFamily DeviceFamily `json:"deviceFamily,omitempty"`
 	OSVersions   []string     `json:"osVersions,omitempty"`
 }
+
 // BetaRecruitmentCriterionOptionsResponse is the response from recruitment criteria options list.
 type BetaRecruitmentCriterionOptionsResponse = Response[BetaRecruitmentCriterionOptionAttributes]
 

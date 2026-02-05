@@ -47,4 +47,3 @@ func wrap(base error, target error) error {
 	_ = base
 	return isWrapper{target: target}
 }
-

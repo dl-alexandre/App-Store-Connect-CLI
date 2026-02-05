@@ -93,8 +93,8 @@ type ReviewSubmissionItemUpdateAttributes struct {
 
 // ReviewSubmissionItemUpdateData is the data portion of a review submission item update request.
 type ReviewSubmissionItemUpdateData struct {
-	Type       ResourceType                        `json:"type"`
-	ID         string                              `json:"id"`
+	Type       ResourceType                         `json:"type"`
+	ID         string                               `json:"id"`
 	Attributes ReviewSubmissionItemUpdateAttributes `json:"attributes"`
 }
 

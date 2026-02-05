@@ -4,8 +4,8 @@ package asc
 type SubscriptionGracePeriodDuration string
 
 const (
-	SubscriptionGracePeriodDurationThreeDays      SubscriptionGracePeriodDuration = "THREE_DAYS"
-	SubscriptionGracePeriodDurationSixteenDays    SubscriptionGracePeriodDuration = "SIXTEEN_DAYS"
+	SubscriptionGracePeriodDurationThreeDays       SubscriptionGracePeriodDuration = "THREE_DAYS"
+	SubscriptionGracePeriodDurationSixteenDays     SubscriptionGracePeriodDuration = "SIXTEEN_DAYS"
 	SubscriptionGracePeriodDurationTwentyEightDays SubscriptionGracePeriodDuration = "TWENTY_EIGHT_DAYS"
 )
 
@@ -35,8 +35,8 @@ type SubscriptionGracePeriodUpdateAttributes struct {
 
 // SubscriptionGracePeriodUpdateData is the data portion of an update request.
 type SubscriptionGracePeriodUpdateData struct {
-	Type       ResourceType                        `json:"type"`
-	ID         string                              `json:"id"`
+	Type       ResourceType                            `json:"type"`
+	ID         string                                  `json:"id"`
 	Attributes SubscriptionGracePeriodUpdateAttributes `json:"attributes"`
 }
 

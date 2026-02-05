@@ -351,7 +351,7 @@ Examples:
 		FlagSet:   fs,
 		UsageFunc: DefaultUsageFunc,
 		Subcommands: []*ffcli.Command{
-		GameCenterGroupAchievementsListCommand(),
+			GameCenterGroupAchievementsListCommand(),
 			GameCenterGroupAchievementsSetCommand(),
 		},
 		Exec: func(ctx context.Context, args []string) error {
@@ -527,7 +527,7 @@ Examples:
 		FlagSet:   fs,
 		UsageFunc: DefaultUsageFunc,
 		Subcommands: []*ffcli.Command{
-		GameCenterGroupLeaderboardsListCommand(),
+			GameCenterGroupLeaderboardsListCommand(),
 			GameCenterGroupLeaderboardsSetCommand(),
 		},
 		Exec: func(ctx context.Context, args []string) error {
@@ -920,7 +920,7 @@ Examples:
 		FlagSet:   fs,
 		UsageFunc: DefaultUsageFunc,
 		Subcommands: []*ffcli.Command{
-		GameCenterGroupChallengesListCommand(),
+			GameCenterGroupChallengesListCommand(),
 			GameCenterGroupChallengesSetCommand(),
 		},
 		Exec: func(ctx context.Context, args []string) error {

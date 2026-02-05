@@ -66,8 +66,8 @@ var ValidAppEventPurposes = []string{
 type AppEventAssetType string
 
 const (
-	AppEventAssetTypeEventCard         AppEventAssetType = "EVENT_CARD"
-	AppEventAssetTypeEventDetailsPage  AppEventAssetType = "EVENT_DETAILS_PAGE"
+	AppEventAssetTypeEventCard        AppEventAssetType = "EVENT_CARD"
+	AppEventAssetTypeEventDetailsPage AppEventAssetType = "EVENT_DETAILS_PAGE"
 )
 
 // ValidAppEventAssetTypes lists supported app event asset types.
@@ -86,40 +86,40 @@ type AppEventTerritorySchedule struct {
 
 // AppEventAttributes represents app event attributes.
 type AppEventAttributes struct {
-	ReferenceName             string                     `json:"referenceName,omitempty"`
-	Badge                     string                     `json:"badge,omitempty"`
-	EventState                string                     `json:"eventState,omitempty"`
-	DeepLink                  string                     `json:"deepLink,omitempty"`
-	PurchaseRequirement       string                     `json:"purchaseRequirement,omitempty"`
-	PrimaryLocale             string                     `json:"primaryLocale,omitempty"`
-	Priority                  string                     `json:"priority,omitempty"`
-	Purpose                   string                     `json:"purpose,omitempty"`
-	TerritorySchedules        []AppEventTerritorySchedule `json:"territorySchedules,omitempty"`
+	ReferenceName              string                      `json:"referenceName,omitempty"`
+	Badge                      string                      `json:"badge,omitempty"`
+	EventState                 string                      `json:"eventState,omitempty"`
+	DeepLink                   string                      `json:"deepLink,omitempty"`
+	PurchaseRequirement        string                      `json:"purchaseRequirement,omitempty"`
+	PrimaryLocale              string                      `json:"primaryLocale,omitempty"`
+	Priority                   string                      `json:"priority,omitempty"`
+	Purpose                    string                      `json:"purpose,omitempty"`
+	TerritorySchedules         []AppEventTerritorySchedule `json:"territorySchedules,omitempty"`
 	ArchivedTerritorySchedules []AppEventTerritorySchedule `json:"archivedTerritorySchedules,omitempty"`
 }
 
 // AppEventCreateAttributes describes attributes for creating an app event.
 type AppEventCreateAttributes struct {
-	ReferenceName       string                     `json:"referenceName"`
-	Badge               string                     `json:"badge,omitempty"`
-	DeepLink            string                     `json:"deepLink,omitempty"`
-	PurchaseRequirement string                     `json:"purchaseRequirement,omitempty"`
-	PrimaryLocale       string                     `json:"primaryLocale,omitempty"`
-	Priority            string                     `json:"priority,omitempty"`
-	Purpose             string                     `json:"purpose,omitempty"`
+	ReferenceName       string                      `json:"referenceName"`
+	Badge               string                      `json:"badge,omitempty"`
+	DeepLink            string                      `json:"deepLink,omitempty"`
+	PurchaseRequirement string                      `json:"purchaseRequirement,omitempty"`
+	PrimaryLocale       string                      `json:"primaryLocale,omitempty"`
+	Priority            string                      `json:"priority,omitempty"`
+	Purpose             string                      `json:"purpose,omitempty"`
 	TerritorySchedules  []AppEventTerritorySchedule `json:"territorySchedules,omitempty"`
 }
 
 // AppEventUpdateAttributes describes attributes for updating an app event.
 type AppEventUpdateAttributes struct {
-	ReferenceName      *string                    `json:"referenceName,omitempty"`
-	Badge              *string                    `json:"badge,omitempty"`
-	DeepLink           *string                    `json:"deepLink,omitempty"`
-	PurchaseRequirement *string                   `json:"purchaseRequirement,omitempty"`
-	PrimaryLocale      *string                    `json:"primaryLocale,omitempty"`
-	Priority           *string                    `json:"priority,omitempty"`
-	Purpose            *string                    `json:"purpose,omitempty"`
-	TerritorySchedules []AppEventTerritorySchedule `json:"territorySchedules,omitempty"`
+	ReferenceName       *string                     `json:"referenceName,omitempty"`
+	Badge               *string                     `json:"badge,omitempty"`
+	DeepLink            *string                     `json:"deepLink,omitempty"`
+	PurchaseRequirement *string                     `json:"purchaseRequirement,omitempty"`
+	PrimaryLocale       *string                     `json:"primaryLocale,omitempty"`
+	Priority            *string                     `json:"priority,omitempty"`
+	Purpose             *string                     `json:"purpose,omitempty"`
+	TerritorySchedules  []AppEventTerritorySchedule `json:"territorySchedules,omitempty"`
 }
 
 // AppEventLocalizationAttributes represents app event localization attributes.
@@ -147,18 +147,18 @@ type AppEventLocalizationUpdateAttributes struct {
 
 // AppEventScreenshotAttributes represents app event screenshot attributes.
 type AppEventScreenshotAttributes struct {
-	FileSize           int64              `json:"fileSize,omitempty"`
-	FileName           string             `json:"fileName,omitempty"`
-	ImageAsset         *ImageAsset        `json:"imageAsset,omitempty"`
-	AssetToken         string             `json:"assetToken,omitempty"`
-	UploadOperations   []UploadOperation  `json:"uploadOperations,omitempty"`
+	FileSize           int64               `json:"fileSize,omitempty"`
+	FileName           string              `json:"fileName,omitempty"`
+	ImageAsset         *ImageAsset         `json:"imageAsset,omitempty"`
+	AssetToken         string              `json:"assetToken,omitempty"`
+	UploadOperations   []UploadOperation   `json:"uploadOperations,omitempty"`
 	AssetDeliveryState *AppMediaAssetState `json:"assetDeliveryState,omitempty"`
-	AppEventAssetType  string             `json:"appEventAssetType,omitempty"`
+	AppEventAssetType  string              `json:"appEventAssetType,omitempty"`
 }
 
 // AppMediaVideoState represents the state of a video asset.
 type AppMediaVideoState struct {
-	State    *string      `json:"state,omitempty"`
+	State    *string       `json:"state,omitempty"`
 	Errors   []StateDetail `json:"errors,omitempty"`
 	Warnings []StateDetail `json:"warnings,omitempty"`
 }
@@ -172,35 +172,35 @@ type AppMediaPreviewFrameImageState struct {
 
 // PreviewFrameImage represents a preview frame image.
 type PreviewFrameImage struct {
-	Image *ImageAsset                `json:"image,omitempty"`
+	Image *ImageAsset                     `json:"image,omitempty"`
 	State *AppMediaPreviewFrameImageState `json:"state,omitempty"`
 }
 
 // AppEventVideoClipAttributes represents app event video clip attributes.
 type AppEventVideoClipAttributes struct {
-	FileSize            int64             `json:"fileSize,omitempty"`
-	FileName            string            `json:"fileName,omitempty"`
-	PreviewFrameTimeCode string           `json:"previewFrameTimeCode,omitempty"`
-	VideoURL            string            `json:"videoUrl,omitempty"`
-	PreviewFrameImage   *PreviewFrameImage `json:"previewFrameImage,omitempty"`
-	PreviewImage        *ImageAsset       `json:"previewImage,omitempty"`
-	UploadOperations    []UploadOperation `json:"uploadOperations,omitempty"`
-	AssetDeliveryState  *AppMediaAssetState `json:"assetDeliveryState,omitempty"`
-	VideoDeliveryState  *AppMediaVideoState `json:"videoDeliveryState,omitempty"`
-	AppEventAssetType   string            `json:"appEventAssetType,omitempty"`
+	FileSize             int64               `json:"fileSize,omitempty"`
+	FileName             string              `json:"fileName,omitempty"`
+	PreviewFrameTimeCode string              `json:"previewFrameTimeCode,omitempty"`
+	VideoURL             string              `json:"videoUrl,omitempty"`
+	PreviewFrameImage    *PreviewFrameImage  `json:"previewFrameImage,omitempty"`
+	PreviewImage         *ImageAsset         `json:"previewImage,omitempty"`
+	UploadOperations     []UploadOperation   `json:"uploadOperations,omitempty"`
+	AssetDeliveryState   *AppMediaAssetState `json:"assetDeliveryState,omitempty"`
+	VideoDeliveryState   *AppMediaVideoState `json:"videoDeliveryState,omitempty"`
+	AppEventAssetType    string              `json:"appEventAssetType,omitempty"`
 }
 
 // Response types.
 type (
-	AppEventsResponse              = Response[AppEventAttributes]
-	AppEventResponse               = SingleResponse[AppEventAttributes]
-	AppEventLocalizationsResponse  = Response[AppEventLocalizationAttributes]
-	AppEventLocalizationResponse   = SingleResponse[AppEventLocalizationAttributes]
-	AppEventScreenshotsResponse    = Response[AppEventScreenshotAttributes]
-	AppEventScreenshotResponse     = SingleResponse[AppEventScreenshotAttributes]
-	AppEventVideoClipsResponse     = Response[AppEventVideoClipAttributes]
-	AppEventVideoClipResponse      = SingleResponse[AppEventVideoClipAttributes]
-	AppEventLocalizationsLinkagesResponse        = LinkagesResponse
+	AppEventsResponse                               = Response[AppEventAttributes]
+	AppEventResponse                                = SingleResponse[AppEventAttributes]
+	AppEventLocalizationsResponse                   = Response[AppEventLocalizationAttributes]
+	AppEventLocalizationResponse                    = SingleResponse[AppEventLocalizationAttributes]
+	AppEventScreenshotsResponse                     = Response[AppEventScreenshotAttributes]
+	AppEventScreenshotResponse                      = SingleResponse[AppEventScreenshotAttributes]
+	AppEventVideoClipsResponse                      = Response[AppEventVideoClipAttributes]
+	AppEventVideoClipResponse                       = SingleResponse[AppEventVideoClipAttributes]
+	AppEventLocalizationsLinkagesResponse           = LinkagesResponse
 	AppEventLocalizationScreenshotsLinkagesResponse = LinkagesResponse
 	AppEventLocalizationVideoClipsLinkagesResponse  = LinkagesResponse
 )

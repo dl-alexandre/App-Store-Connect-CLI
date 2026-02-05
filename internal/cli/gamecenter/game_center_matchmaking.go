@@ -225,7 +225,7 @@ Examples:
 			}
 
 			attrs := asc.GameCenterMatchmakingQueueCreateAttributes{
-				ReferenceName:             name,
+				ReferenceName:               name,
 				ClassicMatchmakingBundleIDs: splitCSV(*classicBundleIDs),
 			}
 
@@ -541,10 +541,10 @@ Examples:
 			}
 
 			attrs := asc.GameCenterMatchmakingRuleSetCreateAttributes{
-				ReferenceName:      name,
+				ReferenceName:       name,
 				RuleLanguageVersion: *ruleLanguageVersion,
-				MinPlayers:         *minPlayers,
-				MaxPlayers:         *maxPlayers,
+				MinPlayers:          *minPlayers,
+				MaxPlayers:          *maxPlayers,
 			}
 
 			client, err := getASCClient()

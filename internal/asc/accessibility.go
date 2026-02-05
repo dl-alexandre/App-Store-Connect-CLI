@@ -25,9 +25,9 @@ const (
 
 // DeviceFamilyOsVersionFilter represents device family OS constraints.
 type DeviceFamilyOsVersionFilter struct {
-	DeviceFamily        DeviceFamily `json:"deviceFamily,omitempty"`
-	MinimumOsInclusive  string       `json:"minimumOsInclusive,omitempty"`
-	MaximumOsInclusive  string       `json:"maximumOsInclusive,omitempty"`
+	DeviceFamily       DeviceFamily `json:"deviceFamily,omitempty"`
+	MinimumOsInclusive string       `json:"minimumOsInclusive,omitempty"`
+	MaximumOsInclusive string       `json:"maximumOsInclusive,omitempty"`
 }
 
 // AccessibilityDeclarationState represents the publishing state of a declaration.

@@ -63,4 +63,3 @@ func FormatStderr(err error) string {
 	}
 	return fmt.Sprintf("Error: %s\nHint: %s\n", ce.Message, ce.Hint)
 }
-

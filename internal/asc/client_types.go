@@ -1,294 +1,240 @@
 package asc
 
-import "encoding/json"
+// This file provides type aliases to internal/asc/types for backward compatibility.
+// All callers continue to use asc.ResourceType, asc.Resource[T], etc. without changes.
+// The canonical definitions now live in internal/asc/types/.
 
-// ResourceType represents an ASC resource type.
-type ResourceType string
+import "github.com/rudrankriyam/App-Store-Connect-CLI/internal/asc/types"
 
+// Core types — aliases to types package.
+type ResourceType = types.ResourceType
+type Links = types.Links
+type Platform = types.Platform
+type ChecksumAlgorithm = types.ChecksumAlgorithm
+type AssetType = types.AssetType
+type UTI = types.UTI
+type Relationship = types.Relationship
+type RelationshipList = types.RelationshipList
+type RelationshipRequest = types.RelationshipRequest
+type RelationshipData = types.RelationshipData
+type ResourceData = types.ResourceData
+
+// Generic resource types — aliases to types package.
+type Resource[T any] = types.Resource[T]
+type Response[T any] = types.Response[T]
+type SingleResponse[T any] = types.SingleResponse[T]
+type LinkagesResponse = types.LinkagesResponse
+type SingleResourceResponse[T any] = types.SingleResourceResponse[T]
+
+// Pagination interface — alias to types package.
+type PaginatedResponse = types.PaginatedResponse
+
+// ResourceType constants — re-exported from types package.
 const (
-	ResourceTypeApps                                            ResourceType = "apps"
-	ResourceTypeAppTags                                         ResourceType = "appTags"
-	ResourceTypeBundleIds                                       ResourceType = "bundleIds"
-	ResourceTypeBundleIdCapabilities                            ResourceType = "bundleIdCapabilities"
-	ResourceTypeMerchantIds                                     ResourceType = "merchantIds"
-	ResourceTypePassTypeIds                                     ResourceType = "passTypeIds"
-	ResourceTypeAppCategories                                   ResourceType = "appCategories"
-	ResourceTypeAppAvailabilities                               ResourceType = "appAvailabilities"
-	ResourceTypeAppPricePoints                                  ResourceType = "appPricePoints"
-	ResourceTypeAppPriceSchedules                               ResourceType = "appPriceSchedules"
-	ResourceTypeAppPrices                                       ResourceType = "appPrices"
-	ResourceTypeBuilds                                          ResourceType = "builds"
-	ResourceTypeBuildBundles                                    ResourceType = "buildBundles"
-	ResourceTypeBuildBundleFileSizes                            ResourceType = "buildBundleFileSizes"
-	ResourceTypeBuildIcons                                      ResourceType = "buildIcons"
-	ResourceTypeBuildUploads                                    ResourceType = "buildUploads"
-	ResourceTypeBuildUploadFiles                                ResourceType = "buildUploadFiles"
-	ResourceTypeCertificates                                    ResourceType = "certificates"
-	ResourceTypeAppStoreVersions                                ResourceType = "appStoreVersions"
-	ResourceTypeAppClips                                        ResourceType = "appClips"
-	ResourceTypeAppClipDefaultExperiences                       ResourceType = "appClipDefaultExperiences"
-	ResourceTypeAppClipDefaultExperienceLocalizations           ResourceType = "appClipDefaultExperienceLocalizations"
-	ResourceTypeAppClipAdvancedExperiences                      ResourceType = "appClipAdvancedExperiences"
-	ResourceTypeAppClipAdvancedExperienceImages                 ResourceType = "appClipAdvancedExperienceImages"
-	ResourceTypeAppClipAdvancedExperienceLocalizations          ResourceType = "appClipAdvancedExperienceLocalizations"
-	ResourceTypeAppClipHeaderImages                             ResourceType = "appClipHeaderImages"
-	ResourceTypeAppClipAppStoreReviewDetails                    ResourceType = "appClipAppStoreReviewDetails"
-	ResourceTypeBackgroundAssets                                ResourceType = "backgroundAssets"
-	ResourceTypeBackgroundAssetVersions                         ResourceType = "backgroundAssetVersions"
-	ResourceTypeBackgroundAssetUploadFiles                      ResourceType = "backgroundAssetUploadFiles"
-	ResourceTypeBackgroundAssetVersionAppStoreReleases          ResourceType = "backgroundAssetVersionAppStoreReleases"
-	ResourceTypeBackgroundAssetVersionExternalBetaReleases      ResourceType = "backgroundAssetVersionExternalBetaReleases"
-	ResourceTypeBackgroundAssetVersionInternalBetaReleases      ResourceType = "backgroundAssetVersionInternalBetaReleases"
-	ResourceTypeRoutingAppCoverages                             ResourceType = "routingAppCoverages"
-	ResourceTypeAppEncryptionDeclarations                       ResourceType = "appEncryptionDeclarations"
-	ResourceTypeAppEncryptionDeclarationDocuments               ResourceType = "appEncryptionDeclarationDocuments"
-	ResourceTypeAppStoreVersionPromotions                       ResourceType = "appStoreVersionPromotions"
-	ResourceTypeAppStoreVersionExperimentTreatments             ResourceType = "appStoreVersionExperimentTreatments"
-	ResourceTypeAppStoreVersionExperimentTreatmentLocalizations ResourceType = "appStoreVersionExperimentTreatmentLocalizations"
-	ResourceTypePreReleaseVersions                              ResourceType = "preReleaseVersions"
-	ResourceTypeAppStoreVersionSubmissions                      ResourceType = "appStoreVersionSubmissions"
-	ResourceTypeAppScreenshotSets                               ResourceType = "appScreenshotSets"
-	ResourceTypeAppScreenshots                                  ResourceType = "appScreenshots"
-	ResourceTypeAppPreviewSets                                  ResourceType = "appPreviewSets"
-	ResourceTypeAppPreviews                                     ResourceType = "appPreviews"
-	ResourceTypeReviewSubmissions                               ResourceType = "reviewSubmissions"
-	ResourceTypeReviewSubmissionItems                           ResourceType = "reviewSubmissionItems"
-	ResourceTypeAppCustomProductPages                           ResourceType = "appCustomProductPages"
-	ResourceTypeAppCustomProductPageVersions                    ResourceType = "appCustomProductPageVersions"
-	ResourceTypeAppCustomProductPageLocalizations               ResourceType = "appCustomProductPageLocalizations"
-	ResourceTypeAppEvents                                       ResourceType = "appEvents"
-	ResourceTypeAppEventLocalizations                           ResourceType = "appEventLocalizations"
-	ResourceTypeAppEventScreenshots                             ResourceType = "appEventScreenshots"
-	ResourceTypeAppEventVideoClips                              ResourceType = "appEventVideoClips"
-	ResourceTypeAppStoreVersionExperiments                      ResourceType = "appStoreVersionExperiments"
-	ResourceTypeBetaGroups                                      ResourceType = "betaGroups"
-	ResourceTypeBetaTesters                                     ResourceType = "betaTesters"
-	ResourceTypeBetaTesterInvitations                           ResourceType = "betaTesterInvitations"
-	ResourceTypeBetaAppReviewDetails                            ResourceType = "betaAppReviewDetails"
-	ResourceTypeBetaAppReviewSubmissions                        ResourceType = "betaAppReviewSubmissions"
-	ResourceTypeBetaLicenseAgreements                           ResourceType = "betaLicenseAgreements"
-	ResourceTypeBetaAppClipInvocations                          ResourceType = "betaAppClipInvocations"
-	ResourceTypeBetaAppClipInvocationLocalizations              ResourceType = "betaAppClipInvocationLocalizations"
-	ResourceTypeBuildBetaDetails                                ResourceType = "buildBetaDetails"
-	ResourceTypeBuildBetaNotifications                          ResourceType = "buildBetaNotifications"
-	ResourceTypeBetaAppLocalizations                            ResourceType = "betaAppLocalizations"
-	ResourceTypeBetaBuildLocalizations                          ResourceType = "betaBuildLocalizations"
-	ResourceTypeBetaRecruitmentCriteria                         ResourceType = "betaRecruitmentCriteria"
-	ResourceTypeBetaRecruitmentCriterionOptions                 ResourceType = "betaRecruitmentCriterionOptions"
-	ResourceTypeSandboxTesters                                  ResourceType = "sandboxTesters"
-	ResourceTypeSandboxTestersClearHistory                      ResourceType = "sandboxTestersClearPurchaseHistoryRequest"
-	ResourceTypeAppClipDomainStatuses                           ResourceType = "appClipDomainStatuses"
-	ResourceTypeAppStoreVersionLocalizations                    ResourceType = "appStoreVersionLocalizations"
-	ResourceTypeAppKeywords                                     ResourceType = "appKeywords"
-	ResourceTypeAppInfoLocalizations                            ResourceType = "appInfoLocalizations"
-	ResourceTypeAppInfos                                        ResourceType = "appInfos"
-	ResourceTypeAgeRatingDeclarations                           ResourceType = "ageRatingDeclarations"
-	ResourceTypeAccessibilityDeclarations                       ResourceType = "accessibilityDeclarations"
-	ResourceTypeDiagnosticSignatures                            ResourceType = "diagnosticSignatures"
-	ResourceTypeAndroidToIosAppMappingDetails                   ResourceType = "androidToIosAppMappingDetails"
-	ResourceTypeAnalyticsReportRequests                         ResourceType = "analyticsReportRequests"
-	ResourceTypeAnalyticsReports                                ResourceType = "analyticsReports"
-	ResourceTypeAnalyticsReportInstances                        ResourceType = "analyticsReportInstances"
-	ResourceTypeAnalyticsReportSegments                         ResourceType = "analyticsReportSegments"
-	ResourceTypeInAppPurchases                                  ResourceType = "inAppPurchases"
-	ResourceTypeInAppPurchaseLocalizations                      ResourceType = "inAppPurchaseLocalizations"
-	ResourceTypeInAppPurchaseImages                             ResourceType = "inAppPurchaseImages"
-	ResourceTypeInAppPurchaseAppStoreReviewScreenshots          ResourceType = "inAppPurchaseAppStoreReviewScreenshots"
-	ResourceTypeInAppPurchaseAvailabilities                     ResourceType = "inAppPurchaseAvailabilities"
-	ResourceTypeInAppPurchaseContents                           ResourceType = "inAppPurchaseContents"
-	ResourceTypeInAppPurchasePricePoints                        ResourceType = "inAppPurchasePricePoints"
-	ResourceTypeInAppPurchasePriceSchedules                     ResourceType = "inAppPurchasePriceSchedules"
-	ResourceTypeInAppPurchasePrices                             ResourceType = "inAppPurchasePrices"
-	ResourceTypeInAppPurchaseOfferCodes                         ResourceType = "inAppPurchaseOfferCodes"
-	ResourceTypeInAppPurchaseOfferCodeCustomCodes               ResourceType = "inAppPurchaseOfferCodeCustomCodes"
-	ResourceTypeInAppPurchaseOfferCodeOneTimeUseCodes           ResourceType = "inAppPurchaseOfferCodeOneTimeUseCodes"
-	ResourceTypeInAppPurchaseOfferPrices                        ResourceType = "inAppPurchaseOfferPrices"
-	ResourceTypeInAppPurchaseSubmissions                        ResourceType = "inAppPurchaseSubmissions"
-	ResourceTypeSubscriptionGroups                              ResourceType = "subscriptionGroups"
-	ResourceTypeSubscriptionGroupLocalizations                  ResourceType = "subscriptionGroupLocalizations"
-	ResourceTypeSubscriptionGroupSubmissions                    ResourceType = "subscriptionGroupSubmissions"
-	ResourceTypeSubscriptions                                   ResourceType = "subscriptions"
-	ResourceTypeSubscriptionLocalizations                       ResourceType = "subscriptionLocalizations"
-	ResourceTypeSubscriptionImages                              ResourceType = "subscriptionImages"
-	ResourceTypeSubscriptionIntroductoryOffers                  ResourceType = "subscriptionIntroductoryOffers"
-	ResourceTypeSubscriptionPromotionalOffers                   ResourceType = "subscriptionPromotionalOffers"
-	ResourceTypeSubscriptionPromotionalOfferPrices              ResourceType = "subscriptionPromotionalOfferPrices"
-	ResourceTypeSubscriptionOfferCodeCustomCodes                ResourceType = "subscriptionOfferCodeCustomCodes"
-	ResourceTypeSubscriptionOfferCodePrices                     ResourceType = "subscriptionOfferCodePrices"
-	ResourceTypeSubscriptionSubmissions                         ResourceType = "subscriptionSubmissions"
-	ResourceTypeSubscriptionAppStoreReviewScreenshots           ResourceType = "subscriptionAppStoreReviewScreenshots"
-	ResourceTypeSubscriptionGracePeriods                        ResourceType = "subscriptionGracePeriods"
-	ResourceTypePromotedPurchases                               ResourceType = "promotedPurchases"
-	ResourceTypeSubscriptionPrices                              ResourceType = "subscriptionPrices"
-	ResourceTypeSubscriptionAvailabilities                      ResourceType = "subscriptionAvailabilities"
-	ResourceTypeSubscriptionPricePoints                         ResourceType = "subscriptionPricePoints"
-	ResourceTypeDevices                                         ResourceType = "devices"
-	ResourceTypeProfiles                                        ResourceType = "profiles"
-	ResourceTypeTerritories                                     ResourceType = "territories"
-	ResourceTypeTerritoryAgeRatings                             ResourceType = "territoryAgeRatings"
-	ResourceTypeEndUserLicenseAgreements                        ResourceType = "endUserLicenseAgreements"
-	ResourceTypeEndAppAvailabilityPreOrders                     ResourceType = "endAppAvailabilityPreOrders"
-	ResourceTypeTerritoryAvailabilities                         ResourceType = "territoryAvailabilities"
-	ResourceTypeAppStoreReviewDetails                           ResourceType = "appStoreReviewDetails"
-	ResourceTypeAppStoreReviewAttachments                       ResourceType = "appStoreReviewAttachments"
-	ResourceTypeCustomerReviewSummarizations                    ResourceType = "customerReviewSummarizations"
-	ResourceTypeUsers                                           ResourceType = "users"
-	ResourceTypeUserInvitations                                 ResourceType = "userInvitations"
-	ResourceTypeActors                                          ResourceType = "actors"
-	ResourceTypeSubscriptionOfferCodes                          ResourceType = "subscriptionOfferCodes"
-	ResourceTypeSubscriptionOfferCodeOneTimeUseCodes            ResourceType = "subscriptionOfferCodeOneTimeUseCodes"
-	ResourceTypeWinBackOffers                                   ResourceType = "winBackOffers"
-	ResourceTypeWinBackOfferPrices                              ResourceType = "winBackOfferPrices"
-	ResourceTypeNominations                                     ResourceType = "nominations"
-	ResourceTypeMarketplaceSearchDetails                        ResourceType = "marketplaceSearchDetails"
-	ResourceTypeMarketplaceWebhooks                             ResourceType = "marketplaceWebhooks"
-	ResourceTypeWebhooks                                        ResourceType = "webhooks"
-	ResourceTypeWebhookDeliveries                               ResourceType = "webhookDeliveries"
-	ResourceTypeWebhookPings                                    ResourceType = "webhookPings"
-	ResourceTypeAlternativeDistributionDomains                  ResourceType = "alternativeDistributionDomains"
-	ResourceTypeAlternativeDistributionKeys                     ResourceType = "alternativeDistributionKeys"
-	ResourceTypeAlternativeDistributionPackages                 ResourceType = "alternativeDistributionPackages"
-	ResourceTypeGameCenterDetails                               ResourceType = "gameCenterDetails"
-	ResourceTypeGameCenterAppVersions                           ResourceType = "gameCenterAppVersions"
-	ResourceTypeGameCenterEnabledVersions                       ResourceType = "gameCenterEnabledVersions"
-	ResourceTypeGameCenterAchievements                          ResourceType = "gameCenterAchievements"
-	ResourceTypeGameCenterAchievementVersions                   ResourceType = "gameCenterAchievementVersions"
-	ResourceTypeGameCenterLeaderboards                          ResourceType = "gameCenterLeaderboards"
-	ResourceTypeGameCenterLeaderboardVersions                   ResourceType = "gameCenterLeaderboardVersions"
-	ResourceTypeGameCenterLeaderboardSets                       ResourceType = "gameCenterLeaderboardSets"
-	ResourceTypeGameCenterLeaderboardSetVersions                ResourceType = "gameCenterLeaderboardSetVersions"
-	ResourceTypeGameCenterLeaderboardLocalizations              ResourceType = "gameCenterLeaderboardLocalizations"
-	ResourceTypeGameCenterAchievementLocalizations              ResourceType = "gameCenterAchievementLocalizations"
-	ResourceTypeGameCenterLeaderboardReleases                   ResourceType = "gameCenterLeaderboardReleases"
-	ResourceTypeGameCenterAchievementReleases                   ResourceType = "gameCenterAchievementReleases"
-	ResourceTypeGameCenterLeaderboardSetReleases                ResourceType = "gameCenterLeaderboardSetReleases"
-	ResourceTypeGameCenterLeaderboardImages                     ResourceType = "gameCenterLeaderboardImages"
-	ResourceTypeGameCenterLeaderboardSetLocalizations           ResourceType = "gameCenterLeaderboardSetLocalizations"
-	ResourceTypeGameCenterLeaderboardSetMemberLocalizations     ResourceType = "gameCenterLeaderboardSetMemberLocalizations"
-	ResourceTypeGameCenterAchievementImages                     ResourceType = "gameCenterAchievementImages"
-	ResourceTypeGameCenterLeaderboardSetImages                  ResourceType = "gameCenterLeaderboardSetImages"
-	ResourceTypeGameCenterChallenges                            ResourceType = "gameCenterChallenges"
-	ResourceTypeGameCenterChallengeVersions                     ResourceType = "gameCenterChallengeVersions"
-	ResourceTypeGameCenterChallengeLocalizations                ResourceType = "gameCenterChallengeLocalizations"
-	ResourceTypeGameCenterChallengeImages                       ResourceType = "gameCenterChallengeImages"
-	ResourceTypeGameCenterChallengeVersionReleases              ResourceType = "gameCenterChallengeVersionReleases"
-	ResourceTypeGameCenterActivities                            ResourceType = "gameCenterActivities"
-	ResourceTypeGameCenterActivityVersions                      ResourceType = "gameCenterActivityVersions"
-	ResourceTypeGameCenterActivityLocalizations                 ResourceType = "gameCenterActivityLocalizations"
-	ResourceTypeGameCenterActivityImages                        ResourceType = "gameCenterActivityImages"
-	ResourceTypeGameCenterActivityVersionReleases               ResourceType = "gameCenterActivityVersionReleases"
-	ResourceTypeGameCenterGroups                                ResourceType = "gameCenterGroups"
-	ResourceTypeGameCenterMatchmakingQueues                     ResourceType = "gameCenterMatchmakingQueues"
-	ResourceTypeGameCenterMatchmakingRuleSets                   ResourceType = "gameCenterMatchmakingRuleSets"
-	ResourceTypeGameCenterMatchmakingRules                      ResourceType = "gameCenterMatchmakingRules"
-	ResourceTypeGameCenterMatchmakingTeams                      ResourceType = "gameCenterMatchmakingTeams"
-	ResourceTypeGameCenterMatchmakingRuleSetTests               ResourceType = "gameCenterMatchmakingRuleSetTests"
-	ResourceTypeGameCenterLeaderboardEntrySubmissions           ResourceType = "gameCenterLeaderboardEntrySubmissions"
-	ResourceTypeGameCenterPlayerAchievementSubmissions          ResourceType = "gameCenterPlayerAchievementSubmissions"
-	ResourceTypeGameCenterMatchmakingTestRequests               ResourceType = "gameCenterMatchmakingTestRequests"
-	ResourceTypeGameCenterMatchmakingTestPlayerProperties       ResourceType = "gameCenterMatchmakingTestPlayerProperties"
+	ResourceTypeApps                                            = types.ResourceTypeApps
+	ResourceTypeAppTags                                         = types.ResourceTypeAppTags
+	ResourceTypeBundleIds                                       = types.ResourceTypeBundleIds
+	ResourceTypeBundleIdCapabilities                            = types.ResourceTypeBundleIdCapabilities
+	ResourceTypeMerchantIds                                     = types.ResourceTypeMerchantIds
+	ResourceTypePassTypeIds                                     = types.ResourceTypePassTypeIds
+	ResourceTypeAppCategories                                   = types.ResourceTypeAppCategories
+	ResourceTypeAppAvailabilities                               = types.ResourceTypeAppAvailabilities
+	ResourceTypeAppPricePoints                                  = types.ResourceTypeAppPricePoints
+	ResourceTypeAppPriceSchedules                               = types.ResourceTypeAppPriceSchedules
+	ResourceTypeAppPrices                                       = types.ResourceTypeAppPrices
+	ResourceTypeBuilds                                          = types.ResourceTypeBuilds
+	ResourceTypeBuildBundles                                    = types.ResourceTypeBuildBundles
+	ResourceTypeBuildBundleFileSizes                            = types.ResourceTypeBuildBundleFileSizes
+	ResourceTypeBuildIcons                                      = types.ResourceTypeBuildIcons
+	ResourceTypeBuildUploads                                    = types.ResourceTypeBuildUploads
+	ResourceTypeBuildUploadFiles                                = types.ResourceTypeBuildUploadFiles
+	ResourceTypeCertificates                                    = types.ResourceTypeCertificates
+	ResourceTypeAppStoreVersions                                = types.ResourceTypeAppStoreVersions
+	ResourceTypeAppClips                                        = types.ResourceTypeAppClips
+	ResourceTypeAppClipDefaultExperiences                       = types.ResourceTypeAppClipDefaultExperiences
+	ResourceTypeAppClipDefaultExperienceLocalizations           = types.ResourceTypeAppClipDefaultExperienceLocalizations
+	ResourceTypeAppClipAdvancedExperiences                      = types.ResourceTypeAppClipAdvancedExperiences
+	ResourceTypeAppClipAdvancedExperienceImages                 = types.ResourceTypeAppClipAdvancedExperienceImages
+	ResourceTypeAppClipAdvancedExperienceLocalizations          = types.ResourceTypeAppClipAdvancedExperienceLocalizations
+	ResourceTypeAppClipHeaderImages                             = types.ResourceTypeAppClipHeaderImages
+	ResourceTypeAppClipAppStoreReviewDetails                    = types.ResourceTypeAppClipAppStoreReviewDetails
+	ResourceTypeBackgroundAssets                                = types.ResourceTypeBackgroundAssets
+	ResourceTypeBackgroundAssetVersions                         = types.ResourceTypeBackgroundAssetVersions
+	ResourceTypeBackgroundAssetUploadFiles                      = types.ResourceTypeBackgroundAssetUploadFiles
+	ResourceTypeBackgroundAssetVersionAppStoreReleases          = types.ResourceTypeBackgroundAssetVersionAppStoreReleases
+	ResourceTypeBackgroundAssetVersionExternalBetaReleases      = types.ResourceTypeBackgroundAssetVersionExternalBetaReleases
+	ResourceTypeBackgroundAssetVersionInternalBetaReleases      = types.ResourceTypeBackgroundAssetVersionInternalBetaReleases
+	ResourceTypeRoutingAppCoverages                             = types.ResourceTypeRoutingAppCoverages
+	ResourceTypeAppEncryptionDeclarations                       = types.ResourceTypeAppEncryptionDeclarations
+	ResourceTypeAppEncryptionDeclarationDocuments               = types.ResourceTypeAppEncryptionDeclarationDocuments
+	ResourceTypeAppStoreVersionPromotions                       = types.ResourceTypeAppStoreVersionPromotions
+	ResourceTypeAppStoreVersionExperimentTreatments             = types.ResourceTypeAppStoreVersionExperimentTreatments
+	ResourceTypeAppStoreVersionExperimentTreatmentLocalizations = types.ResourceTypeAppStoreVersionExperimentTreatmentLocalizations
+	ResourceTypePreReleaseVersions                              = types.ResourceTypePreReleaseVersions
+	ResourceTypeAppStoreVersionSubmissions                      = types.ResourceTypeAppStoreVersionSubmissions
+	ResourceTypeAppScreenshotSets                               = types.ResourceTypeAppScreenshotSets
+	ResourceTypeAppScreenshots                                  = types.ResourceTypeAppScreenshots
+	ResourceTypeAppPreviewSets                                  = types.ResourceTypeAppPreviewSets
+	ResourceTypeAppPreviews                                     = types.ResourceTypeAppPreviews
+	ResourceTypeReviewSubmissions                               = types.ResourceTypeReviewSubmissions
+	ResourceTypeReviewSubmissionItems                           = types.ResourceTypeReviewSubmissionItems
+	ResourceTypeAppCustomProductPages                           = types.ResourceTypeAppCustomProductPages
+	ResourceTypeAppCustomProductPageVersions                    = types.ResourceTypeAppCustomProductPageVersions
+	ResourceTypeAppCustomProductPageLocalizations               = types.ResourceTypeAppCustomProductPageLocalizations
+	ResourceTypeAppEvents                                       = types.ResourceTypeAppEvents
+	ResourceTypeAppEventLocalizations                           = types.ResourceTypeAppEventLocalizations
+	ResourceTypeAppEventScreenshots                             = types.ResourceTypeAppEventScreenshots
+	ResourceTypeAppEventVideoClips                              = types.ResourceTypeAppEventVideoClips
+	ResourceTypeAppStoreVersionExperiments                      = types.ResourceTypeAppStoreVersionExperiments
+	ResourceTypeBetaGroups                                      = types.ResourceTypeBetaGroups
+	ResourceTypeBetaTesters                                     = types.ResourceTypeBetaTesters
+	ResourceTypeBetaTesterInvitations                           = types.ResourceTypeBetaTesterInvitations
+	ResourceTypeBetaAppReviewDetails                            = types.ResourceTypeBetaAppReviewDetails
+	ResourceTypeBetaAppReviewSubmissions                        = types.ResourceTypeBetaAppReviewSubmissions
+	ResourceTypeBetaLicenseAgreements                           = types.ResourceTypeBetaLicenseAgreements
+	ResourceTypeBetaAppClipInvocations                          = types.ResourceTypeBetaAppClipInvocations
+	ResourceTypeBetaAppClipInvocationLocalizations              = types.ResourceTypeBetaAppClipInvocationLocalizations
+	ResourceTypeBuildBetaDetails                                = types.ResourceTypeBuildBetaDetails
+	ResourceTypeBuildBetaNotifications                          = types.ResourceTypeBuildBetaNotifications
+	ResourceTypeBetaAppLocalizations                            = types.ResourceTypeBetaAppLocalizations
+	ResourceTypeBetaBuildLocalizations                          = types.ResourceTypeBetaBuildLocalizations
+	ResourceTypeBetaRecruitmentCriteria                         = types.ResourceTypeBetaRecruitmentCriteria
+	ResourceTypeBetaRecruitmentCriterionOptions                 = types.ResourceTypeBetaRecruitmentCriterionOptions
+	ResourceTypeSandboxTesters                                  = types.ResourceTypeSandboxTesters
+	ResourceTypeSandboxTestersClearHistory                      = types.ResourceTypeSandboxTestersClearHistory
+	ResourceTypeAppClipDomainStatuses                           = types.ResourceTypeAppClipDomainStatuses
+	ResourceTypeAppStoreVersionLocalizations                    = types.ResourceTypeAppStoreVersionLocalizations
+	ResourceTypeAppKeywords                                     = types.ResourceTypeAppKeywords
+	ResourceTypeAppInfoLocalizations                            = types.ResourceTypeAppInfoLocalizations
+	ResourceTypeAppInfos                                        = types.ResourceTypeAppInfos
+	ResourceTypeAgeRatingDeclarations                           = types.ResourceTypeAgeRatingDeclarations
+	ResourceTypeAccessibilityDeclarations                       = types.ResourceTypeAccessibilityDeclarations
+	ResourceTypeDiagnosticSignatures                            = types.ResourceTypeDiagnosticSignatures
+	ResourceTypeAndroidToIosAppMappingDetails                   = types.ResourceTypeAndroidToIosAppMappingDetails
+	ResourceTypeAnalyticsReportRequests                         = types.ResourceTypeAnalyticsReportRequests
+	ResourceTypeAnalyticsReports                                = types.ResourceTypeAnalyticsReports
+	ResourceTypeAnalyticsReportInstances                        = types.ResourceTypeAnalyticsReportInstances
+	ResourceTypeAnalyticsReportSegments                         = types.ResourceTypeAnalyticsReportSegments
+	ResourceTypeInAppPurchases                                  = types.ResourceTypeInAppPurchases
+	ResourceTypeInAppPurchaseLocalizations                      = types.ResourceTypeInAppPurchaseLocalizations
+	ResourceTypeInAppPurchaseImages                             = types.ResourceTypeInAppPurchaseImages
+	ResourceTypeInAppPurchaseAppStoreReviewScreenshots          = types.ResourceTypeInAppPurchaseAppStoreReviewScreenshots
+	ResourceTypeInAppPurchaseAvailabilities                     = types.ResourceTypeInAppPurchaseAvailabilities
+	ResourceTypeInAppPurchaseContents                           = types.ResourceTypeInAppPurchaseContents
+	ResourceTypeInAppPurchasePricePoints                        = types.ResourceTypeInAppPurchasePricePoints
+	ResourceTypeInAppPurchasePriceSchedules                     = types.ResourceTypeInAppPurchasePriceSchedules
+	ResourceTypeInAppPurchasePrices                             = types.ResourceTypeInAppPurchasePrices
+	ResourceTypeInAppPurchaseOfferCodes                         = types.ResourceTypeInAppPurchaseOfferCodes
+	ResourceTypeInAppPurchaseOfferCodeCustomCodes               = types.ResourceTypeInAppPurchaseOfferCodeCustomCodes
+	ResourceTypeInAppPurchaseOfferCodeOneTimeUseCodes           = types.ResourceTypeInAppPurchaseOfferCodeOneTimeUseCodes
+	ResourceTypeInAppPurchaseOfferPrices                        = types.ResourceTypeInAppPurchaseOfferPrices
+	ResourceTypeInAppPurchaseSubmissions                        = types.ResourceTypeInAppPurchaseSubmissions
+	ResourceTypeSubscriptionGroups                              = types.ResourceTypeSubscriptionGroups
+	ResourceTypeSubscriptionGroupLocalizations                  = types.ResourceTypeSubscriptionGroupLocalizations
+	ResourceTypeSubscriptionGroupSubmissions                    = types.ResourceTypeSubscriptionGroupSubmissions
+	ResourceTypeSubscriptions                                   = types.ResourceTypeSubscriptions
+	ResourceTypeSubscriptionLocalizations                       = types.ResourceTypeSubscriptionLocalizations
+	ResourceTypeSubscriptionImages                              = types.ResourceTypeSubscriptionImages
+	ResourceTypeSubscriptionIntroductoryOffers                  = types.ResourceTypeSubscriptionIntroductoryOffers
+	ResourceTypeSubscriptionPromotionalOffers                   = types.ResourceTypeSubscriptionPromotionalOffers
+	ResourceTypeSubscriptionPromotionalOfferPrices              = types.ResourceTypeSubscriptionPromotionalOfferPrices
+	ResourceTypeSubscriptionOfferCodeCustomCodes                = types.ResourceTypeSubscriptionOfferCodeCustomCodes
+	ResourceTypeSubscriptionOfferCodePrices                     = types.ResourceTypeSubscriptionOfferCodePrices
+	ResourceTypeSubscriptionSubmissions                         = types.ResourceTypeSubscriptionSubmissions
+	ResourceTypeSubscriptionAppStoreReviewScreenshots           = types.ResourceTypeSubscriptionAppStoreReviewScreenshots
+	ResourceTypeSubscriptionGracePeriods                        = types.ResourceTypeSubscriptionGracePeriods
+	ResourceTypePromotedPurchases                               = types.ResourceTypePromotedPurchases
+	ResourceTypeSubscriptionPrices                              = types.ResourceTypeSubscriptionPrices
+	ResourceTypeSubscriptionAvailabilities                      = types.ResourceTypeSubscriptionAvailabilities
+	ResourceTypeSubscriptionPricePoints                         = types.ResourceTypeSubscriptionPricePoints
+	ResourceTypeDevices                                         = types.ResourceTypeDevices
+	ResourceTypeProfiles                                        = types.ResourceTypeProfiles
+	ResourceTypeTerritories                                     = types.ResourceTypeTerritories
+	ResourceTypeTerritoryAgeRatings                             = types.ResourceTypeTerritoryAgeRatings
+	ResourceTypeEndUserLicenseAgreements                        = types.ResourceTypeEndUserLicenseAgreements
+	ResourceTypeEndAppAvailabilityPreOrders                     = types.ResourceTypeEndAppAvailabilityPreOrders
+	ResourceTypeTerritoryAvailabilities                         = types.ResourceTypeTerritoryAvailabilities
+	ResourceTypeAppStoreReviewDetails                           = types.ResourceTypeAppStoreReviewDetails
+	ResourceTypeAppStoreReviewAttachments                       = types.ResourceTypeAppStoreReviewAttachments
+	ResourceTypeCustomerReviewSummarizations                    = types.ResourceTypeCustomerReviewSummarizations
+	ResourceTypeUsers                                           = types.ResourceTypeUsers
+	ResourceTypeUserInvitations                                 = types.ResourceTypeUserInvitations
+	ResourceTypeActors                                          = types.ResourceTypeActors
+	ResourceTypeSubscriptionOfferCodes                          = types.ResourceTypeSubscriptionOfferCodes
+	ResourceTypeSubscriptionOfferCodeOneTimeUseCodes            = types.ResourceTypeSubscriptionOfferCodeOneTimeUseCodes
+	ResourceTypeWinBackOffers                                   = types.ResourceTypeWinBackOffers
+	ResourceTypeWinBackOfferPrices                              = types.ResourceTypeWinBackOfferPrices
+	ResourceTypeNominations                                     = types.ResourceTypeNominations
+	ResourceTypeMarketplaceSearchDetails                        = types.ResourceTypeMarketplaceSearchDetails
+	ResourceTypeMarketplaceWebhooks                             = types.ResourceTypeMarketplaceWebhooks
+	ResourceTypeWebhooks                                        = types.ResourceTypeWebhooks
+	ResourceTypeWebhookDeliveries                               = types.ResourceTypeWebhookDeliveries
+	ResourceTypeWebhookPings                                    = types.ResourceTypeWebhookPings
+	ResourceTypeAlternativeDistributionDomains                  = types.ResourceTypeAlternativeDistributionDomains
+	ResourceTypeAlternativeDistributionKeys                     = types.ResourceTypeAlternativeDistributionKeys
+	ResourceTypeAlternativeDistributionPackages                 = types.ResourceTypeAlternativeDistributionPackages
+	ResourceTypeGameCenterDetails                               = types.ResourceTypeGameCenterDetails
+	ResourceTypeGameCenterAppVersions                           = types.ResourceTypeGameCenterAppVersions
+	ResourceTypeGameCenterEnabledVersions                       = types.ResourceTypeGameCenterEnabledVersions
+	ResourceTypeGameCenterAchievements                          = types.ResourceTypeGameCenterAchievements
+	ResourceTypeGameCenterAchievementVersions                   = types.ResourceTypeGameCenterAchievementVersions
+	ResourceTypeGameCenterLeaderboards                          = types.ResourceTypeGameCenterLeaderboards
+	ResourceTypeGameCenterLeaderboardVersions                   = types.ResourceTypeGameCenterLeaderboardVersions
+	ResourceTypeGameCenterLeaderboardSets                       = types.ResourceTypeGameCenterLeaderboardSets
+	ResourceTypeGameCenterLeaderboardSetVersions                = types.ResourceTypeGameCenterLeaderboardSetVersions
+	ResourceTypeGameCenterLeaderboardLocalizations              = types.ResourceTypeGameCenterLeaderboardLocalizations
+	ResourceTypeGameCenterAchievementLocalizations              = types.ResourceTypeGameCenterAchievementLocalizations
+	ResourceTypeGameCenterLeaderboardReleases                   = types.ResourceTypeGameCenterLeaderboardReleases
+	ResourceTypeGameCenterAchievementReleases                   = types.ResourceTypeGameCenterAchievementReleases
+	ResourceTypeGameCenterLeaderboardSetReleases                = types.ResourceTypeGameCenterLeaderboardSetReleases
+	ResourceTypeGameCenterLeaderboardImages                     = types.ResourceTypeGameCenterLeaderboardImages
+	ResourceTypeGameCenterLeaderboardSetLocalizations           = types.ResourceTypeGameCenterLeaderboardSetLocalizations
+	ResourceTypeGameCenterLeaderboardSetMemberLocalizations     = types.ResourceTypeGameCenterLeaderboardSetMemberLocalizations
+	ResourceTypeGameCenterAchievementImages                     = types.ResourceTypeGameCenterAchievementImages
+	ResourceTypeGameCenterLeaderboardSetImages                  = types.ResourceTypeGameCenterLeaderboardSetImages
+	ResourceTypeGameCenterChallenges                            = types.ResourceTypeGameCenterChallenges
+	ResourceTypeGameCenterChallengeVersions                     = types.ResourceTypeGameCenterChallengeVersions
+	ResourceTypeGameCenterChallengeLocalizations                = types.ResourceTypeGameCenterChallengeLocalizations
+	ResourceTypeGameCenterChallengeImages                       = types.ResourceTypeGameCenterChallengeImages
+	ResourceTypeGameCenterChallengeVersionReleases              = types.ResourceTypeGameCenterChallengeVersionReleases
+	ResourceTypeGameCenterActivities                            = types.ResourceTypeGameCenterActivities
+	ResourceTypeGameCenterActivityVersions                      = types.ResourceTypeGameCenterActivityVersions
+	ResourceTypeGameCenterActivityLocalizations                 = types.ResourceTypeGameCenterActivityLocalizations
+	ResourceTypeGameCenterActivityImages                        = types.ResourceTypeGameCenterActivityImages
+	ResourceTypeGameCenterActivityVersionReleases               = types.ResourceTypeGameCenterActivityVersionReleases
+	ResourceTypeGameCenterGroups                                = types.ResourceTypeGameCenterGroups
+	ResourceTypeGameCenterMatchmakingQueues                     = types.ResourceTypeGameCenterMatchmakingQueues
+	ResourceTypeGameCenterMatchmakingRuleSets                   = types.ResourceTypeGameCenterMatchmakingRuleSets
+	ResourceTypeGameCenterMatchmakingRules                      = types.ResourceTypeGameCenterMatchmakingRules
+	ResourceTypeGameCenterMatchmakingTeams                      = types.ResourceTypeGameCenterMatchmakingTeams
+	ResourceTypeGameCenterMatchmakingRuleSetTests               = types.ResourceTypeGameCenterMatchmakingRuleSetTests
+	ResourceTypeGameCenterLeaderboardEntrySubmissions           = types.ResourceTypeGameCenterLeaderboardEntrySubmissions
+	ResourceTypeGameCenterPlayerAchievementSubmissions          = types.ResourceTypeGameCenterPlayerAchievementSubmissions
+	ResourceTypeGameCenterMatchmakingTestRequests               = types.ResourceTypeGameCenterMatchmakingTestRequests
+	ResourceTypeGameCenterMatchmakingTestPlayerProperties       = types.ResourceTypeGameCenterMatchmakingTestPlayerProperties
 )
 
-// Resource is a generic ASC API resource wrapper.
-type Resource[T any] struct {
-	Type          ResourceType    `json:"type"`
-	ID            string          `json:"id"`
-	Attributes    T               `json:"attributes"`
-	Relationships json.RawMessage `json:"relationships,omitempty"`
-	Links         json.RawMessage `json:"links,omitempty"`
-}
-
-// Response is a generic ASC API response wrapper.
-type Response[T any] struct {
-	Data     []Resource[T]   `json:"data"`
-	Links    Links           `json:"links,omitempty"`
-	Included json.RawMessage `json:"included,omitempty"`
-	Meta     json.RawMessage `json:"meta,omitempty"`
-}
-
-// SingleResponse is a generic ASC API response wrapper for single resources.
-type SingleResponse[T any] struct {
-	Data     Resource[T]     `json:"data"`
-	Links    Links           `json:"links,omitempty"`
-	Included json.RawMessage `json:"included,omitempty"`
-	Meta     json.RawMessage `json:"meta,omitempty"`
-}
-
-// LinkagesResponse is a generic relationship linkages response.
-type LinkagesResponse struct {
-	Data  []ResourceData  `json:"data"`
-	Links Links           `json:"links,omitempty"`
-	Meta  json.RawMessage `json:"meta,omitempty"`
-}
-
-// SingleResourceResponse is a response with a single resource (not an array).
-type SingleResourceResponse[T any] struct {
-	Data Resource[T] `json:"data"`
-}
-
-// Links represents pagination links
-type Links struct {
-	Self string `json:"self,omitempty"`
-	Next string `json:"next,omitempty"`
-	Prev string `json:"prev,omitempty"`
-}
-
-// Platform represents an Apple platform.
-type Platform string
-
+// Platform constants — re-exported from types package.
 const (
-	PlatformIOS      Platform = "IOS"
-	PlatformMacOS    Platform = "MAC_OS"
-	PlatformTVOS     Platform = "TV_OS"
-	PlatformVisionOS Platform = "VISION_OS"
+	PlatformIOS      = types.PlatformIOS
+	PlatformMacOS    = types.PlatformMacOS
+	PlatformTVOS     = types.PlatformTVOS
+	PlatformVisionOS = types.PlatformVisionOS
 )
 
-// ChecksumAlgorithm represents the algorithm used for checksums.
-type ChecksumAlgorithm string
-
+// ChecksumAlgorithm constants — re-exported from types package.
 const (
-	ChecksumAlgorithmMD5    ChecksumAlgorithm = "MD5"
-	ChecksumAlgorithmSHA256 ChecksumAlgorithm = "SHA_256"
+	ChecksumAlgorithmMD5    = types.ChecksumAlgorithmMD5
+	ChecksumAlgorithmSHA256 = types.ChecksumAlgorithmSHA256
 )
 
-// AssetType represents the asset type for build uploads.
-type AssetType string
-
+// AssetType constants — re-exported from types package.
 const (
-	AssetTypeAsset AssetType = "ASSET"
+	AssetTypeAsset = types.AssetTypeAsset
 )
 
-// UTI represents a Uniform Type Identifier used in uploads.
-type UTI string
-
+// UTI constants — re-exported from types package.
 const (
-	UTIIPA UTI = "com.apple.ipa"
-	UTIPKG UTI = "com.apple.installer-package-archive"
+	UTIIPA = types.UTIIPA
+	UTIPKG = types.UTIPKG
 )
-
-// Relationship represents a generic API relationship.
-type Relationship struct {
-	Data ResourceData `json:"data"`
-}
-
-// RelationshipList represents a relationship containing multiple resources.
-type RelationshipList struct {
-	Data []ResourceData `json:"data"`
-}
-
-// RelationshipRequest represents a relationship list payload.
-type RelationshipRequest struct {
-	Data []RelationshipData `json:"data"`
-}
-
-// RelationshipData represents data in a relationship payload.
-type RelationshipData struct {
-	Type ResourceType `json:"type"`
-	ID   string       `json:"id"`
-}
-
-// ResourceData represents the data portion of a resource.
-type ResourceData struct {
-	Type ResourceType `json:"type"`
-	ID   string       `json:"id"`
-}

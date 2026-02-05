@@ -1,0 +1,44 @@
+name: Integration Tests
+
+on:
+  schedule:
+    # Run weekly on Mondays at 06:00 UTC
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+    # Allow manual trigger from GitHub UI
+
+jobs:
+  integration:
+    runs-on: macos-latest
+    # Only run if secrets are available (skips forks)
+    if: github.repository == 'rudrankriyam/App-Store-Connect-CLI'
+    timeout-minutes: 15
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.24.x'
+
+      - name: Run integration tests
+        env:
+          ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+          ASC_PRIVATE_KEY_B64: ${{ secrets.ASC_PRIVATE_KEY_B64 }}
+          ASC_INTEGRATION_TEST: "true"
+        run: |
+          # Write key from base64 secret to temp file
+          if [ -n "$ASC_PRIVATE_KEY_B64" ]; then
+            echo "$ASC_PRIVATE_KEY_B64" | base64 -d > /tmp/AuthKey.p8
+            export ASC_PRIVATE_KEY_PATH=/tmp/AuthKey.p8
+          fi
+
+          # Run integration tests (build-tagged and env-gated)
+          go test -tags=integration -v -timeout 10m ./internal/asc -run Integration
+          go test -tags=integration -v -timeout 5m ./internal/update -run Integration
+
+      - name: Cleanup
+        if: always()
+        run: rm -f /tmp/AuthKey.p8

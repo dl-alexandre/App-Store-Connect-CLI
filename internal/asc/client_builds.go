@@ -24,11 +24,11 @@ type BuildAttributes struct {
 type IconAssetType string
 
 const (
-	IconAssetTypeAppStore         IconAssetType = "APP_STORE"
-	IconAssetTypeMessagesAppStore IconAssetType = "MESSAGES_APP_STORE"
-	IconAssetTypeWatchAppStore    IconAssetType = "WATCH_APP_STORE"
-	IconAssetTypeTVOSHomeScreen   IconAssetType = "TV_OS_HOME_SCREEN"
-	IconAssetTypeTVOSTopShelf     IconAssetType = "TV_OS_TOP_SHELF"
+	IconAssetTypeAppStore            IconAssetType = "APP_STORE"
+	IconAssetTypeMessagesAppStore    IconAssetType = "MESSAGES_APP_STORE"
+	IconAssetTypeWatchAppStore       IconAssetType = "WATCH_APP_STORE"
+	IconAssetTypeTVOSHomeScreen      IconAssetType = "TV_OS_HOME_SCREEN"
+	IconAssetTypeTVOSTopShelf        IconAssetType = "TV_OS_TOP_SHELF"
 	IconAssetTypeAlternateExperiment IconAssetType = "ALTERNATE_EXPERIMENT"
 )
 

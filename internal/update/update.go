@@ -133,7 +133,7 @@ func CheckAndUpdate(ctx context.Context, opts Options) (Result, error) {
 		return res, fmt.Errorf("update failed: could not resolve executable path")
 	}
 
-	if err := downloadAndReplace(ctx, opts, execPath); err != nil {
+	if err := downloadAndReplace(ctx, opts, execPath, latestVersion); err != nil {
 		return res, err
 	}
 

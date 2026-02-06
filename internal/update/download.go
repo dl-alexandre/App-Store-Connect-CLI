@@ -15,14 +15,15 @@ import (
 	"github.com/schollz/progressbar/v3"
 )
 
-func downloadAndReplace(ctx context.Context, opts Options, execPath string) error {
-	asset := assetName(opts.BinaryName, opts.OS, opts.Arch)
+func downloadAndReplace(ctx context.Context, opts Options, execPath, version string) error {
+	asset := assetName(opts.BinaryName, opts.OS, opts.Arch, version)
 	if asset == "" {
 		return fmt.Errorf("unsupported platform: %s/%s", opts.OS, opts.Arch)
 	}
+	checksumsFile := fmt.Sprintf("%s_%s_checksums.txt", opts.BinaryName, version)
 	base := strings.TrimSuffix(opts.DownloadBaseURL, "/")
 	downloadURL := fmt.Sprintf("%s/%s/releases/latest/download/%s", base, opts.Repo, asset)
-	checksumsURL := fmt.Sprintf("%s/%s/releases/latest/download/checksums.txt", base, opts.Repo)
+	checksumsURL := fmt.Sprintf("%s/%s/releases/latest/download/%s", base, opts.Repo, checksumsFile)
 
 	dir := filepath.Dir(execPath)
 	tempFile, err := os.CreateTemp(dir, "."+opts.BinaryName+"-update-*")
@@ -110,11 +111,22 @@ func downloadAndReplace(ctx context.Context, opts Options, execPath string) erro
 	return nil
 }
 
-func assetName(binaryName, osName, arch string) string {
-	if binaryName == "" || osName == "" || arch == "" {
+// displayOS maps Go's runtime.GOOS value to user-friendly OS names
+// following the GitHub CLI naming convention.
+func displayOS(goos string) string {
+	switch goos {
+	case "darwin":
+		return "macOS"
+	default:
+		return goos
+	}
+}
+
+func assetName(binaryName, osName, arch, version string) string {
+	if binaryName == "" || osName == "" || arch == "" || version == "" {
 		return ""
 	}
-	name := fmt.Sprintf("%s-%s-%s", binaryName, osName, arch)
+	name := fmt.Sprintf("%s_%s_%s_%s", binaryName, version, displayOS(osName), arch)
 	if osName == "windows" {
 		return name + ".exe"
 	}

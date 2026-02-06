@@ -114,19 +114,20 @@ func TestCheckAndUpdate_HomebrewSkipsDownload(t *testing.T) {
 }
 
 func TestCheckAndUpdate_AutoUpdatesBinary(t *testing.T) {
-	assetName := "asc-darwin-amd64"
+	asset := "asc_1.1.0_macOS_amd64"
+	checksumsFile := "asc_1.1.0_checksums.txt"
 	newBinary := []byte("new-binary")
 	hash := sha256.Sum256(newBinary)
-	checksums := fmt.Sprintf("%x  %s\n", hash, assetName)
+	checksums := fmt.Sprintf("%x  %s\n", hash, asset)
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case "/repos/rudrankriyam/App-Store-Connect-CLI/releases/latest":
 			_, _ = io.WriteString(w, `{"tag_name":"1.1.0"}`)
-		case "/rudrankriyam/App-Store-Connect-CLI/releases/latest/download/" + assetName:
+		case "/rudrankriyam/App-Store-Connect-CLI/releases/latest/download/" + asset:
 			w.Header().Set("Content-Length", fmt.Sprintf("%d", len(newBinary)))
 			_, _ = w.Write(newBinary)
-		case "/rudrankriyam/App-Store-Connect-CLI/releases/latest/download/checksums.txt":
+		case "/rudrankriyam/App-Store-Connect-CLI/releases/latest/download/" + checksumsFile:
 			_, _ = io.WriteString(w, checksums)
 		default:
 			w.WriteHeader(http.StatusNotFound)

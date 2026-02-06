@@ -18,7 +18,7 @@ func TestIntegrationAutoUpdate(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("auto-update is disabled on Windows")
 	}
-	if assetName(defaultBinaryName, runtime.GOOS, runtime.GOARCH) == "" {
+	if assetName(defaultBinaryName, runtime.GOOS, runtime.GOARCH, "0.0.0") == "" {
 		t.Skipf("unsupported platform: %s/%s", runtime.GOOS, runtime.GOARCH)
 	}
 

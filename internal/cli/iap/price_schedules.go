@@ -47,6 +47,12 @@ func IAPPriceSchedulesGetCommand() *ffcli.Command {
 
 	iapID := fs.String("iap-id", "", "In-app purchase ID")
 	scheduleID := fs.String("schedule-id", "", "Price schedule ID")
+	include := fs.String("include", "", "Include relationships: baseTerritory,manualPrices,automaticPrices")
+	scheduleFields := fs.String("schedule-fields", "", "fields[inAppPurchasePriceSchedules] (comma-separated)")
+	territoryFields := fs.String("territory-fields", "", "fields[territories] (comma-separated)")
+	priceFields := fs.String("price-fields", "", "fields[inAppPurchasePrices] (comma-separated)")
+	manualPricesLimit := fs.Int("manual-prices-limit", 0, "limit[manualPrices] when included (1-50)")
+	automaticPricesLimit := fs.Int("automatic-prices-limit", 0, "limit[automaticPrices] when included (1-50)")
 	output := fs.String("output", "json", "Output format: json (default), table, markdown")
 	pretty := fs.Bool("pretty", false, "Pretty-print JSON output")
 
@@ -58,7 +64,8 @@ func IAPPriceSchedulesGetCommand() *ffcli.Command {
 
 Examples:
   asc iap price-schedules get --iap-id "IAP_ID"
-  asc iap price-schedules get --schedule-id "SCHEDULE_ID"`,
+  asc iap price-schedules get --schedule-id "SCHEDULE_ID"
+  asc iap price-schedules get --iap-id "IAP_ID" --include "baseTerritory,manualPrices,automaticPrices" --price-fields "startDate,endDate,manual,inAppPurchasePricePoint,territory" --territory-fields "currency" --manual-prices-limit 50 --automatic-prices-limit 50`,
 		FlagSet:   fs,
 		UsageFunc: DefaultUsageFunc,
 		Exec: func(ctx context.Context, args []string) error {
@@ -72,6 +79,20 @@ Examples:
 				fmt.Fprintln(os.Stderr, "Error: --iap-id and --schedule-id are mutually exclusive")
 				return flag.ErrHelp
 			}
+			if *manualPricesLimit != 0 && (*manualPricesLimit < 1 || *manualPricesLimit > 50) {
+				fmt.Fprintln(os.Stderr, "Error: --manual-prices-limit must be between 1 and 50")
+				return flag.ErrHelp
+			}
+			if *automaticPricesLimit != 0 && (*automaticPricesLimit < 1 || *automaticPricesLimit > 50) {
+				fmt.Fprintln(os.Stderr, "Error: --automatic-prices-limit must be between 1 and 50")
+				return flag.ErrHelp
+			}
+
+			includeValues, err := normalizeIAPPriceScheduleInclude(*include)
+			if err != nil {
+				fmt.Fprintln(os.Stderr, "Error:", err.Error())
+				return flag.ErrHelp
+			}
 
 			client, err := getASCClient()
 			if err != nil {
@@ -81,8 +102,28 @@ Examples:
 			requestCtx, cancel := contextWithTimeout(ctx)
 			defer cancel()
 
+			opts := make([]asc.IAPPriceScheduleOption, 0, 6)
+			if len(includeValues) > 0 {
+				opts = append(opts, asc.WithIAPPriceScheduleInclude(includeValues))
+			}
+			if values := splitCSV(*scheduleFields); len(values) > 0 {
+				opts = append(opts, asc.WithIAPPriceScheduleFields(values))
+			}
+			if values := splitCSV(*territoryFields); len(values) > 0 {
+				opts = append(opts, asc.WithIAPPriceScheduleTerritoryFields(values))
+			}
+			if values := splitCSV(*priceFields); len(values) > 0 {
+				opts = append(opts, asc.WithIAPPriceSchedulePriceFields(values))
+			}
+			if *manualPricesLimit > 0 {
+				opts = append(opts, asc.WithIAPPriceScheduleManualPricesLimit(*manualPricesLimit))
+			}
+			if *automaticPricesLimit > 0 {
+				opts = append(opts, asc.WithIAPPriceScheduleAutomaticPricesLimit(*automaticPricesLimit))
+			}
+
 			if scheduleValue != "" {
-				resp, err := client.GetInAppPurchasePriceScheduleByID(requestCtx, scheduleValue)
+				resp, err := client.GetInAppPurchasePriceScheduleByID(requestCtx, scheduleValue, opts...)
 				if err != nil {
 					return fmt.Errorf("iap price-schedules get: failed to fetch: %w", err)
 				}
@@ -90,7 +131,7 @@ Examples:
 				return printOutput(resp, *output, *pretty)
 			}
 
-			resp, err := client.GetInAppPurchasePriceSchedule(requestCtx, iapValue)
+			resp, err := client.GetInAppPurchasePriceSchedule(requestCtx, iapValue, opts...)
 			if err != nil {
 				return fmt.Errorf("iap price-schedules get: failed to fetch: %w", err)
 			}
@@ -98,6 +139,33 @@ Examples:
 			return printOutput(resp, *output, *pretty)
 		},
 	}
+}
+
+func normalizeIAPPriceScheduleInclude(value string) ([]string, error) {
+	parts := splitCSV(value)
+	if len(parts) == 0 {
+		return nil, nil
+	}
+
+	allowed := map[string]struct{}{
+		"baseTerritory":   {},
+		"manualPrices":    {},
+		"automaticPrices": {},
+	}
+
+	unique := make([]string, 0, len(parts))
+	seen := make(map[string]struct{}, len(parts))
+	for _, part := range parts {
+		if _, ok := allowed[part]; !ok {
+			return nil, fmt.Errorf("--include must be one of: baseTerritory, manualPrices, automaticPrices")
+		}
+		if _, ok := seen[part]; ok {
+			continue
+		}
+		seen[part] = struct{}{}
+		unique = append(unique, part)
+	}
+	return unique, nil
 }
 
 // IAPPriceSchedulesBaseTerritoryCommand returns the price schedules base territory subcommand.

@@ -2,6 +2,7 @@ package asc
 
 import (
 	"net/url"
+	"strconv"
 	"strings"
 )
 
@@ -14,6 +15,7 @@ type (
 	IAPOfferCodePricesOption          func(*iapOfferCodePricesQuery)
 	IAPAvailabilityTerritoriesOption  func(*iapAvailabilityTerritoriesQuery)
 	IAPPriceSchedulePricesOption      func(*iapPriceSchedulePricesQuery)
+	IAPPriceScheduleOption            func(*iapPriceScheduleQuery)
 )
 
 type iapImagesQuery struct {
@@ -26,7 +28,10 @@ type iapOfferCodesQuery struct {
 
 type iapPricePointsQuery struct {
 	listQuery
-	territory string
+	territory       string
+	fields          []string
+	territoryFields []string
+	include         []string
 }
 
 type iapOfferCodeCustomCodesQuery struct {
@@ -47,6 +52,15 @@ type iapAvailabilityTerritoriesQuery struct {
 
 type iapPriceSchedulePricesQuery struct {
 	listQuery
+}
+
+type iapPriceScheduleQuery struct {
+	include              []string
+	priceScheduleFields  []string
+	territoryFields      []string
+	inAppPriceFields     []string
+	manualPricesLimit    int
+	automaticPricesLimit int
 }
 
 func WithIAPImagesLimit(limit int) IAPImagesOption {
@@ -102,6 +116,24 @@ func WithIAPPricePointsTerritory(territory string) IAPPricePointsOption {
 		if strings.TrimSpace(territory) != "" {
 			q.territory = strings.TrimSpace(territory)
 		}
+	}
+}
+
+func WithIAPPricePointsFields(fields []string) IAPPricePointsOption {
+	return func(q *iapPricePointsQuery) {
+		q.fields = normalizeList(fields)
+	}
+}
+
+func WithIAPPricePointsTerritoryFields(fields []string) IAPPricePointsOption {
+	return func(q *iapPricePointsQuery) {
+		q.territoryFields = normalizeList(fields)
+	}
+}
+
+func WithIAPPricePointsInclude(include []string) IAPPricePointsOption {
+	return func(q *iapPricePointsQuery) {
+		q.include = normalizeList(include)
 	}
 }
 
@@ -185,6 +217,46 @@ func WithIAPPriceSchedulePricesNextURL(next string) IAPPriceSchedulePricesOption
 	}
 }
 
+func WithIAPPriceScheduleInclude(include []string) IAPPriceScheduleOption {
+	return func(q *iapPriceScheduleQuery) {
+		q.include = normalizeList(include)
+	}
+}
+
+func WithIAPPriceScheduleFields(fields []string) IAPPriceScheduleOption {
+	return func(q *iapPriceScheduleQuery) {
+		q.priceScheduleFields = normalizeList(fields)
+	}
+}
+
+func WithIAPPriceScheduleTerritoryFields(fields []string) IAPPriceScheduleOption {
+	return func(q *iapPriceScheduleQuery) {
+		q.territoryFields = normalizeList(fields)
+	}
+}
+
+func WithIAPPriceSchedulePriceFields(fields []string) IAPPriceScheduleOption {
+	return func(q *iapPriceScheduleQuery) {
+		q.inAppPriceFields = normalizeList(fields)
+	}
+}
+
+func WithIAPPriceScheduleManualPricesLimit(limit int) IAPPriceScheduleOption {
+	return func(q *iapPriceScheduleQuery) {
+		if limit > 0 {
+			q.manualPricesLimit = limit
+		}
+	}
+}
+
+func WithIAPPriceScheduleAutomaticPricesLimit(limit int) IAPPriceScheduleOption {
+	return func(q *iapPriceScheduleQuery) {
+		if limit > 0 {
+			q.automaticPricesLimit = limit
+		}
+	}
+}
+
 func buildIAPImagesQuery(query *iapImagesQuery) string {
 	values := url.Values{}
 	addLimit(values, query.limit)
@@ -202,6 +274,9 @@ func buildIAPPricePointsQuery(query *iapPricePointsQuery) string {
 	if strings.TrimSpace(query.territory) != "" {
 		values.Set("filter[territory]", strings.TrimSpace(query.territory))
 	}
+	addCSV(values, "fields[inAppPurchasePricePoints]", query.fields)
+	addCSV(values, "fields[territories]", query.territoryFields)
+	addCSV(values, "include", query.include)
 	addLimit(values, query.limit)
 	return values.Encode()
 }
@@ -233,5 +308,20 @@ func buildIAPAvailabilityTerritoriesQuery(query *iapAvailabilityTerritoriesQuery
 func buildIAPPriceSchedulePricesQuery(query *iapPriceSchedulePricesQuery) string {
 	values := url.Values{}
 	addLimit(values, query.limit)
+	return values.Encode()
+}
+
+func buildIAPPriceScheduleQuery(query *iapPriceScheduleQuery) string {
+	values := url.Values{}
+	addCSV(values, "include", query.include)
+	addCSV(values, "fields[inAppPurchasePriceSchedules]", query.priceScheduleFields)
+	addCSV(values, "fields[territories]", query.territoryFields)
+	addCSV(values, "fields[inAppPurchasePrices]", query.inAppPriceFields)
+	if query.manualPricesLimit > 0 {
+		values.Set("limit[manualPrices]", strconv.Itoa(query.manualPricesLimit))
+	}
+	if query.automaticPricesLimit > 0 {
+		values.Set("limit[automaticPrices]", strconv.Itoa(query.automaticPricesLimit))
+	}
 	return values.Encode()
 }

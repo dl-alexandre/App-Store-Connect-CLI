@@ -24,6 +24,7 @@ func IAPCommand() *ffcli.Command {
 
 Examples:
   asc iap list --app "APP_ID"
+  asc iap prices --app "APP_ID"
   asc iap get --id "IAP_ID"
   asc iap create --app "APP_ID" --type CONSUMABLE --ref-name "Pro" --product-id "com.example.pro"
   asc iap update --id "IAP_ID" --ref-name "New Name"
@@ -36,6 +37,7 @@ Examples:
 		UsageFunc: DefaultUsageFunc,
 		Subcommands: []*ffcli.Command{
 			IAPListCommand(),
+			IAPPricesCommand(),
 			IAPGetCommand(),
 			IAPCreateCommand(),
 			IAPUpdateCommand(),

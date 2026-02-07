@@ -627,13 +627,21 @@ func (c *Client) GetInAppPurchasePricePointEqualizations(ctx context.Context, pr
 }
 
 // GetInAppPurchasePriceSchedule retrieves the price schedule for an IAP.
-func (c *Client) GetInAppPurchasePriceSchedule(ctx context.Context, iapID string) (*InAppPurchasePriceScheduleResponse, error) {
+func (c *Client) GetInAppPurchasePriceSchedule(ctx context.Context, iapID string, opts ...IAPPriceScheduleOption) (*InAppPurchasePriceScheduleResponse, error) {
+	query := &iapPriceScheduleQuery{}
+	for _, opt := range opts {
+		opt(query)
+	}
+
 	iapID = strings.TrimSpace(iapID)
 	if iapID == "" {
 		return nil, fmt.Errorf("iapID is required")
 	}
 
 	path := fmt.Sprintf("/v2/inAppPurchases/%s/iapPriceSchedule", iapID)
+	if queryString := buildIAPPriceScheduleQuery(query); queryString != "" {
+		path += "?" + queryString
+	}
 	data, err := c.do(ctx, http.MethodGet, path, nil)
 	if err != nil {
 		return nil, err
@@ -648,13 +656,21 @@ func (c *Client) GetInAppPurchasePriceSchedule(ctx context.Context, iapID string
 }
 
 // GetInAppPurchasePriceScheduleByID retrieves an in-app purchase price schedule by ID.
-func (c *Client) GetInAppPurchasePriceScheduleByID(ctx context.Context, scheduleID string) (*InAppPurchasePriceScheduleResponse, error) {
+func (c *Client) GetInAppPurchasePriceScheduleByID(ctx context.Context, scheduleID string, opts ...IAPPriceScheduleOption) (*InAppPurchasePriceScheduleResponse, error) {
+	query := &iapPriceScheduleQuery{}
+	for _, opt := range opts {
+		opt(query)
+	}
+
 	scheduleID = strings.TrimSpace(scheduleID)
 	if scheduleID == "" {
 		return nil, fmt.Errorf("scheduleID is required")
 	}
 
 	path := fmt.Sprintf("/v1/inAppPurchasePriceSchedules/%s", scheduleID)
+	if queryString := buildIAPPriceScheduleQuery(query); queryString != "" {
+		path += "?" + queryString
+	}
 	data, err := c.do(ctx, http.MethodGet, path, nil)
 	if err != nil {
 		return nil, err

@@ -410,6 +410,39 @@ func TestGetInAppPurchasePricePoints_WithTerritory(t *testing.T) {
 	}
 }
 
+func TestGetInAppPurchasePricePoints_WithIncludeAndFields(t *testing.T) {
+	response := jsonResponse(http.StatusOK, `{"data":[]}`)
+	client := newTestClient(t, func(req *http.Request) {
+		if req.Method != http.MethodGet {
+			t.Fatalf("expected GET, got %s", req.Method)
+		}
+		if req.URL.Path != "/v2/inAppPurchases/iap-1/pricePoints" {
+			t.Fatalf("expected path /v2/inAppPurchases/iap-1/pricePoints, got %s", req.URL.Path)
+		}
+		query := req.URL.Query()
+		if query.Get("include") != "territory" {
+			t.Fatalf("expected include=territory, got %q", query.Get("include"))
+		}
+		if query.Get("fields[inAppPurchasePricePoints]") != "customerPrice,proceeds,territory" {
+			t.Fatalf("expected price point fields, got %q", query.Get("fields[inAppPurchasePricePoints]"))
+		}
+		if query.Get("fields[territories]") != "currency" {
+			t.Fatalf("expected territory fields, got %q", query.Get("fields[territories]"))
+		}
+		assertAuthorized(t, req)
+	}, response)
+
+	if _, err := client.GetInAppPurchasePricePoints(
+		context.Background(),
+		"iap-1",
+		WithIAPPricePointsInclude([]string{"territory"}),
+		WithIAPPricePointsFields([]string{"customerPrice", "proceeds", "territory"}),
+		WithIAPPricePointsTerritoryFields([]string{"currency"}),
+	); err != nil {
+		t.Fatalf("GetInAppPurchasePricePoints() error: %v", err)
+	}
+}
+
 func TestGetInAppPurchasePricePointEqualizations(t *testing.T) {
 	response := jsonResponse(http.StatusOK, `{"data":[]}`)
 	client := newTestClient(t, func(req *http.Request) {
@@ -480,6 +513,84 @@ func TestGetInAppPurchasePriceScheduleByID(t *testing.T) {
 	}, response)
 
 	if _, err := client.GetInAppPurchasePriceScheduleByID(context.Background(), "schedule-1"); err != nil {
+		t.Fatalf("GetInAppPurchasePriceScheduleByID() error: %v", err)
+	}
+}
+
+func TestGetInAppPurchasePriceSchedule_WithQueryOptions(t *testing.T) {
+	response := jsonResponse(http.StatusOK, `{"data":{"type":"inAppPurchasePriceSchedules","id":"schedule-1"}}`)
+	client := newTestClient(t, func(req *http.Request) {
+		if req.Method != http.MethodGet {
+			t.Fatalf("expected GET, got %s", req.Method)
+		}
+		if req.URL.Path != "/v2/inAppPurchases/iap-1/iapPriceSchedule" {
+			t.Fatalf("expected path /v2/inAppPurchases/iap-1/iapPriceSchedule, got %s", req.URL.Path)
+		}
+		query := req.URL.Query()
+		if query.Get("include") != "baseTerritory,manualPrices,automaticPrices" {
+			t.Fatalf("expected include query, got %q", query.Get("include"))
+		}
+		if query.Get("fields[inAppPurchasePriceSchedules]") != "baseTerritory,manualPrices,automaticPrices" {
+			t.Fatalf("expected schedule fields query, got %q", query.Get("fields[inAppPurchasePriceSchedules]"))
+		}
+		if query.Get("fields[territories]") != "currency" {
+			t.Fatalf("expected territory fields query, got %q", query.Get("fields[territories]"))
+		}
+		if query.Get("fields[inAppPurchasePrices]") != "startDate,endDate,manual,inAppPurchasePricePoint,territory" {
+			t.Fatalf("expected price fields query, got %q", query.Get("fields[inAppPurchasePrices]"))
+		}
+		if query.Get("limit[manualPrices]") != "50" {
+			t.Fatalf("expected limit[manualPrices]=50, got %q", query.Get("limit[manualPrices]"))
+		}
+		if query.Get("limit[automaticPrices]") != "50" {
+			t.Fatalf("expected limit[automaticPrices]=50, got %q", query.Get("limit[automaticPrices]"))
+		}
+		assertAuthorized(t, req)
+	}, response)
+
+	if _, err := client.GetInAppPurchasePriceSchedule(
+		context.Background(),
+		"iap-1",
+		WithIAPPriceScheduleInclude([]string{"baseTerritory", "manualPrices", "automaticPrices"}),
+		WithIAPPriceScheduleFields([]string{"baseTerritory", "manualPrices", "automaticPrices"}),
+		WithIAPPriceScheduleTerritoryFields([]string{"currency"}),
+		WithIAPPriceSchedulePriceFields([]string{"startDate", "endDate", "manual", "inAppPurchasePricePoint", "territory"}),
+		WithIAPPriceScheduleManualPricesLimit(50),
+		WithIAPPriceScheduleAutomaticPricesLimit(50),
+	); err != nil {
+		t.Fatalf("GetInAppPurchasePriceSchedule() error: %v", err)
+	}
+}
+
+func TestGetInAppPurchasePriceScheduleByID_WithQueryOptions(t *testing.T) {
+	response := jsonResponse(http.StatusOK, `{"data":{"type":"inAppPurchasePriceSchedules","id":"schedule-1"}}`)
+	client := newTestClient(t, func(req *http.Request) {
+		if req.Method != http.MethodGet {
+			t.Fatalf("expected GET, got %s", req.Method)
+		}
+		if req.URL.Path != "/v1/inAppPurchasePriceSchedules/schedule-1" {
+			t.Fatalf("expected path /v1/inAppPurchasePriceSchedules/schedule-1, got %s", req.URL.Path)
+		}
+		query := req.URL.Query()
+		if query.Get("include") != "baseTerritory,manualPrices" {
+			t.Fatalf("expected include query, got %q", query.Get("include"))
+		}
+		if query.Get("fields[inAppPurchasePrices]") != "startDate,endDate,manual" {
+			t.Fatalf("expected price fields query, got %q", query.Get("fields[inAppPurchasePrices]"))
+		}
+		if query.Get("limit[manualPrices]") != "25" {
+			t.Fatalf("expected limit[manualPrices]=25, got %q", query.Get("limit[manualPrices]"))
+		}
+		assertAuthorized(t, req)
+	}, response)
+
+	if _, err := client.GetInAppPurchasePriceScheduleByID(
+		context.Background(),
+		"schedule-1",
+		WithIAPPriceScheduleInclude([]string{"baseTerritory", "manualPrices"}),
+		WithIAPPriceSchedulePriceFields([]string{"startDate", "endDate", "manual"}),
+		WithIAPPriceScheduleManualPricesLimit(25),
+	); err != nil {
 		t.Fatalf("GetInAppPurchasePriceScheduleByID() error: %v", err)
 	}
 }

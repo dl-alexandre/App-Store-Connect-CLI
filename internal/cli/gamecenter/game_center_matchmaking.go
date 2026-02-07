@@ -1829,16 +1829,6 @@ Examples:
 	}
 }
 
-func flagFor(flags ...interface{}) *flag.FlagSet {
-	// The flags are already bound on the caller's FlagSet; return the last provided flagset.
-	switch last := flags[len(flags)-1].(type) {
-	case *flag.FlagSet:
-		return last
-	default:
-		return flag.NewFlagSet("metrics", flag.ExitOnError)
-	}
-}
-
 func ascClient(ctx context.Context) *asc.Client {
 	client, _ := getASCClient()
 	return client

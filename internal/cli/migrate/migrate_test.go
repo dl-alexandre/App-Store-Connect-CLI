@@ -123,16 +123,24 @@ func TestReadFastlaneMetadata_ValidStructure(t *testing.T) {
 	if err := os.MkdirAll(enDir, 0o755); err != nil {
 		t.Fatalf("failed to create dir: %v", err)
 	}
-	os.WriteFile(filepath.Join(enDir, "description.txt"), []byte("English description"), 0o644)
-	os.WriteFile(filepath.Join(enDir, "keywords.txt"), []byte("app, mobile, utility"), 0o644)
-	os.WriteFile(filepath.Join(enDir, "release_notes.txt"), []byte("Bug fixes"), 0o644)
+	if err := os.WriteFile(filepath.Join(enDir, "description.txt"), []byte("English description"), 0o644); err != nil {
+		t.Fatalf("failed to write description: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(enDir, "keywords.txt"), []byte("app, mobile, utility"), 0o644); err != nil {
+		t.Fatalf("failed to write keywords: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(enDir, "release_notes.txt"), []byte("Bug fixes"), 0o644); err != nil {
+		t.Fatalf("failed to write release notes: %v", err)
+	}
 
 	// Create de-DE locale
 	deDir := filepath.Join(dir, "de-DE")
 	if err := os.MkdirAll(deDir, 0o755); err != nil {
 		t.Fatalf("failed to create dir: %v", err)
 	}
-	os.WriteFile(filepath.Join(deDir, "description.txt"), []byte("German description"), 0o644)
+	if err := os.WriteFile(filepath.Join(deDir, "description.txt"), []byte("German description"), 0o644); err != nil {
+		t.Fatalf("failed to write localized description: %v", err)
+	}
 
 	locs, err := readFastlaneMetadata(dir)
 	if err != nil {
@@ -174,7 +182,9 @@ func TestReadFastlaneMetadata_SkipsSpecialDirectories(t *testing.T) {
 	if err := os.MkdirAll(reviewDir, 0o755); err != nil {
 		t.Fatalf("failed to create dir: %v", err)
 	}
-	os.WriteFile(filepath.Join(reviewDir, "description.txt"), []byte("Should be skipped"), 0o644)
+	if err := os.WriteFile(filepath.Join(reviewDir, "description.txt"), []byte("Should be skipped"), 0o644); err != nil {
+		t.Fatalf("failed to write review description: %v", err)
+	}
 
 	// Create default directory (should be skipped)
 	defaultDir := filepath.Join(dir, "default")
@@ -187,7 +197,9 @@ func TestReadFastlaneMetadata_SkipsSpecialDirectories(t *testing.T) {
 	if err := os.MkdirAll(enDir, 0o755); err != nil {
 		t.Fatalf("failed to create dir: %v", err)
 	}
-	os.WriteFile(filepath.Join(enDir, "description.txt"), []byte("English description"), 0o644)
+	if err := os.WriteFile(filepath.Join(enDir, "description.txt"), []byte("English description"), 0o644); err != nil {
+		t.Fatalf("failed to write locale description: %v", err)
+	}
 
 	locs, err := readFastlaneMetadata(dir)
 	if err != nil {
@@ -207,14 +219,18 @@ func TestReadFastlaneMetadata_SkipsFiles(t *testing.T) {
 	dir := t.TempDir()
 
 	// Create a file (should be skipped)
-	os.WriteFile(filepath.Join(dir, "README.md"), []byte("This is a file"), 0o644)
+	if err := os.WriteFile(filepath.Join(dir, "README.md"), []byte("This is a file"), 0o644); err != nil {
+		t.Fatalf("failed to write README: %v", err)
+	}
 
 	// Create en-US locale
 	enDir := filepath.Join(dir, "en-US")
 	if err := os.MkdirAll(enDir, 0o755); err != nil {
 		t.Fatalf("failed to create dir: %v", err)
 	}
-	os.WriteFile(filepath.Join(enDir, "description.txt"), []byte("English description"), 0o644)
+	if err := os.WriteFile(filepath.Join(enDir, "description.txt"), []byte("English description"), 0o644); err != nil {
+		t.Fatalf("failed to write locale description: %v", err)
+	}
 
 	locs, err := readFastlaneMetadata(dir)
 	if err != nil {

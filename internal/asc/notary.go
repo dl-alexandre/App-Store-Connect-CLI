@@ -563,10 +563,7 @@ func completeMultipartUpload(ctx context.Context, host, encodedPath string, cred
 	}
 	payload := completeMultipartUploadRequest{Parts: make([]completeMultipartUploadPart, 0, len(parts))}
 	for _, part := range parts {
-		payload.Parts = append(payload.Parts, completeMultipartUploadPart{
-			PartNumber: part.PartNumber,
-			ETag:       part.ETag,
-		})
+		payload.Parts = append(payload.Parts, completeMultipartUploadPart(part))
 	}
 	bodyBytes, err := xml.Marshal(payload)
 	if err != nil {

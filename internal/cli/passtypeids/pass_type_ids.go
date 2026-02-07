@@ -441,10 +441,6 @@ func normalizePassTypeIDInclude(value string) ([]string, error) {
 	return normalizeInclude(value, passTypeIDIncludeList(), "--include")
 }
 
-func normalizePassTypeIDCertificatesInclude(value string) ([]string, error) {
-	return normalizeInclude(value, passTypeIDCertificatesIncludeList(), "--include")
-}
-
 func normalizeInclude(value string, allowed []string, flagName string) ([]string, error) {
 	include := splitCSV(value)
 	if len(include) == 0 {
@@ -482,10 +478,6 @@ func certificateFieldsList() []string {
 
 func passTypeIDIncludeList() []string {
 	return []string{"certificates"}
-}
-
-func passTypeIDCertificatesIncludeList() []string {
-	return []string{"passTypeId"}
 }
 
 func passTypeIDSortList() []string {

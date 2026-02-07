@@ -43,7 +43,15 @@ make build      # Build binary
 make test       # Run tests (always run before committing)
 make lint       # Lint code
 make format     # Format code
+make install-hooks  # Install local pre-commit hook (.githooks/pre-commit)
 ```
+
+## PR Guardrails
+
+- Before opening or merging a PR, run `make format`, `make lint`, and `make test`.
+- Use `make install-hooks` once per clone to enforce local pre-commit checks.
+- CI must enforce formatting + lint + tests on both PR and `main` workflows.
+- Remove unused shared wrappers/helpers when commands are refactored.
 
 ## Testing Discipline
 

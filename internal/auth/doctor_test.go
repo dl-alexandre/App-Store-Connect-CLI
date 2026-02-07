@@ -24,7 +24,7 @@ func TestDoctorConfigPermissionsWarning(t *testing.T) {
 		t.Fatalf("expected config permissions warning, got %#v", section.Checks)
 	}
 
-	report = Doctor(DoctorOptions{Fix: true})
+	Doctor(DoctorOptions{Fix: true})
 	info, err := os.Stat(configPath)
 	if err != nil {
 		t.Fatalf("stat config error: %v", err)

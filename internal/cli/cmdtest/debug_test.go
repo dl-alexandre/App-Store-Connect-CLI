@@ -13,7 +13,9 @@ func TestDebugFlagLogsHTTPRequests(t *testing.T) {
 	// Create a test HTTP server
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"data":[]}`))
+		if _, err := w.Write([]byte(`{"data":[]}`)); err != nil {
+			t.Errorf("write response: %v", err)
+		}
 	}))
 	defer server.Close()
 

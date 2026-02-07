@@ -2457,13 +2457,16 @@ func TestWithRetry_ZeroRetries(t *testing.T) {
 func TestWithRetry_NegativeRetriesUsesDefault(t *testing.T) {
 	callCount := 0
 
-	WithRetry(context.Background(), func() (string, error) {
+	_, err := WithRetry(context.Background(), func() (string, error) {
 		callCount++
 		if callCount < DefaultMaxRetries+1 {
 			return "", &RetryableError{RetryAfter: time.Millisecond}
 		}
 		return "success", nil
 	}, RetryOptions{MaxRetries: -1})
+	if err != nil {
+		t.Fatalf("expected no error, got %v", err)
+	}
 
 	// Should use default retries (3)
 	if callCount != DefaultMaxRetries+1 {

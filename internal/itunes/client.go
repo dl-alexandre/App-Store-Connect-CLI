@@ -113,11 +113,8 @@ func (c *Client) GetRatings(ctx context.Context, appID, country string) (*AppRat
 		Histogram:            make(map[int]int64),
 	}
 
-	// Fetch histogram from HTML endpoint
-	if err := c.fetchHistogram(ctx, appID, country, ratings); err != nil {
-		// Non-fatal: histogram is optional enhancement
-		// Just continue with what we have
-	}
+	// Fetch histogram from HTML endpoint. Non-fatal: histogram is optional enhancement.
+	_ = c.fetchHistogram(ctx, appID, country, ratings)
 
 	return ratings, nil
 }

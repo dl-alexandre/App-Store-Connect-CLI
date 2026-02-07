@@ -35,12 +35,12 @@ func TestGetRatings_Success(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/lookup" {
 			w.Header().Set("Content-Type", "application/json")
-			w.Write([]byte(lookupResponse))
+			writeBody(t, w, lookupResponse)
 			return
 		}
 		if r.URL.Path == "/us/customer-reviews/id1479784361" {
 			w.Header().Set("Content-Type", "text/html")
-			w.Write([]byte(histogramHTML))
+			writeBody(t, w, histogramHTML)
 			return
 		}
 		http.NotFound(w, r)
@@ -113,12 +113,12 @@ func TestGetRatings_HistogramWithCommas(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/lookup" {
 			w.Header().Set("Content-Type", "application/json")
-			w.Write([]byte(lookupResponse))
+			writeBody(t, w, lookupResponse)
 			return
 		}
 		if r.URL.Path == "/us/customer-reviews/id123" {
 			w.Header().Set("Content-Type", "text/html")
-			w.Write([]byte(histogramHTML))
+			writeBody(t, w, histogramHTML)
 			return
 		}
 		http.NotFound(w, r)
@@ -147,7 +147,7 @@ func TestGetRatings_HistogramWithCommas(t *testing.T) {
 func TestGetRatings_NotFound(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(`{"resultCount": 0, "results": []}`))
+		writeBody(t, w, `{"resultCount": 0, "results": []}`)
 	}))
 	defer server.Close()
 
@@ -177,7 +177,7 @@ func TestGetRatings_HistogramFailureIsNonFatal(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.URL.Path == "/lookup" {
 			w.Header().Set("Content-Type", "application/json")
-			w.Write([]byte(lookupResponse))
+			writeBody(t, w, lookupResponse)
 			return
 		}
 		if r.URL.Path == "/us/customer-reviews/id123" {
@@ -216,7 +216,7 @@ func TestGetRatings_DefaultCountry(t *testing.T) {
 
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(lookupResponse))
+		writeBody(t, w, lookupResponse)
 	}))
 	defer server.Close()
 
@@ -251,17 +251,17 @@ func TestGetAllRatings_Aggregation(t *testing.T) {
 			country := r.URL.Query().Get("country")
 			if resp, ok := responses[country]; ok {
 				w.Header().Set("Content-Type", "application/json")
-				w.Write([]byte(resp))
+				writeBody(t, w, resp)
 				return
 			}
 			// Return empty for unknown countries
 			w.Header().Set("Content-Type", "application/json")
-			w.Write([]byte(`{"resultCount":0,"results":[]}`))
+			writeBody(t, w, `{"resultCount":0,"results":[]}`)
 			return
 		}
 		// Return empty histogram
 		w.Header().Set("Content-Type", "text/html")
-		w.Write([]byte(`<html></html>`))
+		writeBody(t, w, `<html></html>`)
 	}))
 	defer server.Close()
 
@@ -307,7 +307,7 @@ func TestGetAllRatings_Aggregation(t *testing.T) {
 func TestGetAllRatings_InvalidWorkers(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(`{"resultCount":1,"results":[{"trackId":123,"trackName":"Test","averageUserRating":4.0,"userRatingCount":10}]}`))
+		writeBody(t, w, `{"resultCount":1,"results":[{"trackId":123,"trackName":"Test","averageUserRating":4.0,"userRatingCount":10}]}`)
 	}))
 	defer server.Close()
 
@@ -341,15 +341,15 @@ func TestGetAllRatings_NoRatings(t *testing.T) {
 			country := r.URL.Query().Get("country")
 			if resp, ok := responses[country]; ok {
 				w.Header().Set("Content-Type", "application/json")
-				w.Write([]byte(resp))
+				writeBody(t, w, resp)
 				return
 			}
 			w.Header().Set("Content-Type", "application/json")
-			w.Write([]byte(`{"resultCount":0,"results":[]}`))
+			writeBody(t, w, `{"resultCount":0,"results":[]}`)
 			return
 		}
 		w.Header().Set("Content-Type", "text/html")
-		w.Write([]byte(`<html></html>`))
+		writeBody(t, w, `<html></html>`)
 	}))
 	defer server.Close()
 
@@ -377,7 +377,7 @@ func TestGetAllRatings_NoRatings(t *testing.T) {
 func TestGetAllRatings_ContextCancellation(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(`{"resultCount":1,"results":[{"trackId":123,"trackName":"Test","averageUserRating":4.0,"userRatingCount":10}]}`))
+		writeBody(t, w, `{"resultCount":1,"results":[{"trackId":123,"trackName":"Test","averageUserRating":4.0,"userRatingCount":10}]}`)
 	}))
 	defer server.Close()
 
@@ -406,4 +406,11 @@ func (t *testTransport) RoundTrip(req *http.Request) (*http.Response, error) {
 	req.URL.Scheme = "http"
 	req.URL.Host = t.baseURL[7:] // strip "http://"
 	return http.DefaultTransport.RoundTrip(req)
+}
+
+func writeBody(t *testing.T, w http.ResponseWriter, body string) {
+	t.Helper()
+	if _, err := w.Write([]byte(body)); err != nil {
+		t.Errorf("write response: %v", err)
+	}
 }

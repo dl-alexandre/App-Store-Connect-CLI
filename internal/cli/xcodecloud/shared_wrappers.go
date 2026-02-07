@@ -1,8 +1,6 @@
 package xcodecloud
 
 import (
-	"context"
-
 	"github.com/peterbourgon/ff/v3/ffcli"
 
 	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/asc"
@@ -19,10 +17,6 @@ func getASCClient() (*asc.Client, error) {
 
 func resolveAppID(appID string) string {
 	return shared.ResolveAppID(appID)
-}
-
-func contextWithTimeout(ctx context.Context) (context.Context, context.CancelFunc) {
-	return shared.ContextWithTimeout(ctx)
 }
 
 func printOutput(data interface{}, format string, pretty bool) error {

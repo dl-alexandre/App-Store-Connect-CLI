@@ -33,18 +33,6 @@ func validateNextURL(next string) error {
 	return shared.ValidateNextURL(next)
 }
 
-func splitCSV(value string) []string {
-	return shared.SplitCSV(value)
-}
-
-func splitCSVUpper(value string) []string {
-	return shared.SplitCSVUpper(value)
-}
-
-func normalizeDate(value, flagName string) (string, error) {
-	return shared.NormalizeDate(value, flagName)
-}
-
 func isAppAvailabilityMissing(err error) bool {
 	return shared.IsAppAvailabilityMissing(err)
 }

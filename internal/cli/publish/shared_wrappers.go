@@ -21,28 +21,8 @@ func resolveAppID(appID string) string {
 	return shared.ResolveAppID(appID)
 }
 
-func contextWithTimeout(ctx context.Context) (context.Context, context.CancelFunc) {
-	return shared.ContextWithTimeout(ctx)
-}
-
 func printOutput(data interface{}, format string, pretty bool) error {
 	return shared.PrintOutput(data, format, pretty)
-}
-
-func validateNextURL(next string) error {
-	return shared.ValidateNextURL(next)
-}
-
-func splitCSV(value string) []string {
-	return shared.SplitCSV(value)
-}
-
-func splitCSVUpper(value string) []string {
-	return shared.SplitCSVUpper(value)
-}
-
-func normalizeDate(value, flagName string) (string, error) {
-	return shared.NormalizeDate(value, flagName)
 }
 
 func parseCommaSeparatedIDs(value string) []string {

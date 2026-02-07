@@ -99,7 +99,7 @@ func TestSubmitNotarization_SendsRequest(t *testing.T) {
 			},
 		}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(resp)
+		mustEncodeJSON(t, w, resp)
 	}))
 	defer server.Close()
 
@@ -129,7 +129,7 @@ func TestSubmitNotarization_ErrorResponse(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusForbidden)
-		json.NewEncoder(w).Encode(map[string]interface{}{
+		mustEncodeJSON(t, w, map[string]interface{}{
 			"errors": []map[string]string{
 				{"code": "FORBIDDEN", "title": "Forbidden", "detail": "Invalid credentials"},
 			},
@@ -177,7 +177,7 @@ func TestGetNotarizationStatus_SendsRequest(t *testing.T) {
 					},
 				}
 				w.Header().Set("Content-Type", "application/json")
-				json.NewEncoder(w).Encode(resp)
+				mustEncodeJSON(t, w, resp)
 			}))
 			defer server.Close()
 
@@ -203,7 +203,7 @@ func TestGetNotarizationStatus_SendsRequest(t *testing.T) {
 func TestGetNotarizationStatus_ErrorResponse(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte(`{"errors":[{"code":"NOT_FOUND","title":"Not Found","detail":"Submission not found"}]}`))
+		mustWriteBody(t, w, `{"errors":[{"code":"NOT_FOUND","title":"Not Found","detail":"Submission not found"}]}`)
 	}))
 	defer server.Close()
 
@@ -233,7 +233,7 @@ func TestGetNotarizationLogs_SendsRequest(t *testing.T) {
 			},
 		}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(resp)
+		mustEncodeJSON(t, w, resp)
 	}))
 	defer server.Close()
 
@@ -254,7 +254,7 @@ func TestGetNotarizationLogs_SendsRequest(t *testing.T) {
 func TestGetNotarizationLogs_ErrorResponse(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte(`{"errors":[{"code":"NOT_FOUND","title":"Not Found","detail":"Logs not available"}]}`))
+		mustWriteBody(t, w, `{"errors":[{"code":"NOT_FOUND","title":"Not Found","detail":"Logs not available"}]}`)
 	}))
 	defer server.Close()
 
@@ -297,7 +297,7 @@ func TestListNotarizations_SendsRequest(t *testing.T) {
 			},
 		}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(resp)
+		mustEncodeJSON(t, w, resp)
 	}))
 	defer server.Close()
 
@@ -330,7 +330,7 @@ func TestListNotarizations_EmptyResult(t *testing.T) {
 			Data: []NotarySubmissionStatusData{},
 		}
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(resp)
+		mustEncodeJSON(t, w, resp)
 	}))
 	defer server.Close()
 
@@ -348,7 +348,7 @@ func TestListNotarizations_EmptyResult(t *testing.T) {
 func TestListNotarizations_ErrorResponse(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusUnauthorized)
-		w.Write([]byte(`{"errors":[{"code":"UNAUTHORIZED","title":"Unauthorized"}]}`))
+		mustWriteBody(t, w, `{"errors":[{"code":"UNAUTHORIZED","title":"Unauthorized"}]}`)
 	}))
 	defer server.Close()
 
@@ -455,6 +455,20 @@ func TestUploadToS3Helpers(t *testing.T) {
 	}
 	if strings.Contains(encoded, "//") {
 		t.Fatalf("unexpected double slash in encoded path: %q", encoded)
+	}
+}
+
+func mustEncodeJSON(t *testing.T, w http.ResponseWriter, value interface{}) {
+	t.Helper()
+	if err := json.NewEncoder(w).Encode(value); err != nil {
+		t.Errorf("encode response: %v", err)
+	}
+}
+
+func mustWriteBody(t *testing.T, w http.ResponseWriter, body string) {
+	t.Helper()
+	if _, err := w.Write([]byte(body)); err != nil {
+		t.Errorf("write response: %v", err)
 	}
 }
 

@@ -101,6 +101,14 @@ tools:
 	@echo "$(GREEN)✓ Tools installed$(NC)"
 	@echo "$(YELLOW)Make sure '$(GOBIN)' is on your PATH$(NC)"
 
+# Install local git hooks
+.PHONY: install-hooks
+install-hooks:
+	@echo "$(BLUE)Installing git hooks...$(NC)"
+	git config core.hooksPath .githooks
+	chmod +x .githooks/pre-commit
+	@echo "$(GREEN)✓ Hooks installed (core.hooksPath=.githooks)$(NC)"
+
 # Install dependencies
 .PHONY: deps
 deps:
@@ -170,6 +178,7 @@ help:
 	@echo "  lint           Lint the code"
 	@echo "  format         Format code"
 	@echo "  tools          Install dev tools"
+	@echo "  install-hooks  Install local git hooks"
 	@echo "  deps           Install dependencies"
 	@echo "  update-deps    Update dependencies"
 	@echo "  update-openapi Update OpenAPI paths index"

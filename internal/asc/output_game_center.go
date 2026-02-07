@@ -286,24 +286,6 @@ func printGameCenterAchievementReleaseDeleteResultMarkdown(result *GameCenterAch
 	return nil
 }
 
-func printGameCenterLeaderboardSetMembersUpdateResultTable(result *GameCenterLeaderboardSetMembersUpdateResult) error {
-	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
-	fmt.Fprintln(w, "Set ID\tMember Count\tUpdated")
-	fmt.Fprintf(w, "%s\t%d\t%t\n", result.SetID, result.MemberCount, result.Updated)
-	return w.Flush()
-}
-
-func printGameCenterLeaderboardSetMembersUpdateResultMarkdown(result *GameCenterLeaderboardSetMembersUpdateResult) error {
-	fmt.Fprintln(os.Stdout, "| Set ID | Member Count | Updated |")
-	fmt.Fprintln(os.Stdout, "| --- | --- | --- |")
-	fmt.Fprintf(os.Stdout, "| %s | %d | %t |\n",
-		escapeMarkdown(result.SetID),
-		result.MemberCount,
-		result.Updated,
-	)
-	return nil
-}
-
 func printGameCenterLeaderboardSetReleasesTable(resp *GameCenterLeaderboardSetReleasesResponse) error {
 	w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', 0)
 	fmt.Fprintln(w, "ID\tLive")

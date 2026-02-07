@@ -24,7 +24,3 @@ func resolveAppID(appID string) string {
 func contextWithTimeout(ctx context.Context) (context.Context, context.CancelFunc) {
 	return shared.ContextWithTimeout(ctx)
 }
-
-func printOutput(data interface{}, format string, pretty bool) error {
-	return shared.PrintOutput(data, format, pretty)
-}

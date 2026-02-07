@@ -1016,10 +1016,6 @@ func listFromConfig() ([]Credential, error) {
 	return credentials, nil
 }
 
-func getDefaultFromConfig() (*config.Config, error) {
-	return getCredentialsFromConfig("")
-}
-
 // SetDefaultCredentials sets the default profile name for credential resolution.
 func SetDefaultCredentials(name string) error {
 	if strings.TrimSpace(name) == "" {

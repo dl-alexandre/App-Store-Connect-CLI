@@ -13,7 +13,7 @@ OS="$(uname -s)"
 ARCH="$(uname -m)"
 
 case "${OS}" in
-  Darwin) OS="darwin" ;;
+  Darwin) OS="macOS" ;;
   Linux) OS="linux" ;;
   *)
     echo "Unsupported OS: ${OS}"
@@ -30,10 +30,18 @@ case "${ARCH}" in
     ;;
 esac
 
-ASSET="${BIN_NAME}-${OS}-${ARCH}"
-BASE_URL="https://github.com/${REPO}/releases/latest/download"
+LATEST_URL="$(curl -fsSL -o /dev/null -w "%{url_effective}" "https://github.com/${REPO}/releases/latest")"
+VERSION="${LATEST_URL##*/}"
+if [ -z "${VERSION}" ] || [ "${VERSION}" = "latest" ]; then
+  echo "Could not determine latest version."
+  exit 1
+fi
+
+ASSET="${BIN_NAME}_${VERSION}_${OS}_${ARCH}"
+BASE_URL="https://github.com/${REPO}/releases/download/${VERSION}"
 BIN_URL="${BASE_URL}/${ASSET}"
-CHECKSUMS_URL="${BASE_URL}/checksums.txt"
+CHECKSUMS_ASSET="${BIN_NAME}_${VERSION}_checksums.txt"
+CHECKSUMS_URL="${BASE_URL}/${CHECKSUMS_ASSET}"
 
 TMP_DIR="$(mktemp -d)"
 trap 'rm -rf "${TMP_DIR}"' EXIT

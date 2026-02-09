@@ -1,0 +1,127 @@
+package cmdtest
+
+import (
+	"context"
+	"encoding/json"
+	"io"
+	"net/http"
+	"path/filepath"
+	"strings"
+	"testing"
+)
+
+func TestBuildsLatestSelectsNewestAcrossPlatformPreReleaseVersions(t *testing.T) {
+	setupAuth(t)
+	t.Setenv("ASC_CONFIG_PATH", filepath.Join(t.TempDir(), "nonexistent.json"))
+
+	const nextPreReleaseURL = "https://api.appstoreconnect.apple.com/v1/preReleaseVersions?page=2"
+
+	originalTransport := http.DefaultTransport
+	t.Cleanup(func() {
+		http.DefaultTransport = originalTransport
+	})
+
+	http.DefaultTransport = roundTripFunc(func(req *http.Request) (*http.Response, error) {
+		switch {
+		case req.Method == http.MethodGet && req.URL.Path == "/v1/preReleaseVersions" && req.URL.Query().Get("page") == "":
+			query := req.URL.Query()
+			if query.Get("filter[app]") != "app-1" {
+				t.Fatalf("expected filter[app]=app-1, got %q", query.Get("filter[app]"))
+			}
+			if query.Get("filter[platform]") != "IOS" {
+				t.Fatalf("expected filter[platform]=IOS, got %q", query.Get("filter[platform]"))
+			}
+			if query.Get("limit") != "200" {
+				t.Fatalf("expected limit=200, got %q", query.Get("limit"))
+			}
+			body := `{
+				"data":[{"type":"preReleaseVersions","id":"prv-old"}],
+				"links":{"next":"` + nextPreReleaseURL + `"}
+			}`
+			return &http.Response{
+				StatusCode: http.StatusOK,
+				Body:       io.NopCloser(strings.NewReader(body)),
+				Header:     http.Header{"Content-Type": []string{"application/json"}},
+			}, nil
+
+		case req.Method == http.MethodGet && req.URL.String() == nextPreReleaseURL:
+			body := `{
+				"data":[{"type":"preReleaseVersions","id":"prv-new"}],
+				"links":{"next":""}
+			}`
+			return &http.Response{
+				StatusCode: http.StatusOK,
+				Body:       io.NopCloser(strings.NewReader(body)),
+				Header:     http.Header{"Content-Type": []string{"application/json"}},
+			}, nil
+
+		case req.Method == http.MethodGet && req.URL.Path == "/v1/builds":
+			query := req.URL.Query()
+			if query.Get("filter[app]") != "app-1" {
+				t.Fatalf("expected filter[app]=app-1, got %q", query.Get("filter[app]"))
+			}
+			if query.Get("sort") != "-uploadedDate" {
+				t.Fatalf("expected sort=-uploadedDate, got %q", query.Get("sort"))
+			}
+			if query.Get("limit") != "1" {
+				t.Fatalf("expected limit=1, got %q", query.Get("limit"))
+			}
+
+			switch query.Get("filter[preReleaseVersion]") {
+			case "prv-old":
+				body := `{
+					"data":[{"type":"builds","id":"build-old","attributes":{"uploadedDate":"2026-01-01T00:00:00Z"}}]
+				}`
+				return &http.Response{
+					StatusCode: http.StatusOK,
+					Body:       io.NopCloser(strings.NewReader(body)),
+					Header:     http.Header{"Content-Type": []string{"application/json"}},
+				}, nil
+			case "prv-new":
+				body := `{
+					"data":[{"type":"builds","id":"build-new","attributes":{"uploadedDate":"2026-02-01T00:00:00Z"}}]
+				}`
+				return &http.Response{
+					StatusCode: http.StatusOK,
+					Body:       io.NopCloser(strings.NewReader(body)),
+					Header:     http.Header{"Content-Type": []string{"application/json"}},
+				}, nil
+			default:
+				t.Fatalf("unexpected filter[preReleaseVersion]=%q", query.Get("filter[preReleaseVersion]"))
+				return nil, nil
+			}
+
+		default:
+			t.Fatalf("unexpected request: %s %s", req.Method, req.URL.String())
+			return nil, nil
+		}
+	})
+
+	root := RootCommand("1.2.3")
+	root.FlagSet.SetOutput(io.Discard)
+
+	stdout, stderr := captureOutput(t, func() {
+		if err := root.Parse([]string{"builds", "latest", "--app", "app-1", "--platform", "ios"}); err != nil {
+			t.Fatalf("parse error: %v", err)
+		}
+		if err := root.Run(context.Background()); err != nil {
+			t.Fatalf("run error: %v", err)
+		}
+	})
+
+	if stderr != "" {
+		t.Fatalf("expected empty stderr, got %q", stderr)
+	}
+
+	var out struct {
+		Data struct {
+			ID string `json:"id"`
+		} `json:"data"`
+	}
+	if err := json.Unmarshal([]byte(stdout), &out); err != nil {
+		t.Fatalf("unmarshal output: %v\nstdout: %s", err, stdout)
+	}
+	if out.Data.ID != "build-new" {
+		t.Fatalf("expected latest build id build-new, got %q", out.Data.ID)
+	}
+}

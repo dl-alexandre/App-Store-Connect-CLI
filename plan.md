@@ -84,6 +84,15 @@ Goal: eliminate current `0.0%` coverage packages by adding package-local tests i
 - [x] `internal/cli/iap` (offer/schedule parsing behavior)
 - [x] Commit Phase 7
 
+## Phase 8 - High-Risk Package API Interaction Coverage
+
+- [x] `internal/cli/builds` (`builds latest` multi-preReleaseVersion selection via API)
+- [x] `internal/cli/apps` (`app-tags list` query + response behavior)
+- [x] `internal/cli/testflight` (`metrics public-link` and `metrics testers` API output)
+- [x] `internal/cli/iap` (`offer-codes create` default eligibilities + payload behavior)
+- [x] `internal/cli/subscriptions` (`offer-codes create` normalization + payload behavior)
+- [x] Commit Phase 8
+
 ## Validation Gate (after each phase and at end)
 
 - [x] `go test -short ./...`

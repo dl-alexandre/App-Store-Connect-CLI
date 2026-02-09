@@ -330,6 +330,14 @@ Goal: eliminate current `0.0%` coverage packages by adding package-local tests i
 - [x] `internal/cli/alternativedistribution` (`packages versions variants` invalid/malformed `--next` validation + `--paginate --next` path)
 - [x] Commit Phase 37
 
+## Phase 38 - `--next` Parity for Actors, Android Mapping, Feedback, and Crashes Lists
+
+- [x] `internal/cli/actors` (`actors list` invalid/malformed `--next` validation + `--paginate --next` without `--id`)
+- [x] `internal/cli/androidiosmapping` (`android-ios-mapping list` invalid/malformed `--next` validation + `--paginate --next` path)
+- [x] `internal/cli/feedback` (`feedback` invalid/malformed `--next` validation + `--paginate --next` without `--app`)
+- [x] `internal/cli/crashes` (`crashes` invalid/malformed `--next` validation + `--paginate --next` without `--app`)
+- [x] Commit Phase 38
+
 ## Validation Gate (after each phase and at end)
 
 - [x] `go test -short ./...`

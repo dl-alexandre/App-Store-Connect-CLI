@@ -148,6 +148,13 @@ Goal: eliminate current `0.0%` coverage packages by adding package-local tests i
 - [x] `internal/cli/subscriptions` (`price-points list` invalid/malformed `--next` validation + `--paginate --next` without `--subscription-id`)
 - [x] Commit Phase 14
 
+## Phase 15 - `--next` Parity for Devices, Users, and Versions Lists
+
+- [x] `internal/cli/devices` (`devices list` invalid/malformed `--next` validation + `--paginate --next` path)
+- [x] `internal/cli/users` (`users list` invalid/malformed `--next` validation + `--paginate --next` path)
+- [x] `internal/cli/versions` (`versions list` invalid/malformed `--next` validation + `--paginate --next` without `--app`)
+- [x] Commit Phase 15
+
 ## Validation Gate (after each phase and at end)
 
 - [x] `go test -short ./...`

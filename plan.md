@@ -403,6 +403,17 @@ Goal: eliminate current `0.0%` coverage packages by adding package-local tests i
 - [x] `internal/cli/buildlocalizations` (`build-localizations list` invalid/malformed `--next` validation + `--paginate --next` path with build-version resolution)
 - [x] Commit Phase 47
 
+## Phase 48 - `--next` Parity for Builds Icons, Testers, Metrics, Relationships, Test Notes, and Upload Lists
+
+- [x] `internal/cli/builds` (`builds icons list` invalid/malformed `--next` validation + `--paginate --next` path)
+- [x] `internal/cli/builds` (`builds individual-testers list` invalid/malformed `--next` validation + `--paginate --next` path)
+- [x] `internal/cli/builds` (`builds metrics beta-usages` invalid/malformed `--next` validation + `--next` fetch path)
+- [x] `internal/cli/builds` (`builds relationships get` invalid/malformed `--next` validation + to-many `--paginate --next` path)
+- [x] `internal/cli/builds` (`builds test-notes list` invalid/malformed `--next` validation + `--paginate --next` path)
+- [x] `internal/cli/builds` (`builds uploads files list` invalid/malformed `--next` validation + `--paginate --next` path)
+- [x] `internal/cli/builds` (`builds uploads list` invalid/malformed `--next` validation + `--paginate --next` without `--app`)
+- [x] Commit Phase 48
+
 ## Validation Gate (after each phase and at end)
 
 - [x] `go test -short ./...`

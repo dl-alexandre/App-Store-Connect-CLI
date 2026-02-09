@@ -62,13 +62,13 @@ Goal: eliminate current `0.0%` coverage packages by adding package-local tests i
 - [x] `internal/cli/reviews`
 - [x] `internal/cli/winbackoffers`
 - [x] `internal/cli/notarization`
-- [ ] Commit Phase 4
+- [x] Commit Phase 4
 
 ## Phase 5 - Large Surface Command Families
 
-- [ ] `internal/cli/gamecenter`
-- [ ] `internal/cli/xcodecloud`
-- [ ] Commit Phase 5
+- [x] `internal/cli/gamecenter`
+- [x] `internal/cli/xcodecloud`
+- [x] Commit Phase 5
 
 ## Phase 6 - Remaining Non-CLI Root Packages
 

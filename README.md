@@ -1697,3 +1697,8 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 <p align="center">
   Primarily Built with Cursor and GPT-5.2 Codex Extra High
+</p>
+
+<p align="center">
+  <sub>This project is an independent, unofficial tool and is not affiliated with, endorsed by, or sponsored by Apple Inc. App Store Connect, TestFlight, Xcode Cloud, and Apple are trademarks of Apple Inc., registered in the U.S. and other countries.</sub>
+</p>

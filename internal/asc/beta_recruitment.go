@@ -80,7 +80,7 @@ type BetaRecruitmentCriterionOptionDeviceFamily struct {
 type BetaRecruitmentCriterionOptionsResponse = Response[BetaRecruitmentCriterionOptionAttributes]
 
 // BetaGroupMetricAttributes represents metric attributes returned by metrics endpoints.
-type BetaGroupMetricAttributes map[string]interface{}
+type BetaGroupMetricAttributes map[string]any
 
 // BetaGroupPublicLinkUsagesResponse is the response from public link usage metrics.
 type BetaGroupPublicLinkUsagesResponse = Response[BetaGroupMetricAttributes]

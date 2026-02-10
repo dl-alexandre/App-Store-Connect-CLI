@@ -9,7 +9,7 @@ import (
 	"testing"
 )
 
-func decodeRequestBody(t *testing.T, req *http.Request) map[string]interface{} {
+func decodeRequestBody(t *testing.T, req *http.Request) map[string]any {
 	t.Helper()
 
 	body, err := io.ReadAll(req.Body)
@@ -17,23 +17,23 @@ func decodeRequestBody(t *testing.T, req *http.Request) map[string]interface{} {
 		t.Fatalf("read body: %v", err)
 	}
 
-	var payload map[string]interface{}
+	var payload map[string]any
 	if err := json.Unmarshal(body, &payload); err != nil {
 		t.Fatalf("decode body: %v", err)
 	}
 	return payload
 }
 
-func requireMap(t *testing.T, value interface{}, name string) map[string]interface{} {
+func requireMap(t *testing.T, value any, name string) map[string]any {
 	t.Helper()
-	m, ok := value.(map[string]interface{})
+	m, ok := value.(map[string]any)
 	if !ok {
 		t.Fatalf("expected %s to be object, got %T", name, value)
 	}
 	return m
 }
 
-func requireString(t *testing.T, value interface{}, name string) string {
+func requireString(t *testing.T, value any, name string) string {
 	t.Helper()
 	str, ok := value.(string)
 	if !ok {
@@ -42,7 +42,7 @@ func requireString(t *testing.T, value interface{}, name string) string {
 	return str
 }
 
-func requireBool(t *testing.T, value interface{}, name string) bool {
+func requireBool(t *testing.T, value any, name string) bool {
 	t.Helper()
 	boolean, ok := value.(bool)
 	if !ok {
@@ -51,7 +51,7 @@ func requireBool(t *testing.T, value interface{}, name string) bool {
 	return boolean
 }
 
-func requireFloat(t *testing.T, value interface{}, name string) float64 {
+func requireFloat(t *testing.T, value any, name string) float64 {
 	t.Helper()
 	number, ok := value.(float64)
 	if !ok {

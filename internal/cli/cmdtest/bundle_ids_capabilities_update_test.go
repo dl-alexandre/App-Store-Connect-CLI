@@ -120,11 +120,11 @@ func TestBundleIDCapabilitiesUpdateSuccessOutput(t *testing.T) {
 		if err != nil {
 			t.Fatalf("read body error: %v", err)
 		}
-		var body map[string]interface{}
+		var body map[string]any
 		if err := json.Unmarshal(payload, &body); err != nil {
 			t.Fatalf("decode body error: %v", err)
 		}
-		data, ok := body["data"].(map[string]interface{})
+		data, ok := body["data"].(map[string]any)
 		if !ok {
 			t.Fatalf("expected data object in body")
 		}
@@ -134,11 +134,11 @@ func TestBundleIDCapabilitiesUpdateSuccessOutput(t *testing.T) {
 		if data["id"] != "cap1" {
 			t.Fatalf("expected id cap1, got %v", data["id"])
 		}
-		attrs, ok := data["attributes"].(map[string]interface{})
+		attrs, ok := data["attributes"].(map[string]any)
 		if !ok {
 			t.Fatalf("expected attributes object in body")
 		}
-		settings, ok := attrs["settings"].([]interface{})
+		settings, ok := attrs["settings"].([]any)
 		if !ok || len(settings) != 1 {
 			t.Fatalf("expected 1 setting, got %v", attrs["settings"])
 		}

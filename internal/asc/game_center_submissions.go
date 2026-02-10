@@ -22,13 +22,13 @@ type GameCenterLeaderboardEntrySubmissionAttributes struct {
 type GameCenterLeaderboardEntrySubmissionResource struct {
 	Type       ResourceType                                   `json:"type"`
 	ID         string                                         `json:"id"`
-	Attributes GameCenterLeaderboardEntrySubmissionAttributes `json:"attributes,omitempty"`
+	Attributes GameCenterLeaderboardEntrySubmissionAttributes `json:"attributes"`
 }
 
 // GameCenterLeaderboardEntrySubmissionResponse is the response from leaderboard entry submissions.
 type GameCenterLeaderboardEntrySubmissionResponse struct {
 	Data  GameCenterLeaderboardEntrySubmissionResource `json:"data"`
-	Links Links                                        `json:"links,omitempty"`
+	Links Links                                        `json:"links"`
 }
 
 // GameCenterLeaderboardEntrySubmissionCreateData is the data portion of a leaderboard entry submission request.
@@ -121,13 +121,13 @@ type GameCenterPlayerAchievementSubmissionAttributes struct {
 type GameCenterPlayerAchievementSubmissionResource struct {
 	Type       ResourceType                                    `json:"type"`
 	ID         string                                          `json:"id"`
-	Attributes GameCenterPlayerAchievementSubmissionAttributes `json:"attributes,omitempty"`
+	Attributes GameCenterPlayerAchievementSubmissionAttributes `json:"attributes"`
 }
 
 // GameCenterPlayerAchievementSubmissionResponse is the response from player achievement submissions.
 type GameCenterPlayerAchievementSubmissionResponse struct {
 	Data  GameCenterPlayerAchievementSubmissionResource `json:"data"`
-	Links Links                                         `json:"links,omitempty"`
+	Links Links                                         `json:"links"`
 }
 
 // GameCenterPlayerAchievementSubmissionCreateData is the data portion of a player achievement submission request.

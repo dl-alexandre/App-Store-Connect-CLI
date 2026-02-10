@@ -33,7 +33,7 @@ type AppStoreVersionPromotionCreateRequest struct {
 // AppStoreVersionPromotionResponse is the response from promotion create endpoints.
 type AppStoreVersionPromotionResponse struct {
 	Data  Resource[AppStoreVersionPromotionAttributes] `json:"data"`
-	Links Links                                        `json:"links,omitempty"`
+	Links Links                                        `json:"links"`
 }
 
 // CreateAppStoreVersionPromotion creates a version promotion.

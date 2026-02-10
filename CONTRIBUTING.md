@@ -5,7 +5,7 @@ Thanks for your interest in contributing to ASC (App Store Connect CLI).
 ## Development Setup
 
 Requirements:
-- Go 1.24+
+- Go 1.26+
 
 Clone and build:
 ```bash

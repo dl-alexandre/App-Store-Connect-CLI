@@ -126,7 +126,7 @@ type S3Credentials struct {
 
 // GenerateNotaryJWT generates a JWT for the Notary API.
 // It is identical to GenerateJWT but includes the "scope" claim required by the Notary API.
-func GenerateNotaryJWT(keyID, issuerID string, privateKey interface{}) (string, error) {
+func GenerateNotaryJWT(keyID, issuerID string, privateKey any) (string, error) {
 	now := time.Now()
 	claims := jwt.MapClaims{
 		"iss":   issuerID,
@@ -794,10 +794,7 @@ func calculateMultipartPartSize(contentLength int64) int64 {
 		return partSize
 	}
 
-	partSize = (contentLength + notaryS3MaxParts - 1) / notaryS3MaxParts
-	if partSize < notaryS3MinPartSizeBytes {
-		partSize = notaryS3MinPartSizeBytes
-	}
+	partSize = max((contentLength+notaryS3MaxParts-1)/notaryS3MaxParts, notaryS3MinPartSizeBytes)
 	return partSize
 }
 

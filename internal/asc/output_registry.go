@@ -21,7 +21,7 @@ var directRenderRegistry = map[reflect.Type]directRenderFunc{}
 // registerRows registers a rows function for the given pointer type.
 // The function must accept a pointer and return (headers, rows).
 func registerRows[T any](fn func(*T) ([]string, [][]string)) {
-	t := reflect.TypeOf((*T)(nil))
+	t := reflect.TypeFor[*T]()
 	if _, exists := outputRegistry[t]; exists {
 		panic(fmt.Sprintf("output registry: duplicate registration for %s", t))
 	}
@@ -36,7 +36,7 @@ func registerRows[T any](fn func(*T) ([]string, [][]string)) {
 
 // registerRowsErr registers a rows function that can return an error.
 func registerRowsErr[T any](fn func(*T) ([]string, [][]string, error)) {
-	t := reflect.TypeOf((*T)(nil))
+	t := reflect.TypeFor[*T]()
 	if _, exists := outputRegistry[t]; exists {
 		panic(fmt.Sprintf("output registry: duplicate registration for %s", t))
 	}
@@ -50,7 +50,7 @@ func registerRowsErr[T any](fn func(*T) ([]string, [][]string, error)) {
 
 // registerDirect registers a type that needs direct render control (multi-table output).
 func registerDirect[T any](fn func(*T, func([]string, [][]string)) error) {
-	t := reflect.TypeOf((*T)(nil))
+	t := reflect.TypeFor[*T]()
 	if _, exists := outputRegistry[t]; exists {
 		panic(fmt.Sprintf("output registry: duplicate registration for %s", t))
 	}

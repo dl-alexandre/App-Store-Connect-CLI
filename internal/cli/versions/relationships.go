@@ -137,7 +137,7 @@ Examples:
 	}
 }
 
-func getAppStoreVersionRelationship(ctx context.Context, client *asc.Client, relationshipType, versionID string) (interface{}, error) {
+func getAppStoreVersionRelationship(ctx context.Context, client *asc.Client, relationshipType, versionID string) (any, error) {
 	switch relationshipType {
 	case "ageRatingDeclaration":
 		return client.GetAppStoreVersionAgeRatingDeclarationRelationship(ctx, versionID)

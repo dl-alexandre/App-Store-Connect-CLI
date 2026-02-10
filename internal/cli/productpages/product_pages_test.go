@@ -18,12 +18,12 @@ func TestProductPagesCommandConstructors(t *testing.T) {
 		t.Fatal("expected Command wrapper to return command")
 	}
 
-	constructors := []func() interface{}{
-		func() interface{} { return CustomPagesCommand() },
-		func() interface{} { return CustomPageLocalizationsCommand() },
-		func() interface{} { return CustomPageVersionsCommand() },
-		func() interface{} { return ExperimentsCommand() },
-		func() interface{} { return ExperimentTreatmentsCommand() },
+	constructors := []func() any{
+		func() any { return CustomPagesCommand() },
+		func() any { return CustomPageLocalizationsCommand() },
+		func() any { return CustomPageVersionsCommand() },
+		func() any { return ExperimentsCommand() },
+		func() any { return ExperimentTreatmentsCommand() },
 	}
 	for _, ctor := range constructors {
 		if got := ctor(); got == nil {

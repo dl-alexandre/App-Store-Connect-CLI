@@ -10,7 +10,7 @@ import (
 // PreReleaseVersionAppLinkageResponse is the response for pre-release version app relationships.
 type PreReleaseVersionAppLinkageResponse struct {
 	Data  ResourceData `json:"data"`
-	Links Links        `json:"links,omitempty"`
+	Links Links        `json:"links"`
 }
 
 // GetPreReleaseVersionAppRelationship retrieves the app linkage for a pre-release version.

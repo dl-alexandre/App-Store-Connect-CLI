@@ -12,7 +12,7 @@ func (r *PreReleaseVersionsResponse) GetLinks() *Links {
 }
 
 // GetData returns the data field for aggregation.
-func (r *PreReleaseVersionsResponse) GetData() interface{} {
+func (r *PreReleaseVersionsResponse) GetData() any {
 	return r.Data
 }
 
@@ -81,7 +81,7 @@ func PaginateAll(ctx context.Context, firstPage PaginatedResponse, fetchNext Pag
 // satisfies PaginatedResponse.
 func newEmptyPaginatedResponse(src PaginatedResponse) (PaginatedResponse, error) {
 	srcValue := reflect.ValueOf(src)
-	if srcValue.Kind() != reflect.Ptr {
+	if srcValue.Kind() != reflect.Pointer {
 		return nil, fmt.Errorf("unsupported response type for pagination: %T (expected pointer)", src)
 	}
 
@@ -105,7 +105,7 @@ func aggregatePageData(result, page PaginatedResponse) error {
 
 	resultValue := reflect.ValueOf(result)
 	pageValue := reflect.ValueOf(page)
-	if resultValue.Kind() != reflect.Ptr || pageValue.Kind() != reflect.Ptr {
+	if resultValue.Kind() != reflect.Pointer || pageValue.Kind() != reflect.Pointer {
 		return fmt.Errorf("page aggregation expects pointer types (got %T and %T)", result, page)
 	}
 

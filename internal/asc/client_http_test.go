@@ -4274,11 +4274,11 @@ func TestCreateCiWorkflow(t *testing.T) {
 		if req.URL.Path != "/v1/ciWorkflows" {
 			t.Fatalf("expected path /v1/ciWorkflows, got %s", req.URL.Path)
 		}
-		var payload map[string]interface{}
+		var payload map[string]any
 		if err := json.NewDecoder(req.Body).Decode(&payload); err != nil {
 			t.Fatalf("failed to decode request: %v", err)
 		}
-		data, ok := payload["data"].(map[string]interface{})
+		data, ok := payload["data"].(map[string]any)
 		if !ok || data["type"] != "ciWorkflows" {
 			t.Fatalf("expected data.type=ciWorkflows")
 		}
@@ -4300,11 +4300,11 @@ func TestUpdateCiWorkflow(t *testing.T) {
 		if req.URL.Path != "/v1/ciWorkflows/wf-1" {
 			t.Fatalf("expected path /v1/ciWorkflows/wf-1, got %s", req.URL.Path)
 		}
-		var payload map[string]interface{}
+		var payload map[string]any
 		if err := json.NewDecoder(req.Body).Decode(&payload); err != nil {
 			t.Fatalf("failed to decode request: %v", err)
 		}
-		data, ok := payload["data"].(map[string]interface{})
+		data, ok := payload["data"].(map[string]any)
 		if !ok || data["type"] != "ciWorkflows" {
 			t.Fatalf("expected data.type=ciWorkflows")
 		}

@@ -20,7 +20,7 @@ type AppStoreVersionReleaseRequest struct {
 // AppStoreVersionReleaseRequestResponse represents a release request API response.
 type AppStoreVersionReleaseRequestResponse struct {
 	Data  AppStoreVersionReleaseRequest `json:"data"`
-	Links Links                         `json:"links,omitempty"`
+	Links Links                         `json:"links"`
 }
 
 // AppStoreVersionReleaseRequestCreateRequest represents a release request create payload.

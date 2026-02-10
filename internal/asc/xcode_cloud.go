@@ -64,14 +64,14 @@ type CiProductRelationships struct {
 type CiProductResource struct {
 	Type          ResourceType            `json:"type"`
 	ID            string                  `json:"id"`
-	Attributes    CiProductAttributes     `json:"attributes,omitempty"`
+	Attributes    CiProductAttributes     `json:"attributes"`
 	Relationships *CiProductRelationships `json:"relationships,omitempty"`
 }
 
 // CiProductsResponse is the response from CI products endpoints.
 type CiProductsResponse struct {
 	Data  []CiProductResource `json:"data"`
-	Links Links               `json:"links,omitempty"`
+	Links Links               `json:"links"`
 }
 
 // GetLinks returns the links field for pagination.
@@ -80,14 +80,14 @@ func (r *CiProductsResponse) GetLinks() *Links {
 }
 
 // GetData returns the data field for aggregation.
-func (r *CiProductsResponse) GetData() interface{} {
+func (r *CiProductsResponse) GetData() any {
 	return r.Data
 }
 
 // CiProductResponse is the response from CI product detail endpoints.
 type CiProductResponse struct {
 	Data  CiProductResource `json:"data"`
-	Links Links             `json:"links,omitempty"`
+	Links Links             `json:"links"`
 }
 
 // CiWorkflowAttributes describes a CI workflow resource.
@@ -186,14 +186,14 @@ type CiWorkflowRelationships struct {
 type CiWorkflowResource struct {
 	Type          ResourceType             `json:"type"`
 	ID            string                   `json:"id"`
-	Attributes    CiWorkflowAttributes     `json:"attributes,omitempty"`
+	Attributes    CiWorkflowAttributes     `json:"attributes"`
 	Relationships *CiWorkflowRelationships `json:"relationships,omitempty"`
 }
 
 // CiWorkflowsResponse is the response from CI workflows endpoints.
 type CiWorkflowsResponse struct {
 	Data  []CiWorkflowResource `json:"data"`
-	Links Links                `json:"links,omitempty"`
+	Links Links                `json:"links"`
 }
 
 // GetLinks returns the links field for pagination.
@@ -202,14 +202,14 @@ func (r *CiWorkflowsResponse) GetLinks() *Links {
 }
 
 // GetData returns the data field for aggregation.
-func (r *CiWorkflowsResponse) GetData() interface{} {
+func (r *CiWorkflowsResponse) GetData() any {
 	return r.Data
 }
 
 // CiWorkflowResponse is the response from CI workflow detail endpoints.
 type CiWorkflowResponse struct {
 	Data  CiWorkflowResource `json:"data"`
-	Links Links              `json:"links,omitempty"`
+	Links Links              `json:"links"`
 }
 
 // ScmProviderAttributes describes an SCM provider resource.
@@ -229,13 +229,13 @@ type ScmProviderType struct {
 type ScmProviderResource struct {
 	Type       ResourceType          `json:"type"`
 	ID         string                `json:"id"`
-	Attributes ScmProviderAttributes `json:"attributes,omitempty"`
+	Attributes ScmProviderAttributes `json:"attributes"`
 }
 
 // ScmProvidersResponse is the response from SCM providers endpoints.
 type ScmProvidersResponse struct {
 	Data  []ScmProviderResource `json:"data"`
-	Links Links                 `json:"links,omitempty"`
+	Links Links                 `json:"links"`
 }
 
 // GetLinks returns the links field for pagination.
@@ -244,14 +244,14 @@ func (r *ScmProvidersResponse) GetLinks() *Links {
 }
 
 // GetData returns the data field for aggregation.
-func (r *ScmProvidersResponse) GetData() interface{} {
+func (r *ScmProvidersResponse) GetData() any {
 	return r.Data
 }
 
 // ScmProviderResponse is the response from SCM provider detail endpoints.
 type ScmProviderResponse struct {
 	Data  ScmProviderResource `json:"data"`
-	Links Links               `json:"links,omitempty"`
+	Links Links               `json:"links"`
 }
 
 // ScmRepositoryAttributes describes an SCM repository resource.
@@ -273,14 +273,14 @@ type ScmRepositoryRelationships struct {
 type ScmRepositoryResource struct {
 	Type          ResourceType                `json:"type"`
 	ID            string                      `json:"id"`
-	Attributes    ScmRepositoryAttributes     `json:"attributes,omitempty"`
+	Attributes    ScmRepositoryAttributes     `json:"attributes"`
 	Relationships *ScmRepositoryRelationships `json:"relationships,omitempty"`
 }
 
 // ScmRepositoriesResponse is the response from SCM repositories endpoints.
 type ScmRepositoriesResponse struct {
 	Data  []ScmRepositoryResource `json:"data"`
-	Links Links                   `json:"links,omitempty"`
+	Links Links                   `json:"links"`
 }
 
 // GetLinks returns the links field for pagination.
@@ -289,7 +289,7 @@ func (r *ScmRepositoriesResponse) GetLinks() *Links {
 }
 
 // GetData returns the data field for aggregation.
-func (r *ScmRepositoriesResponse) GetData() interface{} {
+func (r *ScmRepositoriesResponse) GetData() any {
 	return r.Data
 }
 
@@ -310,20 +310,20 @@ type ScmGitReferenceRelationships struct {
 type ScmGitReferenceResource struct {
 	Type          ResourceType                  `json:"type"`
 	ID            string                        `json:"id"`
-	Attributes    ScmGitReferenceAttributes     `json:"attributes,omitempty"`
+	Attributes    ScmGitReferenceAttributes     `json:"attributes"`
 	Relationships *ScmGitReferenceRelationships `json:"relationships,omitempty"`
 }
 
 // ScmGitReferenceResponse is the response from SCM git reference detail endpoints.
 type ScmGitReferenceResponse struct {
 	Data  ScmGitReferenceResource `json:"data"`
-	Links Links                   `json:"links,omitempty"`
+	Links Links                   `json:"links"`
 }
 
 // ScmGitReferencesResponse is the response from SCM git references endpoints.
 type ScmGitReferencesResponse struct {
 	Data  []ScmGitReferenceResource `json:"data"`
-	Links Links                     `json:"links,omitempty"`
+	Links Links                     `json:"links"`
 }
 
 // GetLinks returns the links field for pagination.
@@ -332,7 +332,7 @@ func (r *ScmGitReferencesResponse) GetLinks() *Links {
 }
 
 // GetData returns the data field for aggregation.
-func (r *ScmGitReferencesResponse) GetData() interface{} {
+func (r *ScmGitReferencesResponse) GetData() any {
 	return r.Data
 }
 
@@ -360,14 +360,14 @@ type ScmPullRequestRelationships struct {
 type ScmPullRequestResource struct {
 	Type          ResourceType                 `json:"type"`
 	ID            string                       `json:"id"`
-	Attributes    ScmPullRequestAttributes     `json:"attributes,omitempty"`
+	Attributes    ScmPullRequestAttributes     `json:"attributes"`
 	Relationships *ScmPullRequestRelationships `json:"relationships,omitempty"`
 }
 
 // ScmPullRequestsResponse is the response from SCM pull request endpoints.
 type ScmPullRequestsResponse struct {
 	Data  []ScmPullRequestResource `json:"data"`
-	Links Links                    `json:"links,omitempty"`
+	Links Links                    `json:"links"`
 }
 
 // GetLinks returns the links field for pagination.
@@ -376,14 +376,14 @@ func (r *ScmPullRequestsResponse) GetLinks() *Links {
 }
 
 // GetData returns the data field for aggregation.
-func (r *ScmPullRequestsResponse) GetData() interface{} {
+func (r *ScmPullRequestsResponse) GetData() any {
 	return r.Data
 }
 
 // ScmPullRequestResponse is the response from SCM pull request detail endpoints.
 type ScmPullRequestResponse struct {
 	Data  ScmPullRequestResource `json:"data"`
-	Links Links                  `json:"links,omitempty"`
+	Links Links                  `json:"links"`
 }
 
 // CiBuildRunAttributes describes a CI build run resource.
@@ -464,14 +464,14 @@ type CiBuildRunRelationships struct {
 type CiBuildRunResource struct {
 	Type          ResourceType             `json:"type"`
 	ID            string                   `json:"id"`
-	Attributes    CiBuildRunAttributes     `json:"attributes,omitempty"`
+	Attributes    CiBuildRunAttributes     `json:"attributes"`
 	Relationships *CiBuildRunRelationships `json:"relationships,omitempty"`
 }
 
 // CiBuildRunsResponse is the response from CI build runs endpoints.
 type CiBuildRunsResponse struct {
 	Data  []CiBuildRunResource `json:"data"`
-	Links Links                `json:"links,omitempty"`
+	Links Links                `json:"links"`
 }
 
 // GetLinks returns the links field for pagination.
@@ -480,14 +480,14 @@ func (r *CiBuildRunsResponse) GetLinks() *Links {
 }
 
 // GetData returns the data field for aggregation.
-func (r *CiBuildRunsResponse) GetData() interface{} {
+func (r *CiBuildRunsResponse) GetData() any {
 	return r.Data
 }
 
 // CiBuildRunResponse is the response from CI build run detail/create endpoints.
 type CiBuildRunResponse struct {
 	Data  CiBuildRunResource `json:"data"`
-	Links Links              `json:"links,omitempty"`
+	Links Links              `json:"links"`
 }
 
 // CiBuildRunCreateRequest is a request to create a CI build run.
@@ -1734,13 +1734,13 @@ type CiBuildActionAttributes struct {
 type CiBuildActionResource struct {
 	Type       ResourceType            `json:"type"`
 	ID         string                  `json:"id"`
-	Attributes CiBuildActionAttributes `json:"attributes,omitempty"`
+	Attributes CiBuildActionAttributes `json:"attributes"`
 }
 
 // CiBuildActionsResponse is the response from CI build actions endpoints.
 type CiBuildActionsResponse struct {
 	Data  []CiBuildActionResource `json:"data"`
-	Links Links                   `json:"links,omitempty"`
+	Links Links                   `json:"links"`
 }
 
 // GetLinks returns the links field for pagination.
@@ -1749,14 +1749,14 @@ func (r *CiBuildActionsResponse) GetLinks() *Links {
 }
 
 // GetData returns the data field for aggregation.
-func (r *CiBuildActionsResponse) GetData() interface{} {
+func (r *CiBuildActionsResponse) GetData() any {
 	return r.Data
 }
 
 // CiBuildActionResponse is the response from CI build action detail endpoints.
 type CiBuildActionResponse struct {
 	Data  CiBuildActionResource `json:"data"`
-	Links Links                 `json:"links,omitempty"`
+	Links Links                 `json:"links"`
 }
 
 // CiArtifactAttributes describes a CI artifact resource.
@@ -1771,13 +1771,13 @@ type CiArtifactAttributes struct {
 type CiArtifactResource struct {
 	Type       ResourceType         `json:"type"`
 	ID         string               `json:"id"`
-	Attributes CiArtifactAttributes `json:"attributes,omitempty"`
+	Attributes CiArtifactAttributes `json:"attributes"`
 }
 
 // CiArtifactsResponse is the response from CI artifacts endpoints.
 type CiArtifactsResponse struct {
 	Data  []CiArtifactResource `json:"data"`
-	Links Links                `json:"links,omitempty"`
+	Links Links                `json:"links"`
 }
 
 // GetLinks returns the links field for pagination.
@@ -1786,14 +1786,14 @@ func (r *CiArtifactsResponse) GetLinks() *Links {
 }
 
 // GetData returns the data field for aggregation.
-func (r *CiArtifactsResponse) GetData() interface{} {
+func (r *CiArtifactsResponse) GetData() any {
 	return r.Data
 }
 
 // CiArtifactResponse is the response from CI artifact detail endpoints.
 type CiArtifactResponse struct {
 	Data  CiArtifactResource `json:"data"`
-	Links Links              `json:"links,omitempty"`
+	Links Links              `json:"links"`
 }
 
 // CiTestDestinationResult describes a destination-specific test result.
@@ -1819,13 +1819,13 @@ type CiTestResultAttributes struct {
 type CiTestResultResource struct {
 	Type       ResourceType           `json:"type"`
 	ID         string                 `json:"id"`
-	Attributes CiTestResultAttributes `json:"attributes,omitempty"`
+	Attributes CiTestResultAttributes `json:"attributes"`
 }
 
 // CiTestResultsResponse is the response from CI test results endpoints.
 type CiTestResultsResponse struct {
 	Data  []CiTestResultResource `json:"data"`
-	Links Links                  `json:"links,omitempty"`
+	Links Links                  `json:"links"`
 }
 
 // GetLinks returns the links field for pagination.
@@ -1834,14 +1834,14 @@ func (r *CiTestResultsResponse) GetLinks() *Links {
 }
 
 // GetData returns the data field for aggregation.
-func (r *CiTestResultsResponse) GetData() interface{} {
+func (r *CiTestResultsResponse) GetData() any {
 	return r.Data
 }
 
 // CiTestResultResponse is the response from CI test result detail endpoints.
 type CiTestResultResponse struct {
 	Data  CiTestResultResource `json:"data"`
-	Links Links                `json:"links,omitempty"`
+	Links Links                `json:"links"`
 }
 
 // CiIssueAttributes describes a CI issue resource.
@@ -1856,13 +1856,13 @@ type CiIssueAttributes struct {
 type CiIssueResource struct {
 	Type       ResourceType      `json:"type"`
 	ID         string            `json:"id"`
-	Attributes CiIssueAttributes `json:"attributes,omitempty"`
+	Attributes CiIssueAttributes `json:"attributes"`
 }
 
 // CiIssuesResponse is the response from CI issues endpoints.
 type CiIssuesResponse struct {
 	Data  []CiIssueResource `json:"data"`
-	Links Links             `json:"links,omitempty"`
+	Links Links             `json:"links"`
 }
 
 // GetLinks returns the links field for pagination.
@@ -1871,14 +1871,14 @@ func (r *CiIssuesResponse) GetLinks() *Links {
 }
 
 // GetData returns the data field for aggregation.
-func (r *CiIssuesResponse) GetData() interface{} {
+func (r *CiIssuesResponse) GetData() any {
 	return r.Data
 }
 
 // CiIssueResponse is the response from CI issue detail endpoints.
 type CiIssueResponse struct {
 	Data  CiIssueResource `json:"data"`
-	Links Links           `json:"links,omitempty"`
+	Links Links           `json:"links"`
 }
 
 // CiMacOsVersionAttributes describes a CI macOS version resource.
@@ -1896,7 +1896,7 @@ type CiMacOsVersionRelationships struct {
 type CiMacOsVersionResource struct {
 	Type          ResourceType                 `json:"type"`
 	ID            string                       `json:"id"`
-	Attributes    CiMacOsVersionAttributes     `json:"attributes,omitempty"`
+	Attributes    CiMacOsVersionAttributes     `json:"attributes"`
 	Relationships *CiMacOsVersionRelationships `json:"relationships,omitempty"`
 }
 
@@ -1904,7 +1904,7 @@ type CiMacOsVersionResource struct {
 type CiMacOsVersionsResponse struct {
 	Data     []CiMacOsVersionResource `json:"data"`
 	Included []CiXcodeVersionResource `json:"included,omitempty"`
-	Links    Links                    `json:"links,omitempty"`
+	Links    Links                    `json:"links"`
 }
 
 // GetLinks returns the links field for pagination.
@@ -1913,7 +1913,7 @@ func (r *CiMacOsVersionsResponse) GetLinks() *Links {
 }
 
 // GetData returns the data field for aggregation.
-func (r *CiMacOsVersionsResponse) GetData() interface{} {
+func (r *CiMacOsVersionsResponse) GetData() any {
 	return r.Data
 }
 
@@ -1921,7 +1921,7 @@ func (r *CiMacOsVersionsResponse) GetData() interface{} {
 type CiMacOsVersionResponse struct {
 	Data     CiMacOsVersionResource   `json:"data"`
 	Included []CiXcodeVersionResource `json:"included,omitempty"`
-	Links    Links                    `json:"links,omitempty"`
+	Links    Links                    `json:"links"`
 }
 
 // CiTestDestinationRuntime describes an available runtime for a test destination.
@@ -1954,7 +1954,7 @@ type CiXcodeVersionRelationships struct {
 type CiXcodeVersionResource struct {
 	Type          ResourceType                 `json:"type"`
 	ID            string                       `json:"id"`
-	Attributes    CiXcodeVersionAttributes     `json:"attributes,omitempty"`
+	Attributes    CiXcodeVersionAttributes     `json:"attributes"`
 	Relationships *CiXcodeVersionRelationships `json:"relationships,omitempty"`
 }
 
@@ -1962,7 +1962,7 @@ type CiXcodeVersionResource struct {
 type CiXcodeVersionsResponse struct {
 	Data     []CiXcodeVersionResource `json:"data"`
 	Included []CiMacOsVersionResource `json:"included,omitempty"`
-	Links    Links                    `json:"links,omitempty"`
+	Links    Links                    `json:"links"`
 }
 
 // GetLinks returns the links field for pagination.
@@ -1971,7 +1971,7 @@ func (r *CiXcodeVersionsResponse) GetLinks() *Links {
 }
 
 // GetData returns the data field for aggregation.
-func (r *CiXcodeVersionsResponse) GetData() interface{} {
+func (r *CiXcodeVersionsResponse) GetData() any {
 	return r.Data
 }
 
@@ -1979,7 +1979,7 @@ func (r *CiXcodeVersionsResponse) GetData() interface{} {
 type CiXcodeVersionResponse struct {
 	Data     CiXcodeVersionResource   `json:"data"`
 	Included []CiMacOsVersionResource `json:"included,omitempty"`
-	Links    Links                    `json:"links,omitempty"`
+	Links    Links                    `json:"links"`
 }
 
 type ciMacOsVersionsQuery struct {

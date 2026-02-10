@@ -159,7 +159,7 @@ Examples:
 	}
 }
 
-func getBuildRelationship(ctx context.Context, client *asc.Client, relationshipType, buildID string) (interface{}, error) {
+func getBuildRelationship(ctx context.Context, client *asc.Client, relationshipType, buildID string) (any, error) {
 	switch relationshipType {
 	case "app":
 		return client.GetBuildAppRelationship(ctx, buildID)

@@ -120,10 +120,7 @@ Examples:
 					fmt.Fprintf(os.Stderr, "Warning: build %s has invalid uploadedDate %q: %v\n", item.ID, item.Attributes.UploadedDate, err)
 					continue
 				}
-				ageDays := int(now.Sub(uploadedAt).Hours() / 24)
-				if ageDays < 0 {
-					ageDays = 0
-				}
+				ageDays := max(int(now.Sub(uploadedAt).Hours()/24), 0)
 				candidates = append(candidates, buildExpireCandidate{
 					resource:   item,
 					uploadedAt: uploadedAt,

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"slices"
 	"strings"
 	"time"
 
@@ -21,10 +22,8 @@ func normalizeAppEventBadge(value string, required bool) (string, error) {
 		}
 		return "", nil
 	}
-	for _, option := range asc.ValidAppEventBadges {
-		if normalized == option {
-			return normalized, nil
-		}
+	if slices.Contains(asc.ValidAppEventBadges, normalized) {
+		return normalized, nil
 	}
 	return "", fmt.Errorf("--event-type must be one of: %s", strings.Join(asc.ValidAppEventBadges, ", "))
 }
@@ -34,10 +33,8 @@ func normalizeAppEventPriority(value string) (string, error) {
 	if normalized == "" {
 		return "", nil
 	}
-	for _, option := range asc.ValidAppEventPriorities {
-		if normalized == option {
-			return normalized, nil
-		}
+	if slices.Contains(asc.ValidAppEventPriorities, normalized) {
+		return normalized, nil
 	}
 	return "", fmt.Errorf("--priority must be one of: %s", strings.Join(asc.ValidAppEventPriorities, ", "))
 }
@@ -47,10 +44,8 @@ func normalizeAppEventPurpose(value string) (string, error) {
 	if normalized == "" {
 		return "", nil
 	}
-	for _, option := range asc.ValidAppEventPurposes {
-		if normalized == option {
-			return normalized, nil
-		}
+	if slices.Contains(asc.ValidAppEventPurposes, normalized) {
+		return normalized, nil
 	}
 	return "", fmt.Errorf("--purpose must be one of: %s", strings.Join(asc.ValidAppEventPurposes, ", "))
 }
@@ -60,10 +55,8 @@ func normalizeAppEventAssetType(value string) (string, error) {
 	if normalized == "" {
 		return "", fmt.Errorf("--asset-type is required")
 	}
-	for _, option := range asc.ValidAppEventAssetTypes {
-		if normalized == option {
-			return normalized, nil
-		}
+	if slices.Contains(asc.ValidAppEventAssetTypes, normalized) {
+		return normalized, nil
 	}
 	return "", fmt.Errorf("--asset-type must be one of: %s", strings.Join(asc.ValidAppEventAssetTypes, ", "))
 }

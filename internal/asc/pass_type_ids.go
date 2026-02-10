@@ -52,5 +52,5 @@ type PassTypeIDCertificatesLinkagesResponse = LinkagesResponse
 // CertificatePassTypeIDLinkageResponse is the response from certificate pass type ID linkage endpoint.
 type CertificatePassTypeIDLinkageResponse struct {
 	Data  ResourceData `json:"data"`
-	Links Links        `json:"links,omitempty"`
+	Links Links        `json:"links"`
 }

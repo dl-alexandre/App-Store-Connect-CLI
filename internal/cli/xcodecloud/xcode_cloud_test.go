@@ -18,19 +18,19 @@ func TestXcodeCloudCommandConstructors(t *testing.T) {
 		t.Fatal("expected Command wrapper to return command")
 	}
 
-	constructors := []func() interface{}{
-		func() interface{} { return XcodeCloudRunCommand() },
-		func() interface{} { return XcodeCloudStatusCommand() },
-		func() interface{} { return XcodeCloudWorkflowsCommand() },
-		func() interface{} { return XcodeCloudBuildRunsCommand() },
-		func() interface{} { return XcodeCloudActionsCommand() },
-		func() interface{} { return XcodeCloudArtifactsCommand() },
-		func() interface{} { return XcodeCloudTestResultsCommand() },
-		func() interface{} { return XcodeCloudIssuesCommand() },
-		func() interface{} { return XcodeCloudScmCommand() },
-		func() interface{} { return XcodeCloudProductsCommand() },
-		func() interface{} { return XcodeCloudMacOSVersionsCommand() },
-		func() interface{} { return XcodeCloudXcodeVersionsCommand() },
+	constructors := []func() any{
+		func() any { return XcodeCloudRunCommand() },
+		func() any { return XcodeCloudStatusCommand() },
+		func() any { return XcodeCloudWorkflowsCommand() },
+		func() any { return XcodeCloudBuildRunsCommand() },
+		func() any { return XcodeCloudActionsCommand() },
+		func() any { return XcodeCloudArtifactsCommand() },
+		func() any { return XcodeCloudTestResultsCommand() },
+		func() any { return XcodeCloudIssuesCommand() },
+		func() any { return XcodeCloudScmCommand() },
+		func() any { return XcodeCloudProductsCommand() },
+		func() any { return XcodeCloudMacOSVersionsCommand() },
+		func() any { return XcodeCloudXcodeVersionsCommand() },
 	}
 	for _, ctor := range constructors {
 		if got := ctor(); got == nil {

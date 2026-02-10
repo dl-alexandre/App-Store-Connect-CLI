@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"slices"
 	"strings"
 
 	"github.com/peterbourgon/ff/v3/ffcli"
@@ -406,10 +407,8 @@ func parseOptionalEnumFlag(name, raw string, allowed []string) (*string, error) 
 		return nil, nil
 	}
 	normalized := strings.ToUpper(raw)
-	for _, value := range allowed {
-		if normalized == value {
-			return &normalized, nil
-		}
+	if slices.Contains(allowed, normalized) {
+		return &normalized, nil
 	}
 	return nil, fmt.Errorf("%s must be one of: %s", name, strings.Join(allowed, ", "))
 }

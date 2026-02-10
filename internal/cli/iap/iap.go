@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"slices"
 	"strings"
 
 	"github.com/peterbourgon/ff/v3/ffcli"
@@ -506,10 +507,8 @@ func normalizeIAPType(value string) (string, error) {
 	if normalized == "" {
 		return "", fmt.Errorf("--type is required")
 	}
-	for _, option := range asc.ValidIAPTypes {
-		if normalized == option {
-			return normalized, nil
-		}
+	if slices.Contains(asc.ValidIAPTypes, normalized) {
+		return normalized, nil
 	}
 	return "", fmt.Errorf("--type must be one of: %s", strings.Join(asc.ValidIAPTypes, ", "))
 }

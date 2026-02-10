@@ -70,7 +70,7 @@ type AppPriceScheduleCreateData struct {
 type AppPriceScheduleCreateRelationships struct {
 	App           Relationship     `json:"app"`
 	BaseTerritory Relationship     `json:"baseTerritory"`
-	ManualPrices  RelationshipList `json:"manualPrices,omitempty"`
+	ManualPrices  RelationshipList `json:"manualPrices"`
 }
 
 // AppPriceCreateResource represents an app price resource for schedule creation.
@@ -116,7 +116,7 @@ type AppAvailabilityV2CreateData struct {
 // AppAvailabilityV2CreateRelationships describes availability relationships.
 type AppAvailabilityV2CreateRelationships struct {
 	App                     Relationship     `json:"app"`
-	TerritoryAvailabilities RelationshipList `json:"territoryAvailabilities,omitempty"`
+	TerritoryAvailabilities RelationshipList `json:"territoryAvailabilities"`
 }
 
 // TerritoryAvailabilityCreateAttributes describes attributes for create.

@@ -18,21 +18,21 @@ func TestGameCenterCommandConstructors(t *testing.T) {
 		t.Fatal("expected Command wrapper to return command")
 	}
 
-	constructors := []func() interface{}{
-		func() interface{} { return GameCenterAchievementsCommand() },
-		func() interface{} { return GameCenterLeaderboardsCommand() },
-		func() interface{} { return GameCenterLeaderboardSetsCommand() },
-		func() interface{} { return GameCenterGroupsCommand() },
-		func() interface{} { return GameCenterDetailsCommand() },
-		func() interface{} { return GameCenterAppVersionsCommand() },
-		func() interface{} { return GameCenterEnabledVersionsCommand() },
-		func() interface{} { return GameCenterMatchmakingCommand() },
-		func() interface{} { return GameCenterChallengesCommand() },
-		func() interface{} { return GameCenterActivitiesCommand() },
-		func() interface{} { return GameCenterAchievementsV2Command() },
-		func() interface{} { return GameCenterLeaderboardsV2Command() },
-		func() interface{} { return GameCenterLeaderboardSetsV2Command() },
-		func() interface{} { return GameCenterLeaderboardSetImagesCommand() },
+	constructors := []func() any{
+		func() any { return GameCenterAchievementsCommand() },
+		func() any { return GameCenterLeaderboardsCommand() },
+		func() any { return GameCenterLeaderboardSetsCommand() },
+		func() any { return GameCenterGroupsCommand() },
+		func() any { return GameCenterDetailsCommand() },
+		func() any { return GameCenterAppVersionsCommand() },
+		func() any { return GameCenterEnabledVersionsCommand() },
+		func() any { return GameCenterMatchmakingCommand() },
+		func() any { return GameCenterChallengesCommand() },
+		func() any { return GameCenterActivitiesCommand() },
+		func() any { return GameCenterAchievementsV2Command() },
+		func() any { return GameCenterLeaderboardsV2Command() },
+		func() any { return GameCenterLeaderboardSetsV2Command() },
+		func() any { return GameCenterLeaderboardSetImagesCommand() },
 	}
 	for _, ctor := range constructors {
 		if got := ctor(); got == nil {

@@ -216,13 +216,13 @@ type InAppPurchasePriceScheduleCreateData struct {
 type InAppPurchasePriceScheduleCreateRelationships struct {
 	InAppPurchase Relationship     `json:"inAppPurchase"`
 	BaseTerritory Relationship     `json:"baseTerritory"`
-	ManualPrices  RelationshipList `json:"manualPrices,omitempty"`
+	ManualPrices  RelationshipList `json:"manualPrices"`
 }
 
 type InAppPurchasePriceInlineCreateResource struct {
 	Type          ResourceType                          `json:"type"`
 	ID            string                                `json:"id,omitempty"`
-	Attributes    InAppPurchasePriceInlineAttributes    `json:"attributes,omitempty"`
+	Attributes    InAppPurchasePriceInlineAttributes    `json:"attributes"`
 	Relationships InAppPurchasePriceInlineRelationships `json:"relationships"`
 }
 

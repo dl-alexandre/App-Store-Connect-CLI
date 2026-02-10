@@ -24,14 +24,14 @@ type CustomerReviewSummarizationRelationships struct {
 type CustomerReviewSummarizationResource struct {
 	Type          ResourceType                              `json:"type"`
 	ID            string                                    `json:"id"`
-	Attributes    CustomerReviewSummarizationAttributes     `json:"attributes,omitempty"`
+	Attributes    CustomerReviewSummarizationAttributes     `json:"attributes"`
 	Relationships *CustomerReviewSummarizationRelationships `json:"relationships,omitempty"`
 }
 
 // CustomerReviewSummarizationsResponse is the response from customer review summarizations endpoints.
 type CustomerReviewSummarizationsResponse struct {
 	Data     []CustomerReviewSummarizationResource `json:"data"`
-	Links    Links                                 `json:"links,omitempty"`
+	Links    Links                                 `json:"links"`
 	Included json.RawMessage                       `json:"included,omitempty"`
 	Meta     json.RawMessage                       `json:"meta,omitempty"`
 }
@@ -81,6 +81,6 @@ func (r *CustomerReviewSummarizationsResponse) GetLinks() *Links {
 }
 
 // GetData returns the data field for pagination aggregation.
-func (r *CustomerReviewSummarizationsResponse) GetData() interface{} {
+func (r *CustomerReviewSummarizationsResponse) GetData() any {
 	return r.Data
 }

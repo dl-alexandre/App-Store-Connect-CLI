@@ -24,13 +24,13 @@ type CustomerReviewResponseResource struct {
 // CustomerReviewResponsesResponse is the response from customer review responses endpoints (list).
 type CustomerReviewResponsesResponse struct {
 	Data  []CustomerReviewResponseResource `json:"data"`
-	Links Links                            `json:"links,omitempty"`
+	Links Links                            `json:"links"`
 }
 
 // CustomerReviewResponseResponse is the response from customer review response detail/create/update.
 type CustomerReviewResponseResponse struct {
 	Data  CustomerReviewResponseResource `json:"data"`
-	Links Links                          `json:"links,omitempty"`
+	Links Links                          `json:"links"`
 }
 
 // CustomerReviewResponseCreateAttributes describes attributes for creating a review response.

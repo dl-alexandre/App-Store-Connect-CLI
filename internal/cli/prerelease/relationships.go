@@ -153,7 +153,7 @@ Examples:
 	}
 }
 
-func getPreReleaseRelationship(ctx context.Context, client *asc.Client, relationshipType, versionID string) (interface{}, error) {
+func getPreReleaseRelationship(ctx context.Context, client *asc.Client, relationshipType, versionID string) (any, error) {
 	switch relationshipType {
 	case "app":
 		return client.GetPreReleaseVersionAppRelationship(ctx, versionID)

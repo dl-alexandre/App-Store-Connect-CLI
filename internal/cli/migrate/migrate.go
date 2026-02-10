@@ -502,7 +502,7 @@ func writeAndCount(path, content string) int {
 }
 
 // printMigrateOutput handles output for migrate-specific result types.
-func printMigrateOutput(data interface{}, format string, pretty bool) error {
+func printMigrateOutput(data any, format string, pretty bool) error {
 	format = strings.ToLower(format)
 
 	if format == "json" {

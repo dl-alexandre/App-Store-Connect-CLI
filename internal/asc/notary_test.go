@@ -129,7 +129,7 @@ func TestSubmitNotarization_ErrorResponse(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusForbidden)
-		mustEncodeJSON(t, w, map[string]interface{}{
+		mustEncodeJSON(t, w, map[string]any{
 			"errors": []map[string]string{
 				{"code": "FORBIDDEN", "title": "Forbidden", "detail": "Invalid credentials"},
 			},
@@ -458,7 +458,7 @@ func TestUploadToS3Helpers(t *testing.T) {
 	}
 }
 
-func mustEncodeJSON(t *testing.T, w http.ResponseWriter, value interface{}) {
+func mustEncodeJSON(t *testing.T, w http.ResponseWriter, value any) {
 	t.Helper()
 	if err := json.NewEncoder(w).Encode(value); err != nil {
 		t.Errorf("encode response: %v", err)

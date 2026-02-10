@@ -18,13 +18,13 @@ func TestAppEventsCommandConstructors(t *testing.T) {
 		t.Fatal("expected Command wrapper to return command")
 	}
 
-	constructors := []func() interface{}{
-		func() interface{} { return AppEventLocalizationsCommand() },
-		func() interface{} { return AppEventScreenshotsCommand() },
-		func() interface{} { return AppEventVideoClipsCommand() },
-		func() interface{} { return AppEventsRelationshipsCommand() },
-		func() interface{} { return AppEventsSubmitCommand() },
-		func() interface{} { return AppEventLocalizationScreenshotsCommand() },
+	constructors := []func() any{
+		func() any { return AppEventLocalizationsCommand() },
+		func() any { return AppEventScreenshotsCommand() },
+		func() any { return AppEventVideoClipsCommand() },
+		func() any { return AppEventsRelationshipsCommand() },
+		func() any { return AppEventsSubmitCommand() },
+		func() any { return AppEventLocalizationScreenshotsCommand() },
 	}
 	for _, ctor := range constructors {
 		if got := ctor(); got == nil {

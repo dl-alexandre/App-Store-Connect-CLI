@@ -96,17 +96,11 @@ func HTTPStatusToExitCode(status int) int {
 		return ExitConflict
 	case status >= 400 && status < 500:
 		// 4xx: 10 + (status - 400), clamped to 10-59
-		code := 10 + (status - 400)
-		if code > 59 {
-			code = 59
-		}
+		code := min(10+(status-400), 59)
 		return code
 	case status >= 500 && status < 600:
 		// 5xx: 60 + (status - 500), clamped to 60-99
-		code := 60 + (status - 500)
-		if code > 99 {
-			code = 99
-		}
+		code := min(60+(status-500), 99)
 		return code
 	default:
 		return ExitError

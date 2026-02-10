@@ -4,6 +4,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/peterbourgon/ff/v3/ffcli"
@@ -73,30 +74,15 @@ func parseBool(value, flagName string) (bool, error) {
 
 // isValidLeaderboardFormatter checks if the value is a valid leaderboard formatter.
 func isValidLeaderboardFormatter(value string) bool {
-	for _, v := range asc.ValidLeaderboardFormatters {
-		if value == v {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(asc.ValidLeaderboardFormatters, value)
 }
 
 // isValidScoreSortType checks if the value is a valid score sort type.
 func isValidScoreSortType(value string) bool {
-	for _, v := range asc.ValidScoreSortTypes {
-		if value == v {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(asc.ValidScoreSortTypes, value)
 }
 
 // isValidSubmissionType checks if the value is a valid submission type.
 func isValidSubmissionType(value string) bool {
-	for _, v := range asc.ValidSubmissionTypes {
-		if value == v {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(asc.ValidSubmissionTypes, value)
 }

@@ -17,13 +17,13 @@ type AppCategoryAttributes struct {
 type AppCategory struct {
 	Type       ResourceType          `json:"type"`
 	ID         string                `json:"id"`
-	Attributes AppCategoryAttributes `json:"attributes,omitempty"`
+	Attributes AppCategoryAttributes `json:"attributes"`
 }
 
 // AppCategoriesResponse is the response from app categories endpoint.
 type AppCategoriesResponse struct {
 	Data  []AppCategory `json:"data"`
-	Links Links         `json:"links,omitempty"`
+	Links Links         `json:"links"`
 }
 
 // GetLinks returns the links field for pagination.
@@ -32,14 +32,14 @@ func (r *AppCategoriesResponse) GetLinks() *Links {
 }
 
 // GetData returns the data field for aggregation.
-func (r *AppCategoriesResponse) GetData() interface{} {
+func (r *AppCategoriesResponse) GetData() any {
 	return r.Data
 }
 
 // AppCategoryResponse is the response from app category detail endpoints.
 type AppCategoryResponse struct {
 	Data  AppCategory `json:"data"`
-	Links Links       `json:"links,omitempty"`
+	Links Links       `json:"links"`
 }
 
 // GetAppCategories retrieves all app categories.

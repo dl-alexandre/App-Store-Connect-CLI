@@ -229,5 +229,5 @@ type ProfileDevicesLinkagesResponse = LinkagesResponse
 // ProfileBundleIDLinkageResponse is the response from profile bundle ID linkage endpoint.
 type ProfileBundleIDLinkageResponse struct {
 	Data  ResourceData `json:"data"`
-	Links Links        `json:"links,omitempty"`
+	Links Links        `json:"links"`
 }

@@ -12,7 +12,7 @@ import (
 // makeBetaGroupsPage creates a BetaGroupsResponse page for testing pagination.
 func makeBetaGroupsPage(page, perPage, totalPages int) *BetaGroupsResponse {
 	data := make([]Resource[BetaGroupAttributes], 0, perPage)
-	for i := 0; i < perPage; i++ {
+	for i := range perPage {
 		data = append(data, Resource[BetaGroupAttributes]{
 			Type:       ResourceTypeBetaGroups,
 			ID:         fmt.Sprintf("group-%d-%d", page, i),
@@ -29,7 +29,7 @@ func makeBetaGroupsPage(page, perPage, totalPages int) *BetaGroupsResponse {
 // makeAppsPage creates an AppsResponse page for testing pagination.
 func makeAppsPage(page, perPage, totalPages int) *AppsResponse {
 	data := make([]Resource[AppAttributes], 0, perPage)
-	for i := 0; i < perPage; i++ {
+	for i := range perPage {
 		data = append(data, Resource[AppAttributes]{
 			Type: ResourceTypeApps,
 			ID:   fmt.Sprintf("app-%d-%d", page, i),
@@ -288,8 +288,8 @@ type unsupportedPaginatedResponse struct {
 	data  []string
 }
 
-func (r *unsupportedPaginatedResponse) GetLinks() *Links     { return &r.links }
-func (r *unsupportedPaginatedResponse) GetData() interface{} { return r.data }
+func (r *unsupportedPaginatedResponse) GetLinks() *Links { return &r.links }
+func (r *unsupportedPaginatedResponse) GetData() any     { return r.data }
 
 func TestPaginateAll_ContextCancelled(t *testing.T) {
 	firstPage := &AppsResponse{
@@ -323,7 +323,7 @@ func TestPaginateAll_LinkagesResponse(t *testing.T) {
 		Data:  make([]ResourceData, perPage),
 		Links: Links{Next: "page=2"},
 	}
-	for i := 0; i < perPage; i++ {
+	for i := range perPage {
 		firstPage.Data[i] = ResourceData{Type: ResourceTypeBetaGroups, ID: fmt.Sprintf("linkage-1-%d", i)}
 	}
 
@@ -332,7 +332,7 @@ func TestPaginateAll_LinkagesResponse(t *testing.T) {
 			Data:  make([]ResourceData, perPage),
 			Links: Links{},
 		}
-		for i := 0; i < perPage; i++ {
+		for i := range perPage {
 			page2.Data[i] = ResourceData{Type: ResourceTypeBetaGroups, ID: fmt.Sprintf("linkage-2-%d", i)}
 		}
 		return page2, nil
@@ -392,7 +392,7 @@ func TestPaginateAll_ManyPages_BetaTesters(t *testing.T) {
 
 	makePage := func(page int) *BetaTestersResponse {
 		data := make([]Resource[BetaTesterAttributes], 0, perPage)
-		for i := 0; i < perPage; i++ {
+		for i := range perPage {
 			data = append(data, Resource[BetaTesterAttributes]{
 				Type: ResourceTypeBetaTesters,
 				ID:   fmt.Sprintf("tester-%d-%d", page, i),
@@ -441,7 +441,7 @@ func TestPaginateAll_Builds(t *testing.T) {
 
 	makePage := func(page int) *BuildsResponse {
 		data := make([]Resource[BuildAttributes], 0, perPage)
-		for i := 0; i < perPage; i++ {
+		for i := range perPage {
 			data = append(data, Resource[BuildAttributes]{
 				Type: ResourceTypeBuilds,
 				ID:   fmt.Sprintf("build-%d-%d", page, i),
@@ -485,7 +485,7 @@ func TestPaginateAll_GameCenterEnabledVersions(t *testing.T) {
 
 	makePage := func(page int) *GameCenterEnabledVersionsResponse {
 		data := make([]Resource[GameCenterEnabledVersionAttributes], 0, perPage)
-		for i := 0; i < perPage; i++ {
+		for i := range perPage {
 			data = append(data, Resource[GameCenterEnabledVersionAttributes]{
 				Type: ResourceTypeGameCenterEnabledVersions,
 				ID:   fmt.Sprintf("gcev-%d-%d", page, i),
@@ -526,7 +526,7 @@ func TestPaginateAll_SubscriptionGroups(t *testing.T) {
 
 	makePage := func(page int) *SubscriptionGroupsResponse {
 		data := make([]Resource[SubscriptionGroupAttributes], 0, perPage)
-		for i := 0; i < perPage; i++ {
+		for i := range perPage {
 			data = append(data, Resource[SubscriptionGroupAttributes]{
 				Type: ResourceTypeSubscriptionGroups,
 				ID:   fmt.Sprintf("subgrp-%d-%d", page, i),

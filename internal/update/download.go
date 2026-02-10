@@ -158,7 +158,7 @@ func fetchChecksum(ctx context.Context, opts Options, url, asset string) (string
 }
 
 func parseChecksum(data, asset string) string {
-	for _, line := range strings.Split(data, "\n") {
+	for line := range strings.SplitSeq(data, "\n") {
 		fields := strings.Fields(line)
 		if len(fields) < 2 {
 			continue

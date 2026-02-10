@@ -104,13 +104,13 @@ type AnalyticsReportRequestResource struct {
 // AnalyticsReportRequestResponse is the response for a single analytics report request.
 type AnalyticsReportRequestResponse struct {
 	Data  AnalyticsReportRequestResource `json:"data"`
-	Links Links                          `json:"links,omitempty"`
+	Links Links                          `json:"links"`
 }
 
 // AnalyticsReportRequestsResponse is the response for analytics report requests.
 type AnalyticsReportRequestsResponse struct {
 	Data  []AnalyticsReportRequestResource `json:"data"`
-	Links Links                            `json:"links,omitempty"`
+	Links Links                            `json:"links"`
 }
 
 // GetLinks returns the links field for pagination
@@ -119,7 +119,7 @@ func (r *AnalyticsReportRequestsResponse) GetLinks() *Links {
 }
 
 // GetData returns the data field for aggregation
-func (r *AnalyticsReportRequestsResponse) GetData() interface{} {
+func (r *AnalyticsReportRequestsResponse) GetData() any {
 	return r.Data
 }
 

@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"slices"
 	"strings"
 
 	"github.com/peterbourgon/ff/v3/ffcli"
@@ -514,10 +515,8 @@ func buildAccessibilityDeclarationUpdateAttributes(values map[string]string) (as
 
 func normalizeAccessibilityDeviceFamily(value string) (string, error) {
 	normalized := strings.ToUpper(strings.TrimSpace(value))
-	for _, item := range accessibilityDeviceFamilyList() {
-		if normalized == item {
-			return normalized, nil
-		}
+	if slices.Contains(accessibilityDeviceFamilyList(), normalized) {
+		return normalized, nil
 	}
 	return "", fmt.Errorf("--device-family must be one of: %s", strings.Join(accessibilityDeviceFamilyList(), ", "))
 }

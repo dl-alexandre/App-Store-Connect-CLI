@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"slices"
 	"strconv"
 	"strings"
 	"sync"
@@ -517,7 +518,7 @@ func strictAuthEnabled() bool {
 	return parsed
 }
 
-func printOutput(data interface{}, format string, pretty bool) error {
+func printOutput(data any, format string, pretty bool) error {
 	format = strings.ToLower(format)
 	switch format {
 	case "json":
@@ -540,7 +541,7 @@ func printOutput(data interface{}, format string, pretty bool) error {
 	}
 }
 
-func printStreamPage(data interface{}) error {
+func printStreamPage(data any) error {
 	return asc.PrintJSON(data)
 }
 
@@ -695,10 +696,8 @@ func validateSort(value string, allowed ...string) error {
 	if value == "" {
 		return nil
 	}
-	for _, option := range allowed {
-		if value == option {
-			return nil
-		}
+	if slices.Contains(allowed, value) {
+		return nil
 	}
 	return fmt.Errorf("--sort must be one of: %s", strings.Join(allowed, ", "))
 }
@@ -716,7 +715,7 @@ func ResolvePrivateKeyPath() (string, error) {
 	return resolvePrivateKeyPath()
 }
 
-func PrintOutput(data interface{}, format string, pretty bool) error {
+func PrintOutput(data any, format string, pretty bool) error {
 	return printOutput(data, format, pretty)
 }
 
@@ -759,6 +758,6 @@ func ValidateSort(value string, allowed ...string) error {
 // PrintStreamPage writes a single page of data as a JSON line to stdout.
 // Used with --stream --paginate to emit results page-by-page as NDJSON
 // instead of buffering all pages in memory.
-func PrintStreamPage(data interface{}) error {
+func PrintStreamPage(data any) error {
 	return printStreamPage(data)
 }

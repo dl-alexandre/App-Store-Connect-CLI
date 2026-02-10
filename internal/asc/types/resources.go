@@ -203,7 +203,7 @@ type Resource[T any] struct {
 // Response is a generic ASC API response wrapper.
 type Response[T any] struct {
 	Data     []Resource[T]   `json:"data"`
-	Links    Links           `json:"links,omitempty"`
+	Links    Links           `json:"links"`
 	Included json.RawMessage `json:"included,omitempty"`
 	Meta     json.RawMessage `json:"meta,omitempty"`
 }
@@ -214,14 +214,14 @@ func (r *Response[T]) GetLinks() *Links {
 }
 
 // GetData returns the data field for aggregation.
-func (r *Response[T]) GetData() interface{} {
+func (r *Response[T]) GetData() any {
 	return r.Data
 }
 
 // SingleResponse is a generic ASC API response wrapper for single resources.
 type SingleResponse[T any] struct {
 	Data     Resource[T]     `json:"data"`
-	Links    Links           `json:"links,omitempty"`
+	Links    Links           `json:"links"`
 	Included json.RawMessage `json:"included,omitempty"`
 	Meta     json.RawMessage `json:"meta,omitempty"`
 }
@@ -229,7 +229,7 @@ type SingleResponse[T any] struct {
 // LinkagesResponse is a generic relationship linkages response.
 type LinkagesResponse struct {
 	Data  []ResourceData  `json:"data"`
-	Links Links           `json:"links,omitempty"`
+	Links Links           `json:"links"`
 	Meta  json.RawMessage `json:"meta,omitempty"`
 }
 
@@ -239,7 +239,7 @@ func (r *LinkagesResponse) GetLinks() *Links {
 }
 
 // GetData returns the data field for aggregation.
-func (r *LinkagesResponse) GetData() interface{} {
+func (r *LinkagesResponse) GetData() any {
 	return r.Data
 }
 
@@ -251,7 +251,7 @@ type SingleResourceResponse[T any] struct {
 // PaginatedResponse represents a response that supports pagination.
 type PaginatedResponse interface {
 	GetLinks() *Links
-	GetData() interface{}
+	GetData() any
 }
 
 // Links represents pagination links.

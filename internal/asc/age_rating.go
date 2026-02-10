@@ -82,7 +82,7 @@ type AgeRatingDeclarationResponse = SingleResponse[AgeRatingDeclarationAttribute
 type AgeRatingDeclarationUpdateData struct {
 	Type       ResourceType                   `json:"type"`
 	ID         string                         `json:"id"`
-	Attributes AgeRatingDeclarationAttributes `json:"attributes,omitempty"`
+	Attributes AgeRatingDeclarationAttributes `json:"attributes"`
 }
 
 // AgeRatingDeclarationUpdateRequest is a request to update an age rating declaration.

@@ -18,10 +18,10 @@ func TestOfferCodesCommandConstructors(t *testing.T) {
 		t.Fatal("expected Command wrapper to return command")
 	}
 
-	constructors := []func() interface{}{
-		func() interface{} { return OfferCodeCustomCodesCommand() },
-		func() interface{} { return OfferCodePricesCommand() },
-		func() interface{} { return OfferCodesGenerateCommand() },
+	constructors := []func() any{
+		func() any { return OfferCodeCustomCodesCommand() },
+		func() any { return OfferCodePricesCommand() },
+		func() any { return OfferCodesGenerateCommand() },
 	}
 	for _, ctor := range constructors {
 		if got := ctor(); got == nil {

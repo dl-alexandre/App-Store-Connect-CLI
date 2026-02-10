@@ -18,10 +18,10 @@ func TestEncryptionCommandConstructors(t *testing.T) {
 		t.Fatal("expected Command wrapper to return command")
 	}
 
-	constructors := []func() interface{}{
-		func() interface{} { return EncryptionDeclarationsCommand() },
-		func() interface{} { return EncryptionDocumentsCommand() },
-		func() interface{} { return EncryptionDeclarationsAppCommand() },
+	constructors := []func() any{
+		func() any { return EncryptionDeclarationsCommand() },
+		func() any { return EncryptionDocumentsCommand() },
+		func() any { return EncryptionDeclarationsAppCommand() },
 	}
 	for _, ctor := range constructors {
 		if got := ctor(); got == nil {

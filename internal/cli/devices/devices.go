@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"runtime"
+	"slices"
 	"strings"
 	"time"
 
@@ -416,10 +417,8 @@ func normalizeDevicePlatform(value string) (string, error) {
 		return "", nil
 	}
 	normalized := strings.ToUpper(trimmed)
-	for _, platform := range devicePlatformList() {
-		if normalized == platform {
-			return normalized, nil
-		}
+	if slices.Contains(devicePlatformList(), normalized) {
+		return normalized, nil
 	}
 	return "", fmt.Errorf("--platform must be one of: %s", strings.Join(devicePlatformList(), ", "))
 }
@@ -451,10 +450,8 @@ func normalizeDeviceStatus(value string) (string, error) {
 		return "", nil
 	}
 	normalized := strings.ToUpper(trimmed)
-	for _, status := range deviceStatusList() {
-		if normalized == status {
-			return normalized, nil
-		}
+	if slices.Contains(deviceStatusList(), normalized) {
+		return normalized, nil
 	}
 	return "", fmt.Errorf("--status must be one of: %s", strings.Join(deviceStatusList(), ", "))
 }
@@ -503,10 +500,10 @@ func localMacUDID() (string, error) {
 		return "", fmt.Errorf("failed to read local hardware UUID: %w", err)
 	}
 
-	for _, line := range strings.Split(string(output), "\n") {
+	for line := range strings.SplitSeq(string(output), "\n") {
 		line = strings.TrimSpace(line)
-		if strings.HasPrefix(line, "\"IOPlatformUUID\" = ") {
-			value := strings.TrimPrefix(line, "\"IOPlatformUUID\" = ")
+		if after, ok := strings.CutPrefix(line, "\"IOPlatformUUID\" = "); ok {
+			value := after
 			value = strings.Trim(value, "\"")
 			if value != "" {
 				return value, nil

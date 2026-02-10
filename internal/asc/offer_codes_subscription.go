@@ -71,5 +71,5 @@ type SubscriptionOfferCodePriceRelationships struct {
 type SubscriptionOfferCodePriceInlineCreate struct {
 	Type          ResourceType                            `json:"type"`
 	ID            string                                  `json:"id,omitempty"`
-	Relationships SubscriptionOfferCodePriceRelationships `json:"relationships,omitempty"`
+	Relationships SubscriptionOfferCodePriceRelationships `json:"relationships"`
 }

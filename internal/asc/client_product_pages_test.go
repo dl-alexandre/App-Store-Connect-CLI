@@ -111,8 +111,8 @@ func TestUpdateAppCustomProductPage_SendsRequest(t *testing.T) {
 	}, response)
 
 	attrs := AppCustomProductPageUpdateAttributes{
-		Name:    ptrString("Updated"),
-		Visible: ptrBool(true),
+		Name:    new("Updated"),
+		Visible: new(true),
 	}
 	if _, err := client.UpdateAppCustomProductPage(context.Background(), "page-1", attrs); err != nil {
 		t.Fatalf("UpdateAppCustomProductPage() error: %v", err)
@@ -232,7 +232,7 @@ func TestUpdateAppCustomProductPageVersion_SendsRequest(t *testing.T) {
 	}, response)
 
 	attrs := AppCustomProductPageVersionUpdateAttributes{
-		DeepLink: ptrString("https://example.com/deeplink"),
+		DeepLink: new("https://example.com/deeplink"),
 	}
 	if _, err := client.UpdateAppCustomProductPageVersion(context.Background(), "version-1", attrs); err != nil {
 		t.Fatalf("UpdateAppCustomProductPageVersion() error: %v", err)
@@ -613,7 +613,7 @@ func TestUpdateAppCustomProductPageLocalization_SendsRequest(t *testing.T) {
 	}, response)
 
 	attrs := AppCustomProductPageLocalizationUpdateAttributes{
-		PromotionalText: ptrString("Updated"),
+		PromotionalText: new("Updated"),
 	}
 	if _, err := client.UpdateAppCustomProductPageLocalization(context.Background(), "loc-1", attrs); err != nil {
 		t.Fatalf("UpdateAppCustomProductPageLocalization() error: %v", err)
@@ -806,8 +806,8 @@ func TestUpdateAppStoreVersionExperiment_SendsRequest(t *testing.T) {
 	}, response)
 
 	attrs := AppStoreVersionExperimentUpdateAttributes{
-		Name:    ptrString("Updated"),
-		Started: ptrBool(true),
+		Name:    new("Updated"),
+		Started: new(true),
 	}
 	if _, err := client.UpdateAppStoreVersionExperiment(context.Background(), "exp-1", attrs); err != nil {
 		t.Fatalf("UpdateAppStoreVersionExperiment() error: %v", err)
@@ -837,7 +837,7 @@ func TestUpdateAppStoreVersionExperimentV2_SendsRequest(t *testing.T) {
 	}, response)
 
 	attrs := AppStoreVersionExperimentV2UpdateAttributes{
-		Name: ptrString("Updated"),
+		Name: new("Updated"),
 	}
 	if _, err := client.UpdateAppStoreVersionExperimentV2(context.Background(), "exp-2", attrs); err != nil {
 		t.Fatalf("UpdateAppStoreVersionExperimentV2() error: %v", err)
@@ -991,7 +991,7 @@ func TestUpdateAppStoreVersionExperimentTreatment_SendsRequest(t *testing.T) {
 	}, response)
 
 	attrs := AppStoreVersionExperimentTreatmentUpdateAttributes{
-		Name: ptrString("Updated"),
+		Name: new("Updated"),
 	}
 	if _, err := client.UpdateAppStoreVersionExperimentTreatment(context.Background(), "treat-1", attrs); err != nil {
 		t.Fatalf("UpdateAppStoreVersionExperimentTreatment() error: %v", err)
@@ -1140,12 +1140,4 @@ func TestDeleteAppStoreVersionExperimentTreatmentLocalization_SendsRequest(t *te
 	if err := client.DeleteAppStoreVersionExperimentTreatmentLocalization(context.Background(), "tloc-1"); err != nil {
 		t.Fatalf("DeleteAppStoreVersionExperimentTreatmentLocalization() error: %v", err)
 	}
-}
-
-func ptrString(value string) *string {
-	return &value
-}
-
-func ptrBool(value bool) *bool {
-	return &value
 }

@@ -13,7 +13,7 @@ func TestPrintTable_AppCustomProductPages(t *testing.T) {
 				Attributes: AppCustomProductPageAttributes{
 					Name:    "Summer Campaign",
 					URL:     "https://example.com/page",
-					Visible: ptrBool(true),
+					Visible: new(true),
 				},
 			},
 		},
@@ -39,7 +39,7 @@ func TestPrintMarkdown_AppCustomProductPages(t *testing.T) {
 				Attributes: AppCustomProductPageAttributes{
 					Name:    "Summer Campaign",
 					URL:     "https://example.com/page",
-					Visible: ptrBool(true),
+					Visible: new(true),
 				},
 			},
 		},
@@ -448,7 +448,7 @@ func TestPrintTable_AppStoreVersionExperiments(t *testing.T) {
 				ID: "exp-1",
 				Attributes: AppStoreVersionExperimentAttributes{
 					Name:              "Icon Test",
-					TrafficProportion: ptrInt(25),
+					TrafficProportion: new(25),
 					State:             "IN_REVIEW",
 				},
 			},
@@ -474,7 +474,7 @@ func TestPrintMarkdown_AppStoreVersionExperiments(t *testing.T) {
 				ID: "exp-1",
 				Attributes: AppStoreVersionExperimentAttributes{
 					Name:              "Icon Test",
-					TrafficProportion: ptrInt(25),
+					TrafficProportion: new(25),
 					State:             "IN_REVIEW",
 				},
 			},
@@ -525,7 +525,7 @@ func TestPrintTable_AppStoreVersionExperimentsV2(t *testing.T) {
 				Attributes: AppStoreVersionExperimentV2Attributes{
 					Name:              "Icon Test V2",
 					Platform:          PlatformIOS,
-					TrafficProportion: ptrInt(40),
+					TrafficProportion: new(40),
 					State:             "PREPARE_FOR_SUBMISSION",
 				},
 			},
@@ -552,7 +552,7 @@ func TestPrintMarkdown_AppStoreVersionExperimentsV2(t *testing.T) {
 				Attributes: AppStoreVersionExperimentV2Attributes{
 					Name:              "Icon Test V2",
 					Platform:          PlatformIOS,
-					TrafficProportion: ptrInt(40),
+					TrafficProportion: new(40),
 					State:             "PREPARE_FOR_SUBMISSION",
 				},
 			},
@@ -771,8 +771,4 @@ func TestPrintMarkdown_AppCustomProductPageDeleteResult(t *testing.T) {
 	if !strings.Contains(output, "page-1") {
 		t.Fatalf("expected ID in output, got: %s", output)
 	}
-}
-
-func ptrInt(value int) *int {
-	return &value
 }

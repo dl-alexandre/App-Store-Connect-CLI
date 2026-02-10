@@ -179,8 +179,8 @@ func consumeFlagToken(fs *flag.FlagSet, token string, args []string, idx int) (i
 }
 
 func splitFlagToken(token string) (name string, hasInlineValue bool) {
-	if eq := strings.Index(token, "="); eq >= 0 {
-		return token[:eq], true
+	if before, _, ok := strings.Cut(token, "="); ok {
+		return before, true
 	}
 	return token, false
 }

@@ -474,7 +474,7 @@ func (c *Client) doStreamNoAuth(ctx context.Context, method, rawURL, accept stri
 }
 
 // BuildRequestBody builds a JSON request body
-func BuildRequestBody(data interface{}) (io.Reader, error) {
+func BuildRequestBody(data any) (io.Reader, error) {
 	var buf bytes.Buffer
 	enc := json.NewEncoder(&buf)
 	if err := enc.Encode(data); err != nil {

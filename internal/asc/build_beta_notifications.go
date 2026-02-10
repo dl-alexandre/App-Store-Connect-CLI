@@ -16,7 +16,7 @@ type BuildBetaNotificationResource struct {
 // BuildBetaNotificationResponse is the response from build beta notification endpoints.
 type BuildBetaNotificationResponse struct {
 	Data  BuildBetaNotificationResource `json:"data"`
-	Links Links                         `json:"links,omitempty"`
+	Links Links                         `json:"links"`
 }
 
 // BuildBetaNotificationRelationships describes relationships for a build beta notification.

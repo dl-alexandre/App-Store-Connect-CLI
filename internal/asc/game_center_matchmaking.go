@@ -396,7 +396,7 @@ type GameCenterMetricsData struct {
 // GameCenterMetricsResponse represents a generic metrics response.
 type GameCenterMetricsResponse struct {
 	Data  []GameCenterMetricsData `json:"data"`
-	Links Links                   `json:"links,omitempty"`
+	Links Links                   `json:"links"`
 	Meta  json.RawMessage         `json:"meta,omitempty"`
 }
 
@@ -406,7 +406,7 @@ func (r *GameCenterMetricsResponse) GetLinks() *Links {
 }
 
 // GetData returns the data field for aggregation.
-func (r *GameCenterMetricsResponse) GetData() interface{} {
+func (r *GameCenterMetricsResponse) GetData() any {
 	return r.Data
 }
 

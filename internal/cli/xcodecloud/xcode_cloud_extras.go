@@ -1033,7 +1033,7 @@ func readJSONFilePayload(path string) (json.RawMessage, error) {
 		return nil, fmt.Errorf("payload file is empty")
 	}
 
-	var payload map[string]interface{}
+	var payload map[string]any
 	if err := json.Unmarshal(data, &payload); err != nil {
 		return nil, fmt.Errorf("invalid JSON: %w", err)
 	}

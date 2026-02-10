@@ -420,7 +420,7 @@ Examples:
 				return fmt.Errorf("versions delete: %w", err)
 			}
 
-			result := map[string]interface{}{
+			result := map[string]any{
 				"versionId": strings.TrimSpace(*versionID),
 				"deleted":   true,
 			}

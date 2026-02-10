@@ -18,23 +18,23 @@ func printPrettyRawJSON(data json.RawMessage) error {
 }
 
 // PrintMarkdown prints data as Markdown table.
-func PrintMarkdown(data interface{}) error {
+func PrintMarkdown(data any) error {
 	return renderByRegistry(data, RenderMarkdown)
 }
 
 // PrintTable prints data as a formatted table.
-func PrintTable(data interface{}) error {
+func PrintTable(data any) error {
 	return renderByRegistry(data, RenderTable)
 }
 
 // PrintJSON prints data as minified JSON (best for AI agents).
-func PrintJSON(data interface{}) error {
+func PrintJSON(data any) error {
 	enc := json.NewEncoder(os.Stdout)
 	return enc.Encode(data)
 }
 
 // PrintPrettyJSON prints data as indented JSON (best for debugging).
-func PrintPrettyJSON(data interface{}) error {
+func PrintPrettyJSON(data any) error {
 	switch v := data.(type) {
 	case *PerfPowerMetricsResponse:
 		return printPrettyRawJSON(v.Data)

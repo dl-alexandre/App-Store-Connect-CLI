@@ -109,7 +109,7 @@ Examples:
 				return flag.ErrHelp
 			}
 
-			payload := map[string]interface{}{}
+			payload := map[string]any{}
 			payload["text"] = msg
 
 			if ch := strings.TrimSpace(*channel); ch != "" {

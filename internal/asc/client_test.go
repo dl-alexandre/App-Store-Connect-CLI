@@ -2579,7 +2579,7 @@ func TestPaginateAll_CiBuildRuns_ManyPages(t *testing.T) {
 
 	makePage := func(page int) *CiBuildRunsResponse {
 		data := make([]CiBuildRunResource, 0, perPage)
-		for i := 0; i < perPage; i++ {
+		for i := range perPage {
 			data = append(data, CiBuildRunResource{
 				Type: ResourceTypeCiBuildRuns,
 				ID:   fmt.Sprintf("run-%d-%d", page, i),
@@ -2657,7 +2657,7 @@ func TestPaginateAll_CiArtifacts_ManyPages(t *testing.T) {
 
 	makePage := func(page int) *CiArtifactsResponse {
 		data := make([]CiArtifactResource, 0, perPage)
-		for i := 0; i < perPage; i++ {
+		for i := range perPage {
 			data = append(data, CiArtifactResource{
 				Type: ResourceTypeCiArtifacts,
 				ID:   fmt.Sprintf("artifact-%d-%d", page, i),
@@ -2705,7 +2705,7 @@ func TestPaginateAll_CiTestResults_ManyPages(t *testing.T) {
 
 	makePage := func(page int) *CiTestResultsResponse {
 		data := make([]CiTestResultResource, 0, perPage)
-		for i := 0; i < perPage; i++ {
+		for i := range perPage {
 			data = append(data, CiTestResultResource{
 				Type: ResourceTypeCiTestResults,
 				ID:   fmt.Sprintf("test-%d-%d", page, i),
@@ -2753,7 +2753,7 @@ func TestPaginateAll_CiIssues_ManyPages(t *testing.T) {
 
 	makePage := func(page int) *CiIssuesResponse {
 		data := make([]CiIssueResource, 0, perPage)
-		for i := 0; i < perPage; i++ {
+		for i := range perPage {
 			data = append(data, CiIssueResource{
 				Type: ResourceTypeCiIssues,
 				ID:   fmt.Sprintf("issue-%d-%d", page, i),
@@ -2801,7 +2801,7 @@ func TestPaginateAll_ScmRepositories_ManyPages(t *testing.T) {
 
 	makePage := func(page int) *ScmRepositoriesResponse {
 		data := make([]ScmRepositoryResource, 0, perPage)
-		for i := 0; i < perPage; i++ {
+		for i := range perPage {
 			data = append(data, ScmRepositoryResource{
 				Type: ResourceTypeScmRepositories,
 				ID:   fmt.Sprintf("repo-%d-%d", page, i),
@@ -2849,7 +2849,7 @@ func TestPaginateAll_CiMacOsVersions_ManyPages(t *testing.T) {
 
 	makePage := func(page int) *CiMacOsVersionsResponse {
 		data := make([]CiMacOsVersionResource, 0, perPage)
-		for i := 0; i < perPage; i++ {
+		for i := range perPage {
 			data = append(data, CiMacOsVersionResource{
 				Type: ResourceTypeCiMacOsVersions,
 				ID:   fmt.Sprintf("macos-%d-%d", page, i),
@@ -2897,7 +2897,7 @@ func TestPaginateAll_CiXcodeVersions_ManyPages(t *testing.T) {
 
 	makePage := func(page int) *CiXcodeVersionsResponse {
 		data := make([]CiXcodeVersionResource, 0, perPage)
-		for i := 0; i < perPage; i++ {
+		for i := range perPage {
 			data = append(data, CiXcodeVersionResource{
 				Type: ResourceTypeCiXcodeVersions,
 				ID:   fmt.Sprintf("xcode-%d-%d", page, i),

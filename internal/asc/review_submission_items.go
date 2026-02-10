@@ -37,14 +37,14 @@ type ReviewSubmissionItemRelationships struct {
 type ReviewSubmissionItemResource struct {
 	Type          ResourceType                       `json:"type"`
 	ID            string                             `json:"id"`
-	Attributes    ReviewSubmissionItemAttributes     `json:"attributes,omitempty"`
+	Attributes    ReviewSubmissionItemAttributes     `json:"attributes"`
 	Relationships *ReviewSubmissionItemRelationships `json:"relationships,omitempty"`
 }
 
 // ReviewSubmissionItemsResponse is the response from review submission items list endpoints.
 type ReviewSubmissionItemsResponse struct {
 	Data  []ReviewSubmissionItemResource `json:"data"`
-	Links Links                          `json:"links,omitempty"`
+	Links Links                          `json:"links"`
 }
 
 // GetLinks returns the links field for pagination.
@@ -53,14 +53,14 @@ func (r *ReviewSubmissionItemsResponse) GetLinks() *Links {
 }
 
 // GetData returns the data field for aggregation.
-func (r *ReviewSubmissionItemsResponse) GetData() interface{} {
+func (r *ReviewSubmissionItemsResponse) GetData() any {
 	return r.Data
 }
 
 // ReviewSubmissionItemResponse is the response from review submission item detail endpoints.
 type ReviewSubmissionItemResponse struct {
 	Data  ReviewSubmissionItemResource `json:"data"`
-	Links Links                        `json:"links,omitempty"`
+	Links Links                        `json:"links"`
 }
 
 // ReviewSubmissionItemCreateRelationships describes relationships for create requests.

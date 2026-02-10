@@ -422,10 +422,7 @@ func chunkIDs(values []string, batchSize int) [][]string {
 
 	chunks := make([][]string, 0, (len(values)+batchSize-1)/batchSize)
 	for start := 0; start < len(values); start += batchSize {
-		end := start + batchSize
-		if end > len(values) {
-			end = len(values)
-		}
+		end := min(start+batchSize, len(values))
 		chunks = append(chunks, values[start:end])
 	}
 	return chunks

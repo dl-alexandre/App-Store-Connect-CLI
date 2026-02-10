@@ -48,7 +48,7 @@ type AnalyticsReportDownloadResult struct {
 type AnalyticsReportGetResult struct {
 	RequestID string                     `json:"requestId"`
 	Data      []AnalyticsReportGetReport `json:"data"`
-	Links     Links                      `json:"links,omitempty"`
+	Links     Links                      `json:"links"`
 }
 
 // AnalyticsReportGetReport represents an analytics report with instances.

@@ -507,19 +507,19 @@ type (
 // AppClipDefaultExperienceReviewDetailLinkageResponse is the response for review detail relationships.
 type AppClipDefaultExperienceReviewDetailLinkageResponse struct {
 	Data  ResourceData `json:"data"`
-	Links Links        `json:"links,omitempty"`
+	Links Links        `json:"links"`
 }
 
 // AppClipDefaultExperienceReleaseWithAppStoreVersionLinkageResponse is the response for release relationship.
 type AppClipDefaultExperienceReleaseWithAppStoreVersionLinkageResponse struct {
 	Data  ResourceData `json:"data"`
-	Links Links        `json:"links,omitempty"`
+	Links Links        `json:"links"`
 }
 
 // AppClipDefaultExperienceLocalizationHeaderImageLinkageResponse is the response for header image relationships.
 type AppClipDefaultExperienceLocalizationHeaderImageLinkageResponse struct {
 	Data  ResourceData `json:"data"`
-	Links Links        `json:"links,omitempty"`
+	Links Links        `json:"links"`
 }
 
 // AppClipAdvancedExperienceImageUploadResult represents upload results.

@@ -148,7 +148,7 @@ Examples:
 			// Parse leaderboard IDs from comma-separated string
 			var ids []string
 			if strings.TrimSpace(*leaderboardIDs) != "" {
-				for _, leaderboardID := range strings.Split(*leaderboardIDs, ",") {
+				for leaderboardID := range strings.SplitSeq(*leaderboardIDs, ",") {
 					trimmed := strings.TrimSpace(leaderboardID)
 					if trimmed != "" {
 						ids = append(ids, trimmed)

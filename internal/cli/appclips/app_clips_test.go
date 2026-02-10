@@ -18,12 +18,12 @@ func TestAppClipsCommandConstructors(t *testing.T) {
 		t.Fatal("expected Command wrapper to return command")
 	}
 
-	constructors := []func() interface{}{
-		func() interface{} { return AppClipDefaultExperiencesCommand() },
-		func() interface{} { return AppClipAdvancedExperiencesCommand() },
-		func() interface{} { return AppClipHeaderImagesCommand() },
-		func() interface{} { return AppClipInvocationsCommand() },
-		func() interface{} { return AppClipDomainStatusCommand() },
+	constructors := []func() any{
+		func() any { return AppClipDefaultExperiencesCommand() },
+		func() any { return AppClipAdvancedExperiencesCommand() },
+		func() any { return AppClipHeaderImagesCommand() },
+		func() any { return AppClipInvocationsCommand() },
+		func() any { return AppClipDomainStatusCommand() },
 	}
 	for _, ctor := range constructors {
 		if got := ctor(); got == nil {

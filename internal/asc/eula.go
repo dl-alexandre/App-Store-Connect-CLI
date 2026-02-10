@@ -22,14 +22,14 @@ type EndUserLicenseAgreementRelationships struct {
 type EndUserLicenseAgreementResource struct {
 	Type          ResourceType                          `json:"type"`
 	ID            string                                `json:"id"`
-	Attributes    EndUserLicenseAgreementAttributes     `json:"attributes,omitempty"`
+	Attributes    EndUserLicenseAgreementAttributes     `json:"attributes"`
 	Relationships *EndUserLicenseAgreementRelationships `json:"relationships,omitempty"`
 }
 
 // EndUserLicenseAgreementResponse is the response from EULA endpoints.
 type EndUserLicenseAgreementResponse struct {
 	Data  EndUserLicenseAgreementResource `json:"data"`
-	Links Links                           `json:"links,omitempty"`
+	Links Links                           `json:"links"`
 }
 
 // EndUserLicenseAgreementCreateAttributes describes attributes for creating an EULA.

@@ -1,5 +1,7 @@
 package asc
 
+import "slices"
+
 // AppScreenshotSetAttributes describes a screenshot set resource.
 type AppScreenshotSetAttributes struct {
 	ScreenshotDisplayType string `json:"screenshotDisplayType"`
@@ -127,20 +129,10 @@ var ValidPreviewTypes = []string{
 
 // IsValidScreenshotDisplayType checks if a screenshot display type is supported.
 func IsValidScreenshotDisplayType(value string) bool {
-	for _, item := range ValidScreenshotDisplayTypes {
-		if item == value {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(ValidScreenshotDisplayTypes, value)
 }
 
 // IsValidPreviewType checks if a preview type is supported.
 func IsValidPreviewType(value string) bool {
-	for _, item := range ValidPreviewTypes {
-		if item == value {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(ValidPreviewTypes, value)
 }

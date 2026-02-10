@@ -47,8 +47,8 @@ func ResolveReportOutputPaths(outputPath, defaultCompressed, decompressedExt str
 	if !decompress {
 		return compressed, ""
 	}
-	if strings.HasSuffix(compressed, ".gz") {
-		return compressed, strings.TrimSuffix(compressed, ".gz")
+	if before, ok := strings.CutSuffix(compressed, ".gz"); ok {
+		return compressed, before
 	}
 	if strings.HasSuffix(compressed, decompressedExt) {
 		return compressed + ".gz", compressed

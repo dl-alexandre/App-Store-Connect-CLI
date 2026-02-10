@@ -22,14 +22,14 @@ type BetaLicenseAgreementRelationships struct {
 type BetaLicenseAgreementResource struct {
 	Type          ResourceType                       `json:"type"`
 	ID            string                             `json:"id"`
-	Attributes    BetaLicenseAgreementAttributes     `json:"attributes,omitempty"`
+	Attributes    BetaLicenseAgreementAttributes     `json:"attributes"`
 	Relationships *BetaLicenseAgreementRelationships `json:"relationships,omitempty"`
 }
 
 // BetaLicenseAgreementsResponse is the response from beta license agreement endpoints (list).
 type BetaLicenseAgreementsResponse struct {
 	Data     []BetaLicenseAgreementResource `json:"data"`
-	Links    Links                          `json:"links,omitempty"`
+	Links    Links                          `json:"links"`
 	Included json.RawMessage                `json:"included,omitempty"`
 	Meta     json.RawMessage                `json:"meta,omitempty"`
 }
@@ -37,7 +37,7 @@ type BetaLicenseAgreementsResponse struct {
 // BetaLicenseAgreementResponse is the response from beta license agreement endpoints (single).
 type BetaLicenseAgreementResponse struct {
 	Data     BetaLicenseAgreementResource `json:"data"`
-	Links    Links                        `json:"links,omitempty"`
+	Links    Links                        `json:"links"`
 	Included json.RawMessage              `json:"included,omitempty"`
 }
 
@@ -61,13 +61,13 @@ type BetaLicenseAgreementUpdateRequest struct {
 // AppBetaLicenseAgreementLinkageResponse is the response for app beta license agreement relationship.
 type AppBetaLicenseAgreementLinkageResponse struct {
 	Data  ResourceData `json:"data"`
-	Links Links        `json:"links,omitempty"`
+	Links Links        `json:"links"`
 }
 
 // BetaLicenseAgreementAppLinkageResponse is the response for beta license agreement app relationship.
 type BetaLicenseAgreementAppLinkageResponse struct {
 	Data  ResourceData `json:"data"`
-	Links Links        `json:"links,omitempty"`
+	Links Links        `json:"links"`
 }
 
 // GetBetaLicenseAgreements retrieves beta license agreements with optional filters.
@@ -277,6 +277,6 @@ func (r *BetaLicenseAgreementsResponse) GetLinks() *Links {
 }
 
 // GetData returns the data field for pagination aggregation.
-func (r *BetaLicenseAgreementsResponse) GetData() interface{} {
+func (r *BetaLicenseAgreementsResponse) GetData() any {
 	return r.Data
 }

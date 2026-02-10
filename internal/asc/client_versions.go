@@ -83,13 +83,13 @@ type PreReleaseVersion struct {
 // PreReleaseVersionsResponse is the response from pre-release versions endpoints.
 type PreReleaseVersionsResponse struct {
 	Data  []PreReleaseVersion `json:"data"`
-	Links Links               `json:"links,omitempty"`
+	Links Links               `json:"links"`
 }
 
 // PreReleaseVersionResponse is the response from pre-release version detail.
 type PreReleaseVersionResponse struct {
 	Data  PreReleaseVersion `json:"data"`
-	Links Links             `json:"links,omitempty"`
+	Links Links             `json:"links"`
 }
 
 // AppStoreVersionSubmissionCreateData is the data portion of an app store version submission create request.
@@ -122,10 +122,10 @@ type AppStoreVersionSubmissionResource struct {
 	ID         string       `json:"id"`
 	Attributes struct {
 		CreatedDate *string `json:"createdDate,omitempty"`
-	} `json:"attributes,omitempty"`
+	} `json:"attributes"`
 	Relationships struct {
 		AppStoreVersion *Relationship `json:"appStoreVersion,omitempty"`
-	} `json:"relationships,omitempty"`
+	} `json:"relationships"`
 }
 
 // AppStoreVersionSubmissionResourceResponse is a response containing a submission resource.

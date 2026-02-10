@@ -92,7 +92,7 @@ type AppCustomProductPageVersionCreateRelationships struct {
 // AppCustomProductPageVersionCreateData is the data payload for create requests.
 type AppCustomProductPageVersionCreateData struct {
 	Type          ResourceType                                    `json:"type"`
-	Attributes    AppCustomProductPageVersionCreateAttributes     `json:"attributes,omitempty"`
+	Attributes    AppCustomProductPageVersionCreateAttributes     `json:"attributes"`
 	Relationships *AppCustomProductPageVersionCreateRelationships `json:"relationships"`
 }
 

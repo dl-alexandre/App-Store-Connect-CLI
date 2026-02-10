@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"slices"
 	"strings"
 
 	"github.com/peterbourgon/ff/v3/ffcli"
@@ -1000,10 +1001,8 @@ func parseDeviceFamilyOsVersionFilters(value string) ([]asc.DeviceFamilyOsVersio
 
 func normalizeBetaRecruitmentDeviceFamily(value string) (asc.DeviceFamily, error) {
 	normalized := strings.ToUpper(strings.TrimSpace(value))
-	for _, family := range betaRecruitmentDeviceFamilyList() {
-		if normalized == family {
-			return asc.DeviceFamily(normalized), nil
-		}
+	if slices.Contains(betaRecruitmentDeviceFamilyList(), normalized) {
+		return asc.DeviceFamily(normalized), nil
 	}
 	return "", fmt.Errorf("--os-version-filter device family must be one of: %s", strings.Join(betaRecruitmentDeviceFamilyList(), ", "))
 }

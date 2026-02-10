@@ -10,37 +10,37 @@ import (
 // AppStoreVersionAgeRatingDeclarationLinkageResponse is the response for age rating relationships.
 type AppStoreVersionAgeRatingDeclarationLinkageResponse struct {
 	Data  ResourceData `json:"data"`
-	Links Links        `json:"links,omitempty"`
+	Links Links        `json:"links"`
 }
 
 // AppStoreVersionReviewDetailLinkageResponse is the response for review detail relationships.
 type AppStoreVersionReviewDetailLinkageResponse struct {
 	Data  ResourceData `json:"data"`
-	Links Links        `json:"links,omitempty"`
+	Links Links        `json:"links"`
 }
 
 // AppStoreVersionAppClipDefaultExperienceLinkageResponse is the response for app clip default experience relationships.
 type AppStoreVersionAppClipDefaultExperienceLinkageResponse struct {
 	Data  ResourceData `json:"data"`
-	Links Links        `json:"links,omitempty"`
+	Links Links        `json:"links"`
 }
 
 // AppStoreVersionSubmissionLinkageResponse is the response for submission relationships.
 type AppStoreVersionSubmissionLinkageResponse struct {
 	Data  ResourceData `json:"data"`
-	Links Links        `json:"links,omitempty"`
+	Links Links        `json:"links"`
 }
 
 // AppStoreVersionRoutingAppCoverageLinkageResponse is the response for routing coverage relationships.
 type AppStoreVersionRoutingAppCoverageLinkageResponse struct {
 	Data  ResourceData `json:"data"`
-	Links Links        `json:"links,omitempty"`
+	Links Links        `json:"links"`
 }
 
 // AppStoreVersionGameCenterAppVersionLinkageResponse is the response for Game Center app version relationships.
 type AppStoreVersionGameCenterAppVersionLinkageResponse struct {
 	Data  ResourceData `json:"data"`
-	Links Links        `json:"links,omitempty"`
+	Links Links        `json:"links"`
 }
 
 // GetAppStoreVersionAgeRatingDeclarationRelationship retrieves the age rating linkage for a version.

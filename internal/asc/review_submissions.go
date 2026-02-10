@@ -38,14 +38,14 @@ type ReviewSubmissionRelationships struct {
 type ReviewSubmissionResource struct {
 	Type          ResourceType                   `json:"type"`
 	ID            string                         `json:"id"`
-	Attributes    ReviewSubmissionAttributes     `json:"attributes,omitempty"`
+	Attributes    ReviewSubmissionAttributes     `json:"attributes"`
 	Relationships *ReviewSubmissionRelationships `json:"relationships,omitempty"`
 }
 
 // ReviewSubmissionsResponse is the response from review submissions list endpoints.
 type ReviewSubmissionsResponse struct {
 	Data     []ReviewSubmissionResource `json:"data"`
-	Links    Links                      `json:"links,omitempty"`
+	Links    Links                      `json:"links"`
 	Included json.RawMessage            `json:"included,omitempty"`
 }
 
@@ -55,14 +55,14 @@ func (r *ReviewSubmissionsResponse) GetLinks() *Links {
 }
 
 // GetData returns the data field for aggregation.
-func (r *ReviewSubmissionsResponse) GetData() interface{} {
+func (r *ReviewSubmissionsResponse) GetData() any {
 	return r.Data
 }
 
 // ReviewSubmissionResponse is the response from review submission detail endpoints.
 type ReviewSubmissionResponse struct {
 	Data     ReviewSubmissionResource `json:"data"`
-	Links    Links                    `json:"links,omitempty"`
+	Links    Links                    `json:"links"`
 	Included json.RawMessage          `json:"included,omitempty"`
 }
 

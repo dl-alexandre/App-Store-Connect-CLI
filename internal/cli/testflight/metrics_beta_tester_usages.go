@@ -16,7 +16,7 @@ import (
 
 type betaTesterUsagesPage struct {
 	Data  []json.RawMessage `json:"data"`
-	Links asc.Links         `json:"links,omitempty"`
+	Links asc.Links         `json:"links"`
 	Meta  json.RawMessage   `json:"meta,omitempty"`
 }
 

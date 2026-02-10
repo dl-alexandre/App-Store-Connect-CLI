@@ -61,7 +61,7 @@ func readBundleInfoFromInfoPlist(file *zip.File) (IPABundleInfo, error) {
 		return IPABundleInfo{}, fmt.Errorf("read Info.plist: %w", err)
 	}
 
-	var info map[string]interface{}
+	var info map[string]any
 	decoder := plist.NewDecoder(bytes.NewReader(data))
 	if err := decoder.Decode(&info); err != nil {
 		return IPABundleInfo{}, fmt.Errorf("decode Info.plist: %w", err)
@@ -73,7 +73,7 @@ func readBundleInfoFromInfoPlist(file *zip.File) (IPABundleInfo, error) {
 	}, nil
 }
 
-func coercePlistValueToString(value interface{}) string {
+func coercePlistValueToString(value any) string {
 	switch v := value.(type) {
 	case string:
 		return strings.TrimSpace(v)

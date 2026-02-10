@@ -540,7 +540,7 @@ func TestIAPPricesResolvesLegacyManualPricePointValues(t *testing.T) {
 
 func buildIAPPriceScheduleWithAutomaticIncludedCount(automaticCount int) string {
 	included := make([]string, 0, automaticCount+2)
-	for i := 0; i < automaticCount; i++ {
+	for i := range automaticCount {
 		included = append(included, fmt.Sprintf(`{
 			"type":"inAppPurchasePrices",
 			"id":"auto-%d",

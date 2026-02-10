@@ -19,11 +19,11 @@ func TestNotarizationCommandConstructors(t *testing.T) {
 		t.Fatal("expected subcommands")
 	}
 
-	constructors := []func() interface{}{
-		func() interface{} { return submitCommand() },
-		func() interface{} { return statusCommand() },
-		func() interface{} { return logCommand() },
-		func() interface{} { return listCommand() },
+	constructors := []func() any{
+		func() any { return submitCommand() },
+		func() any { return statusCommand() },
+		func() any { return logCommand() },
+		func() any { return listCommand() },
 	}
 	for _, ctor := range constructors {
 		if got := ctor(); got == nil {

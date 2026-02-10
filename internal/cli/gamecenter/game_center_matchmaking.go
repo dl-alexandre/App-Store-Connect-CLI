@@ -1690,7 +1690,7 @@ func runMetricsQueue(ctx context.Context, name string, queueID *string, granular
 		return shared.PrintOutput(resp, *output, *pretty)
 	}
 
-	var resp interface{}
+	var resp any
 	if fetchRequests != nil {
 		resp, err = fetchRequests(requestCtx, id, opts...)
 	} else {
@@ -1859,7 +1859,7 @@ func readJSONFilePayload(path string) (json.RawMessage, error) {
 		return nil, fmt.Errorf("payload file is empty")
 	}
 
-	var payload map[string]interface{}
+	var payload map[string]any
 	if err := json.Unmarshal(data, &payload); err != nil {
 		return nil, fmt.Errorf("invalid JSON: %w", err)
 	}

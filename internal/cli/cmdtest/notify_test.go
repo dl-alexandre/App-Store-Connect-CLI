@@ -59,7 +59,7 @@ func TestNotifySlackValidationErrors(t *testing.T) {
 }
 
 func TestNotifySlackSuccess(t *testing.T) {
-	var receivedPayload map[string]interface{}
+	var receivedPayload map[string]any
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		body, _ := io.ReadAll(r.Body)
 		if err := json.Unmarshal(body, &receivedPayload); err != nil {
@@ -99,7 +99,7 @@ func TestNotifySlackSuccess(t *testing.T) {
 }
 
 func TestNotifySlackSuccessWithBlocks(t *testing.T) {
-	var receivedPayload map[string]interface{}
+	var receivedPayload map[string]any
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		body, _ := io.ReadAll(r.Body)
 		if err := json.Unmarshal(body, &receivedPayload); err != nil {
@@ -134,7 +134,7 @@ func TestNotifySlackSuccessWithBlocks(t *testing.T) {
 	if !strings.Contains(stderr, "Message sent to Slack successfully") {
 		t.Fatalf("expected success message, got %q", stderr)
 	}
-	blocksValue, ok := receivedPayload["blocks"].([]interface{})
+	blocksValue, ok := receivedPayload["blocks"].([]any)
 	if !ok {
 		t.Fatalf("expected blocks array, got %T", receivedPayload["blocks"])
 	}

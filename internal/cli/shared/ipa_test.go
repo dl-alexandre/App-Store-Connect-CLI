@@ -131,10 +131,10 @@ func buildInfoPlist(t *testing.T, version string, build string) []byte {
 	return buildInfoPlistWithValues(t, version, build, plist.XMLFormat)
 }
 
-func buildInfoPlistWithValues(t *testing.T, versionValue interface{}, buildValue interface{}, format int) []byte {
+func buildInfoPlistWithValues(t *testing.T, versionValue any, buildValue any, format int) []byte {
 	t.Helper()
 
-	payload := map[string]interface{}{
+	payload := map[string]any{
 		"CFBundleShortVersionString": versionValue,
 		"CFBundleVersion":            buildValue,
 	}

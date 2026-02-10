@@ -264,7 +264,7 @@ func TestPrintTable_SubscriptionOfferCode(t *testing.T) {
 				ProductionCodeCount:   80,
 				SandboxCodeCount:      20,
 				Active:                true,
-				AutoRenewEnabled:      ptrBool(false),
+				AutoRenewEnabled:      new(false),
 			},
 		},
 	}
@@ -296,7 +296,7 @@ func TestPrintMarkdown_SubscriptionOfferCode(t *testing.T) {
 				ProductionCodeCount:   80,
 				SandboxCodeCount:      20,
 				Active:                true,
-				AutoRenewEnabled:      ptrBool(false),
+				AutoRenewEnabled:      new(false),
 			},
 		},
 	}

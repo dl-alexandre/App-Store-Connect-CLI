@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"slices"
 	"strings"
 
 	"github.com/peterbourgon/ff/v3/ffcli"
@@ -69,13 +70,7 @@ Examples:
 			if strings.TrimSpace(*platform) != "" {
 				validPlatforms := []string{"IOS", "MAC_OS", "TV_OS", "VISION_OS"}
 				normalizedPlatform = strings.ToUpper(strings.TrimSpace(*platform))
-				valid := false
-				for _, p := range validPlatforms {
-					if normalizedPlatform == p {
-						valid = true
-						break
-					}
-				}
+				valid := slices.Contains(validPlatforms, normalizedPlatform)
 				if !valid {
 					fmt.Fprintf(os.Stderr, "Error: --platform must be one of: IOS, MAC_OS, TV_OS, VISION_OS\n\n")
 					return flag.ErrHelp

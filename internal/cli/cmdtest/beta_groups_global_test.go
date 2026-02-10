@@ -56,6 +56,51 @@ func TestBetaGroupsListGlobalSuccess(t *testing.T) {
 	}
 }
 
+func TestBetaGroupsListGlobalWithASCAppIDSet(t *testing.T) {
+	setupAuth(t)
+	t.Setenv("ASC_APP_ID", "app-from-env")
+	t.Setenv("ASC_CONFIG_PATH", filepath.Join(t.TempDir(), "nonexistent.json"))
+
+	originalTransport := http.DefaultTransport
+	t.Cleanup(func() {
+		http.DefaultTransport = originalTransport
+	})
+
+	http.DefaultTransport = roundTripFunc(func(req *http.Request) (*http.Response, error) {
+		if req.Method != http.MethodGet {
+			t.Fatalf("expected GET, got %s", req.Method)
+		}
+		if req.URL.Path != "/v1/betaGroups" {
+			t.Fatalf("expected global path /v1/betaGroups, got %s", req.URL.Path)
+		}
+		body := `{"data":[]}`
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(strings.NewReader(body)),
+			Header:     http.Header{"Content-Type": []string{"application/json"}},
+		}, nil
+	})
+
+	root := RootCommand("1.2.3")
+	root.FlagSet.SetOutput(io.Discard)
+
+	stdout, stderr := captureOutput(t, func() {
+		if err := root.Parse([]string{"testflight", "beta-groups", "list", "--global"}); err != nil {
+			t.Fatalf("parse error: %v", err)
+		}
+		if err := root.Run(context.Background()); err != nil {
+			t.Fatalf("run error: %v", err)
+		}
+	})
+
+	if stderr != "" {
+		t.Fatalf("expected empty stderr, got %q", stderr)
+	}
+	if !strings.Contains(stdout, `"data":[]`) {
+		t.Fatalf("expected empty data output, got %q", stdout)
+	}
+}
+
 func TestBetaGroupsListGlobalWithLimit(t *testing.T) {
 	setupAuth(t)
 	t.Setenv("ASC_APP_ID", "")

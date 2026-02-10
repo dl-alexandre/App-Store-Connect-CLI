@@ -88,8 +88,8 @@ Examples:
 
 			resolvedAppID := shared.ResolveAppID(*appID)
 
-			// Reject --global + --app combination
-			if *global && resolvedAppID != "" {
+			// Reject --global + --app combination (check explicit flag, not resolved value)
+			if *global && strings.TrimSpace(*appID) != "" {
 				fmt.Fprintln(os.Stderr, "Error: --global and --app are mutually exclusive")
 				return flag.ErrHelp
 			}

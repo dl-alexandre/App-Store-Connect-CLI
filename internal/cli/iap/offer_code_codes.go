@@ -26,7 +26,7 @@ func IAPOfferCodesCustomCodesCommand() *ffcli.Command {
 Examples:
   asc iap offer-codes custom-codes list --offer-code-id "OFFER_CODE_ID"
   asc iap offer-codes custom-codes get --custom-code-id "CUSTOM_CODE_ID"
-  asc iap offer-codes custom-codes create --offer-code-id "OFFER_CODE_ID" --custom-code "SUMMER26"`,
+  asc iap offer-codes custom-codes create --offer-code-id "OFFER_CODE_ID" --custom-code "SUMMER26" --quantity 100`,
 		FlagSet:   fs,
 		UsageFunc: shared.DefaultUsageFunc,
 		Subcommands: []*ffcli.Command{

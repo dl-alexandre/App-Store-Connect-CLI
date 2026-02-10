@@ -3,6 +3,7 @@ package asc
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"testing"
 )
@@ -980,5 +981,233 @@ func TestCreateInAppPurchaseOfferCodeOneTimeUseCode_UsesPostPath(t *testing.T) {
 	}
 	if resp.Data.ID != "otuc-1" {
 		t.Fatalf("expected response id otuc-1, got %q", resp.Data.ID)
+	}
+}
+
+func TestCreateInAppPurchaseOfferCodeCustomCode_ValidationErrors(t *testing.T) {
+	client := newTestClient(t, nil, nil)
+
+	tests := []struct {
+		name string
+		req  InAppPurchaseOfferCodeCustomCodeCreateRequest
+	}{
+		{
+			name: "missing offerCode ID",
+			req: InAppPurchaseOfferCodeCustomCodeCreateRequest{
+				Data: InAppPurchaseOfferCodeCustomCodeCreateData{
+					Type: ResourceTypeInAppPurchaseOfferCodeCustomCodes,
+					Attributes: InAppPurchaseOfferCodeCustomCodeCreateAttributes{
+						CustomCode:    "SUMMER26",
+						NumberOfCodes: 100,
+					},
+					Relationships: InAppPurchaseOfferCodeCustomCodeCreateRelationships{
+						OfferCode: Relationship{
+							Data: ResourceData{
+								Type: ResourceTypeInAppPurchaseOfferCodes,
+								ID:   " ",
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "missing customCode",
+			req: InAppPurchaseOfferCodeCustomCodeCreateRequest{
+				Data: InAppPurchaseOfferCodeCustomCodeCreateData{
+					Type: ResourceTypeInAppPurchaseOfferCodeCustomCodes,
+					Attributes: InAppPurchaseOfferCodeCustomCodeCreateAttributes{
+						CustomCode:    " ",
+						NumberOfCodes: 100,
+					},
+					Relationships: InAppPurchaseOfferCodeCustomCodeCreateRelationships{
+						OfferCode: Relationship{
+							Data: ResourceData{
+								Type: ResourceTypeInAppPurchaseOfferCodes,
+								ID:   "offer-1",
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "invalid numberOfCodes",
+			req: InAppPurchaseOfferCodeCustomCodeCreateRequest{
+				Data: InAppPurchaseOfferCodeCustomCodeCreateData{
+					Type: ResourceTypeInAppPurchaseOfferCodeCustomCodes,
+					Attributes: InAppPurchaseOfferCodeCustomCodeCreateAttributes{
+						CustomCode:    "SUMMER26",
+						NumberOfCodes: 0,
+					},
+					Relationships: InAppPurchaseOfferCodeCustomCodeCreateRelationships{
+						OfferCode: Relationship{
+							Data: ResourceData{
+								Type: ResourceTypeInAppPurchaseOfferCodes,
+								ID:   "offer-1",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			_, err := client.CreateInAppPurchaseOfferCodeCustomCode(context.Background(), test.req)
+			if err == nil {
+				t.Fatal("expected error, got nil")
+			}
+		})
+	}
+}
+
+func TestCreateInAppPurchaseOfferCodeCustomCode_ReturnsAPIError(t *testing.T) {
+	response := jsonResponse(http.StatusForbidden, `{"errors":[{"status":"403","code":"FORBIDDEN","title":"Forbidden","detail":"not allowed"}]}`)
+	client := newTestClient(t, nil, response)
+
+	req := InAppPurchaseOfferCodeCustomCodeCreateRequest{
+		Data: InAppPurchaseOfferCodeCustomCodeCreateData{
+			Type: ResourceTypeInAppPurchaseOfferCodeCustomCodes,
+			Attributes: InAppPurchaseOfferCodeCustomCodeCreateAttributes{
+				CustomCode:    "SUMMER26",
+				NumberOfCodes: 100,
+			},
+			Relationships: InAppPurchaseOfferCodeCustomCodeCreateRelationships{
+				OfferCode: Relationship{
+					Data: ResourceData{
+						Type: ResourceTypeInAppPurchaseOfferCodes,
+						ID:   "offer-1",
+					},
+				},
+			},
+		},
+	}
+
+	_, err := client.CreateInAppPurchaseOfferCodeCustomCode(context.Background(), req)
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+	var apiErr *APIError
+	if !errors.As(err, &apiErr) {
+		t.Fatalf("expected APIError, got %T", err)
+	}
+	if apiErr.StatusCode != http.StatusForbidden {
+		t.Fatalf("expected status code %d, got %d", http.StatusForbidden, apiErr.StatusCode)
+	}
+}
+
+func TestCreateInAppPurchaseOfferCodeOneTimeUseCode_ValidationErrors(t *testing.T) {
+	client := newTestClient(t, nil, nil)
+
+	tests := []struct {
+		name string
+		req  InAppPurchaseOfferCodeOneTimeUseCodeCreateRequest
+	}{
+		{
+			name: "missing offerCode ID",
+			req: InAppPurchaseOfferCodeOneTimeUseCodeCreateRequest{
+				Data: InAppPurchaseOfferCodeOneTimeUseCodeCreateData{
+					Type: ResourceTypeInAppPurchaseOfferCodeOneTimeUseCodes,
+					Attributes: InAppPurchaseOfferCodeOneTimeUseCodeCreateAttributes{
+						NumberOfCodes:  100,
+						ExpirationDate: "2026-12-31",
+					},
+					Relationships: InAppPurchaseOfferCodeOneTimeUseCodeCreateRelationships{
+						OfferCode: Relationship{
+							Data: ResourceData{
+								Type: ResourceTypeInAppPurchaseOfferCodes,
+								ID:   " ",
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "invalid numberOfCodes",
+			req: InAppPurchaseOfferCodeOneTimeUseCodeCreateRequest{
+				Data: InAppPurchaseOfferCodeOneTimeUseCodeCreateData{
+					Type: ResourceTypeInAppPurchaseOfferCodeOneTimeUseCodes,
+					Attributes: InAppPurchaseOfferCodeOneTimeUseCodeCreateAttributes{
+						NumberOfCodes:  0,
+						ExpirationDate: "2026-12-31",
+					},
+					Relationships: InAppPurchaseOfferCodeOneTimeUseCodeCreateRelationships{
+						OfferCode: Relationship{
+							Data: ResourceData{
+								Type: ResourceTypeInAppPurchaseOfferCodes,
+								ID:   "offer-1",
+							},
+						},
+					},
+				},
+			},
+		},
+		{
+			name: "missing expirationDate",
+			req: InAppPurchaseOfferCodeOneTimeUseCodeCreateRequest{
+				Data: InAppPurchaseOfferCodeOneTimeUseCodeCreateData{
+					Type: ResourceTypeInAppPurchaseOfferCodeOneTimeUseCodes,
+					Attributes: InAppPurchaseOfferCodeOneTimeUseCodeCreateAttributes{
+						NumberOfCodes:  100,
+						ExpirationDate: " ",
+					},
+					Relationships: InAppPurchaseOfferCodeOneTimeUseCodeCreateRelationships{
+						OfferCode: Relationship{
+							Data: ResourceData{
+								Type: ResourceTypeInAppPurchaseOfferCodes,
+								ID:   "offer-1",
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			_, err := client.CreateInAppPurchaseOfferCodeOneTimeUseCode(context.Background(), test.req)
+			if err == nil {
+				t.Fatal("expected error, got nil")
+			}
+		})
+	}
+}
+
+func TestCreateInAppPurchaseOfferCodeOneTimeUseCode_ReturnsAPIError(t *testing.T) {
+	response := jsonResponse(http.StatusForbidden, `{"errors":[{"status":"403","code":"FORBIDDEN","title":"Forbidden","detail":"not allowed"}]}`)
+	client := newTestClient(t, nil, response)
+
+	req := InAppPurchaseOfferCodeOneTimeUseCodeCreateRequest{
+		Data: InAppPurchaseOfferCodeOneTimeUseCodeCreateData{
+			Type: ResourceTypeInAppPurchaseOfferCodeOneTimeUseCodes,
+			Attributes: InAppPurchaseOfferCodeOneTimeUseCodeCreateAttributes{
+				NumberOfCodes:  100,
+				ExpirationDate: "2026-12-31",
+			},
+			Relationships: InAppPurchaseOfferCodeOneTimeUseCodeCreateRelationships{
+				OfferCode: Relationship{
+					Data: ResourceData{
+						Type: ResourceTypeInAppPurchaseOfferCodes,
+						ID:   "offer-1",
+					},
+				},
+			},
+		},
+	}
+
+	_, err := client.CreateInAppPurchaseOfferCodeOneTimeUseCode(context.Background(), req)
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+	var apiErr *APIError
+	if !errors.As(err, &apiErr) {
+		t.Fatalf("expected APIError, got %T", err)
+	}
+	if apiErr.StatusCode != http.StatusForbidden {
+		t.Fatalf("expected status code %d, got %d", http.StatusForbidden, apiErr.StatusCode)
 	}
 }

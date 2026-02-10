@@ -979,6 +979,20 @@ func (c *Client) GetInAppPurchaseOfferCodeCustomCode(ctx context.Context, custom
 
 // CreateInAppPurchaseOfferCodeCustomCode creates a custom code for an offer code.
 func (c *Client) CreateInAppPurchaseOfferCodeCustomCode(ctx context.Context, req InAppPurchaseOfferCodeCustomCodeCreateRequest) (*InAppPurchaseOfferCodeCustomCodeResponse, error) {
+	offerCodeID := strings.TrimSpace(req.Data.Relationships.OfferCode.Data.ID)
+	if offerCodeID == "" {
+		return nil, fmt.Errorf("offerCodeID is required")
+	}
+	customCode := strings.TrimSpace(req.Data.Attributes.CustomCode)
+	if customCode == "" {
+		return nil, fmt.Errorf("customCode is required")
+	}
+	if req.Data.Attributes.NumberOfCodes <= 0 {
+		return nil, fmt.Errorf("numberOfCodes must be greater than 0")
+	}
+	req.Data.Relationships.OfferCode.Data.ID = offerCodeID
+	req.Data.Attributes.CustomCode = customCode
+
 	body, err := BuildRequestBody(req)
 	if err != nil {
 		return nil, err
@@ -1055,6 +1069,20 @@ func (c *Client) GetInAppPurchaseOfferCodeOneTimeUseCode(ctx context.Context, on
 
 // CreateInAppPurchaseOfferCodeOneTimeUseCode generates a new one-time use code batch.
 func (c *Client) CreateInAppPurchaseOfferCodeOneTimeUseCode(ctx context.Context, req InAppPurchaseOfferCodeOneTimeUseCodeCreateRequest) (*InAppPurchaseOfferCodeOneTimeUseCodeResponse, error) {
+	offerCodeID := strings.TrimSpace(req.Data.Relationships.OfferCode.Data.ID)
+	if offerCodeID == "" {
+		return nil, fmt.Errorf("offerCodeID is required")
+	}
+	if req.Data.Attributes.NumberOfCodes <= 0 {
+		return nil, fmt.Errorf("numberOfCodes must be greater than 0")
+	}
+	expirationDate := strings.TrimSpace(req.Data.Attributes.ExpirationDate)
+	if expirationDate == "" {
+		return nil, fmt.Errorf("expirationDate is required")
+	}
+	req.Data.Relationships.OfferCode.Data.ID = offerCodeID
+	req.Data.Attributes.ExpirationDate = expirationDate
+
 	body, err := BuildRequestBody(req)
 	if err != nil {
 		return nil, err

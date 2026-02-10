@@ -92,6 +92,61 @@ func TestIAPOfferCodesCustomCodesCreateMissingQuantity(t *testing.T) {
 	}
 }
 
+func TestIAPOfferCodesCustomCodesCreateInvalidQuantity(t *testing.T) {
+	root := RootCommand("1.2.3")
+	root.FlagSet.SetOutput(io.Discard)
+
+	stdout, stderr := captureOutput(t, func() {
+		if err := root.Parse([]string{
+			"iap", "offer-codes", "custom-codes", "create",
+			"--offer-code-id", "offer-1",
+			"--custom-code", "SUMMER26",
+			"--quantity", "-5",
+		}); err != nil {
+			t.Fatalf("parse error: %v", err)
+		}
+		err := root.Run(context.Background())
+		if !errors.Is(err, flag.ErrHelp) {
+			t.Fatalf("expected ErrHelp, got %v", err)
+		}
+	})
+
+	if stdout != "" {
+		t.Fatalf("expected empty stdout, got %q", stdout)
+	}
+	if !strings.Contains(stderr, "Error: --quantity must be a positive integer") {
+		t.Fatalf("expected stderr to contain --quantity error, got %q", stderr)
+	}
+}
+
+func TestIAPOfferCodesCustomCodesCreateInvalidExpirationDate(t *testing.T) {
+	root := RootCommand("1.2.3")
+	root.FlagSet.SetOutput(io.Discard)
+
+	stdout, stderr := captureOutput(t, func() {
+		if err := root.Parse([]string{
+			"iap", "offer-codes", "custom-codes", "create",
+			"--offer-code-id", "offer-1",
+			"--custom-code", "SUMMER26",
+			"--quantity", "100",
+			"--expiration-date", "not-a-date",
+		}); err != nil {
+			t.Fatalf("parse error: %v", err)
+		}
+		err := root.Run(context.Background())
+		if !errors.Is(err, flag.ErrHelp) {
+			t.Fatalf("expected ErrHelp, got %v", err)
+		}
+	})
+
+	if stdout != "" {
+		t.Fatalf("expected empty stdout, got %q", stdout)
+	}
+	if !strings.Contains(stderr, "Error: --expiration-date must be in YYYY-MM-DD format") {
+		t.Fatalf("expected stderr to contain expiration-date format error, got %q", stderr)
+	}
+}
+
 func TestIAPOfferCodesCustomCodesCreateSuccess(t *testing.T) {
 	setupAuth(t)
 	t.Setenv("ASC_CONFIG_PATH", filepath.Join(t.TempDir(), "nonexistent.json"))
@@ -329,8 +384,8 @@ func TestIAPOfferCodesOneTimeCodesCreateInvalidExpirationDate(t *testing.T) {
 	if stdout != "" {
 		t.Fatalf("expected empty stdout, got %q", stdout)
 	}
-	if !strings.Contains(stderr, "Error:") {
-		t.Fatalf("expected stderr to contain Error, got %q", stderr)
+	if !strings.Contains(stderr, "Error: --expiration-date must be in YYYY-MM-DD format") {
+		t.Fatalf("expected stderr to contain expiration-date format error, got %q", stderr)
 	}
 }
 
@@ -355,8 +410,8 @@ func TestIAPOfferCodesOneTimeCodesCreateMissingExpirationDate(t *testing.T) {
 	if stdout != "" {
 		t.Fatalf("expected empty stdout, got %q", stdout)
 	}
-	if !strings.Contains(stderr, "Error:") {
-		t.Fatalf("expected stderr to contain Error, got %q", stderr)
+	if !strings.Contains(stderr, "Error: --expiration-date is required") {
+		t.Fatalf("expected stderr to contain expiration-date required error, got %q", stderr)
 	}
 }
 

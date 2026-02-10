@@ -74,9 +74,9 @@ type GameCenterAppVersionRelationships struct {
 
 // GameCenterAppVersionCreateData is the data portion of an app version create request.
 type GameCenterAppVersionCreateData struct {
-	Type          ResourceType                           `json:"type"`
-	Attributes    *GameCenterAppVersionCreateAttributes  `json:"attributes,omitempty"`
-	Relationships *GameCenterAppVersionRelationships     `json:"relationships"`
+	Type          ResourceType                          `json:"type"`
+	Attributes    *GameCenterAppVersionCreateAttributes `json:"attributes,omitempty"`
+	Relationships *GameCenterAppVersionRelationships    `json:"relationships"`
 }
 
 // GameCenterAppVersionCreateRequest is a request to create a Game Center app version.

@@ -2,6 +2,8 @@ package asc
 
 import (
 	"context"
+	"encoding/json"
+	"io"
 	"net/http"
 	"net/url"
 	"testing"
@@ -164,6 +166,101 @@ func TestGetAppStoreVersionGameCenterAppVersion(t *testing.T) {
 
 	if _, err := client.GetAppStoreVersionGameCenterAppVersion(context.Background(), "version-1"); err != nil {
 		t.Fatalf("GetAppStoreVersionGameCenterAppVersion() error: %v", err)
+	}
+}
+
+func TestCreateGameCenterAppVersion(t *testing.T) {
+	response := jsonResponse(http.StatusCreated, `{"data":{"type":"gameCenterAppVersions","id":"gcav-new","attributes":{"enabled":false}}}`)
+	client := newTestClient(t, func(req *http.Request) {
+		if req.Method != http.MethodPost {
+			t.Fatalf("expected POST, got %s", req.Method)
+		}
+		if req.URL.Path != "/v1/gameCenterAppVersions" {
+			t.Fatalf("expected path /v1/gameCenterAppVersions, got %s", req.URL.Path)
+		}
+
+		body, err := io.ReadAll(req.Body)
+		if err != nil {
+			t.Fatalf("failed to read request body: %v", err)
+		}
+
+		var payload GameCenterAppVersionCreateRequest
+		if err := json.Unmarshal(body, &payload); err != nil {
+			t.Fatalf("failed to unmarshal request body: %v", err)
+		}
+
+		if payload.Data.Type != ResourceTypeGameCenterAppVersions {
+			t.Fatalf("expected type gameCenterAppVersions, got %s", payload.Data.Type)
+		}
+		if payload.Data.Relationships == nil || payload.Data.Relationships.AppStoreVersion == nil {
+			t.Fatalf("expected appStoreVersion relationship to be set")
+		}
+		if payload.Data.Relationships.AppStoreVersion.Data.ID != "version-123" {
+			t.Fatalf("expected appStoreVersion ID version-123, got %s", payload.Data.Relationships.AppStoreVersion.Data.ID)
+		}
+		if payload.Data.Relationships.AppStoreVersion.Data.Type != ResourceTypeAppStoreVersions {
+			t.Fatalf("expected appStoreVersion type appStoreVersions, got %s", payload.Data.Relationships.AppStoreVersion.Data.Type)
+		}
+		assertAuthorized(t, req)
+	}, response)
+
+	resp, err := client.CreateGameCenterAppVersion(context.Background(), "version-123")
+	if err != nil {
+		t.Fatalf("CreateGameCenterAppVersion() error: %v", err)
+	}
+
+	if resp.Data.ID != "gcav-new" {
+		t.Fatalf("expected ID gcav-new, got %s", resp.Data.ID)
+	}
+}
+
+func TestUpdateGameCenterAppVersion(t *testing.T) {
+	response := jsonResponse(http.StatusOK, `{"data":{"type":"gameCenterAppVersions","id":"gcav-1","attributes":{"enabled":true}}}`)
+	client := newTestClient(t, func(req *http.Request) {
+		if req.Method != http.MethodPatch {
+			t.Fatalf("expected PATCH, got %s", req.Method)
+		}
+		if req.URL.Path != "/v1/gameCenterAppVersions/gcav-1" {
+			t.Fatalf("expected path /v1/gameCenterAppVersions/gcav-1, got %s", req.URL.Path)
+		}
+
+		body, err := io.ReadAll(req.Body)
+		if err != nil {
+			t.Fatalf("failed to read request body: %v", err)
+		}
+
+		var payload GameCenterAppVersionUpdateRequest
+		if err := json.Unmarshal(body, &payload); err != nil {
+			t.Fatalf("failed to unmarshal request body: %v", err)
+		}
+
+		if payload.Data.Type != ResourceTypeGameCenterAppVersions {
+			t.Fatalf("expected type gameCenterAppVersions, got %s", payload.Data.Type)
+		}
+		if payload.Data.ID != "gcav-1" {
+			t.Fatalf("expected id gcav-1, got %s", payload.Data.ID)
+		}
+		if payload.Data.Attributes == nil || payload.Data.Attributes.Enabled == nil {
+			t.Fatalf("expected enabled attribute to be set")
+		}
+		if *payload.Data.Attributes.Enabled != true {
+			t.Fatalf("expected enabled true, got %v", *payload.Data.Attributes.Enabled)
+		}
+		assertAuthorized(t, req)
+	}, response)
+
+	enabled := true
+	attrs := GameCenterAppVersionUpdateAttributes{Enabled: &enabled}
+	resp, err := client.UpdateGameCenterAppVersion(context.Background(), "gcav-1", attrs)
+	if err != nil {
+		t.Fatalf("UpdateGameCenterAppVersion() error: %v", err)
+	}
+
+	if resp.Data.ID != "gcav-1" {
+		t.Fatalf("expected ID gcav-1, got %s", resp.Data.ID)
+	}
+	if !resp.Data.Attributes.Enabled {
+		t.Fatalf("expected enabled true, got false")
 	}
 }
 

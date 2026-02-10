@@ -2,6 +2,8 @@ package asc
 
 import (
 	"context"
+	"encoding/json"
+	"io"
 	"net/http"
 	"net/url"
 	"testing"
@@ -285,5 +287,100 @@ func TestGetGameCenterDetailsRuleBasedMatchmakingRequests_UsesNextURL(t *testing
 
 	if _, err := client.GetGameCenterDetailsRuleBasedMatchmakingRequests(context.Background(), "detail-1", WithGCMatchmakingMetricsNextURL(next)); err != nil {
 		t.Fatalf("GetGameCenterDetailsRuleBasedMatchmakingRequests() error: %v", err)
+	}
+}
+
+func TestCreateGameCenterDetail(t *testing.T) {
+	response := jsonResponse(http.StatusCreated, `{"data":{"type":"gameCenterDetails","id":"detail-new","attributes":{"challengeEnabled":true}}}`)
+	client := newTestClient(t, func(req *http.Request) {
+		if req.Method != http.MethodPost {
+			t.Fatalf("expected POST, got %s", req.Method)
+		}
+		if req.URL.Path != "/v1/gameCenterDetails" {
+			t.Fatalf("expected path /v1/gameCenterDetails, got %s", req.URL.Path)
+		}
+
+		body, err := io.ReadAll(req.Body)
+		if err != nil {
+			t.Fatalf("failed to read request body: %v", err)
+		}
+
+		var payload GameCenterDetailCreateRequest
+		if err := json.Unmarshal(body, &payload); err != nil {
+			t.Fatalf("failed to unmarshal request body: %v", err)
+		}
+
+		if payload.Data.Type != ResourceTypeGameCenterDetails {
+			t.Fatalf("expected type gameCenterDetails, got %s", payload.Data.Type)
+		}
+		if payload.Data.Relationships == nil || payload.Data.Relationships.App == nil {
+			t.Fatalf("expected app relationship to be set")
+		}
+		if payload.Data.Relationships.App.Data.ID != "app-123" {
+			t.Fatalf("expected app ID app-123, got %s", payload.Data.Relationships.App.Data.ID)
+		}
+		if payload.Data.Relationships.App.Data.Type != ResourceTypeApps {
+			t.Fatalf("expected app type apps, got %s", payload.Data.Relationships.App.Data.Type)
+		}
+		assertAuthorized(t, req)
+	}, response)
+
+	resp, err := client.CreateGameCenterDetail(context.Background(), "app-123", nil)
+	if err != nil {
+		t.Fatalf("CreateGameCenterDetail() error: %v", err)
+	}
+
+	if resp.Data.ID != "detail-new" {
+		t.Fatalf("expected ID detail-new, got %s", resp.Data.ID)
+	}
+}
+
+func TestUpdateGameCenterDetail(t *testing.T) {
+	response := jsonResponse(http.StatusOK, `{"data":{"type":"gameCenterDetails","id":"detail-1","attributes":{"challengeEnabled":true}}}`)
+	client := newTestClient(t, func(req *http.Request) {
+		if req.Method != http.MethodPatch {
+			t.Fatalf("expected PATCH, got %s", req.Method)
+		}
+		if req.URL.Path != "/v1/gameCenterDetails/detail-1" {
+			t.Fatalf("expected path /v1/gameCenterDetails/detail-1, got %s", req.URL.Path)
+		}
+
+		body, err := io.ReadAll(req.Body)
+		if err != nil {
+			t.Fatalf("failed to read request body: %v", err)
+		}
+
+		var payload GameCenterDetailUpdateRequest
+		if err := json.Unmarshal(body, &payload); err != nil {
+			t.Fatalf("failed to unmarshal request body: %v", err)
+		}
+
+		if payload.Data.Type != ResourceTypeGameCenterDetails {
+			t.Fatalf("expected type gameCenterDetails, got %s", payload.Data.Type)
+		}
+		if payload.Data.ID != "detail-1" {
+			t.Fatalf("expected id detail-1, got %s", payload.Data.ID)
+		}
+		if payload.Data.Attributes == nil || payload.Data.Attributes.ChallengeEnabled == nil {
+			t.Fatalf("expected challengeEnabled attribute to be set")
+		}
+		if *payload.Data.Attributes.ChallengeEnabled != true {
+			t.Fatalf("expected challengeEnabled true, got %v", *payload.Data.Attributes.ChallengeEnabled)
+		}
+		assertAuthorized(t, req)
+	}, response)
+
+	enabled := true
+	attrs := &GameCenterDetailUpdateAttributes{ChallengeEnabled: &enabled}
+	resp, err := client.UpdateGameCenterDetail(context.Background(), "detail-1", attrs, nil)
+	if err != nil {
+		t.Fatalf("UpdateGameCenterDetail() error: %v", err)
+	}
+
+	if resp.Data.ID != "detail-1" {
+		t.Fatalf("expected ID detail-1, got %s", resp.Data.ID)
+	}
+	if !resp.Data.Attributes.ChallengeEnabled {
+		t.Fatalf("expected challengeEnabled true, got false")
 	}
 }

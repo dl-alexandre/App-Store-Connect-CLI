@@ -56,15 +56,15 @@ type GameCenterDetailCreateRelationships struct {
 
 // GameCenterDetailUpdateRelationships describes relationships for updating a Game Center detail.
 type GameCenterDetailUpdateRelationships struct {
-	GameCenterGroup  *Relationship `json:"gameCenterGroup,omitempty"`
+	GameCenterGroup    *Relationship `json:"gameCenterGroup,omitempty"`
 	DefaultLeaderboard *Relationship `json:"defaultLeaderboard,omitempty"`
 }
 
 // GameCenterDetailCreateData is the data portion of a detail create request.
 type GameCenterDetailCreateData struct {
-	Type          ResourceType                          `json:"type"`
-	Attributes    *GameCenterDetailCreateAttributes     `json:"attributes,omitempty"`
-	Relationships *GameCenterDetailCreateRelationships  `json:"relationships"`
+	Type          ResourceType                         `json:"type"`
+	Attributes    *GameCenterDetailCreateAttributes    `json:"attributes,omitempty"`
+	Relationships *GameCenterDetailCreateRelationships `json:"relationships"`
 }
 
 // GameCenterDetailCreateRequest is a request to create a Game Center detail.
@@ -74,10 +74,10 @@ type GameCenterDetailCreateRequest struct {
 
 // GameCenterDetailUpdateData is the data portion of a detail update request.
 type GameCenterDetailUpdateData struct {
-	Type          ResourceType                          `json:"type"`
-	ID            string                                `json:"id"`
-	Attributes    *GameCenterDetailUpdateAttributes     `json:"attributes,omitempty"`
-	Relationships *GameCenterDetailUpdateRelationships  `json:"relationships,omitempty"`
+	Type          ResourceType                         `json:"type"`
+	ID            string                               `json:"id"`
+	Attributes    *GameCenterDetailUpdateAttributes    `json:"attributes,omitempty"`
+	Relationships *GameCenterDetailUpdateRelationships `json:"relationships,omitempty"`
 }
 
 // GameCenterDetailUpdateRequest is a request to update a Game Center detail.

@@ -208,7 +208,8 @@ Examples:
 				return flag.ErrHelp
 			}
 
-			if capabilityValue == "" && settingsValue == nil {
+			// Treat empty settings arrays as no-op updates.
+			if capabilityValue == "" && len(settingsValue) == 0 {
 				fmt.Fprintln(os.Stderr, "Error: at least one update field is required (--capability or --settings)")
 				return flag.ErrHelp
 			}

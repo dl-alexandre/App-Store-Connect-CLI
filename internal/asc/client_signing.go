@@ -190,6 +190,9 @@ func (c *Client) CreateBundleIDCapability(ctx context.Context, bundleID string, 
 // UpdateBundleIDCapability updates an existing bundle ID capability.
 func (c *Client) UpdateBundleIDCapability(ctx context.Context, capabilityID string, attrs BundleIDCapabilityUpdateAttributes) (*BundleIDCapabilityResponse, error) {
 	capabilityID = strings.TrimSpace(capabilityID)
+	if capabilityID == "" {
+		return nil, fmt.Errorf("capability ID is required")
+	}
 	request := BundleIDCapabilityUpdateRequest{
 		Data: BundleIDCapabilityUpdateData{
 			Type:       ResourceTypeBundleIdCapabilities,

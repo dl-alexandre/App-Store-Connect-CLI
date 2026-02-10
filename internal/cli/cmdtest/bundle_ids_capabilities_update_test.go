@@ -56,6 +56,28 @@ func TestBundleIDCapabilitiesUpdateNoUpdateFields(t *testing.T) {
 	}
 }
 
+func TestBundleIDCapabilitiesUpdateEmptySettingsArrayNoUpdateFields(t *testing.T) {
+	root := RootCommand("1.2.3")
+	root.FlagSet.SetOutput(io.Discard)
+
+	stdout, stderr := captureOutput(t, func() {
+		if err := root.Parse([]string{"bundle-ids", "capabilities", "update", "--id", "cap1", "--settings", "[]"}); err != nil {
+			t.Fatalf("parse error: %v", err)
+		}
+		err := root.Run(context.Background())
+		if !errors.Is(err, flag.ErrHelp) {
+			t.Fatalf("expected ErrHelp, got %v", err)
+		}
+	})
+
+	if stdout != "" {
+		t.Fatalf("expected empty stdout, got %q", stdout)
+	}
+	if !strings.Contains(stderr, "at least one update field is required") {
+		t.Fatalf("expected update field required error, got %q", stderr)
+	}
+}
+
 func TestBundleIDCapabilitiesUpdateInvalidSettingsJSON(t *testing.T) {
 	root := RootCommand("1.2.3")
 	root.FlagSet.SetOutput(io.Discard)

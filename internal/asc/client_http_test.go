@@ -5751,6 +5751,38 @@ func TestUpdateBundleIDCapability_UsesPatchPath(t *testing.T) {
 	}
 }
 
+func TestUpdateBundleIDCapability_RequiresID(t *testing.T) {
+	called := false
+	client := newTestClient(t, func(req *http.Request) {
+		called = true
+	}, jsonResponse(http.StatusOK, `{"data":{"type":"bundleIdCapabilities","id":"cap1"}}`))
+
+	_, err := client.UpdateBundleIDCapability(context.Background(), "   ", BundleIDCapabilityUpdateAttributes{
+		CapabilityType: "ICLOUD",
+	})
+	if err == nil {
+		t.Fatal("expected error")
+	}
+	if called {
+		t.Fatal("expected request not to be sent")
+	}
+}
+
+func TestUpdateBundleIDCapability_ReturnsAPIError(t *testing.T) {
+	response := jsonResponse(http.StatusForbidden, `{"errors":[{"code":"FORBIDDEN","title":"Forbidden","detail":"not allowed"}]}`)
+	client := newTestClient(t, nil, response)
+
+	_, err := client.UpdateBundleIDCapability(context.Background(), "cap1", BundleIDCapabilityUpdateAttributes{
+		CapabilityType: "ICLOUD",
+	})
+	if err == nil {
+		t.Fatal("expected error")
+	}
+	if !errors.Is(err, ErrForbidden) {
+		t.Fatalf("expected forbidden error, got %v", err)
+	}
+}
+
 func TestGetCertificates_WithFilter(t *testing.T) {
 	response := jsonResponse(http.StatusOK, `{"data":[{"type":"certificates","id":"c1","attributes":{"name":"Cert","certificateType":"IOS_DISTRIBUTION"}}]}`)
 	client := newTestClient(t, func(req *http.Request) {

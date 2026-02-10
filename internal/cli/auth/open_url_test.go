@@ -19,3 +19,9 @@ func TestOpenURLRejectsUnsupportedScheme(t *testing.T) {
 		t.Fatal("expected error, got nil")
 	}
 }
+
+func TestOpenURLRejectsMalformedHostURL(t *testing.T) {
+	if err := openURL("http://localhost:80:80/path"); err == nil {
+		t.Fatal("expected error, got nil")
+	}
+}

@@ -30,12 +30,14 @@ import (
 	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/completion"
 	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/crashes"
 	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/devices"
+	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/docs"
 	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/encryption"
 	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/eula"
 	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/feedback"
 	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/finance"
 	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/gamecenter"
 	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/iap"
+	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/initcmd"
 	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/install"
 	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/localizations"
 	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/marketplace"
@@ -88,6 +90,8 @@ func Subcommands(version string) []*ffcli.Command {
 	subs := []*ffcli.Command{
 		auth.AuthCommand(),
 		install.InstallCommand(),
+		initcmd.InitCommand(),
+		docs.DocsCommand(),
 		feedback.FeedbackCommand(),
 		crashes.CrashesCommand(),
 		reviews.ReviewsCommand(),

@@ -145,6 +145,7 @@ Use `asc <command> --help` for subcommands and flags.
 - `encryption` - Manage app encryption declarations and documents.
 - `promoted-purchases` - Manage promoted purchases for subscriptions and in-app purchases.
 - `migrate` - Migrate metadata from/to fastlane format.
+- `validate` - Run pre-submission metadata and asset validation checks.
 - `notify` - Send notifications to external services.
 - `game-center` - Manage Game Center resources in App Store Connect.
 - `version` - Print version information and exit.

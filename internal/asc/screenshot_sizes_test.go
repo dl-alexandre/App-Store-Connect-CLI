@@ -7,7 +7,6 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"slices"
 	"sort"
 	"strings"
 	"testing"
@@ -74,8 +73,16 @@ func TestScreenshotDisplayTypesMatchOpenAPI(t *testing.T) {
 	codeTypes := ScreenshotDisplayTypes()
 	sort.Strings(codeTypes)
 
-	if !slices.Equal(specTypes, codeTypes) {
-		t.Fatalf("screenshot display types drifted from OpenAPI: spec=%v code=%v", specTypes, codeTypes)
+	missingFromCode := differenceStrings(specTypes, codeTypes)
+	if len(missingFromCode) > 0 {
+		t.Fatalf("missing screenshot display types from OpenAPI: %v", missingFromCode)
+	}
+
+	extrasInCode := differenceStrings(codeTypes, specTypes)
+	allowedExtras := []string{"APP_IPHONE_69", "IMESSAGE_APP_IPHONE_69"}
+	unexpectedExtras := differenceStrings(extrasInCode, allowedExtras)
+	if len(unexpectedExtras) > 0 {
+		t.Fatalf("unexpected screenshot display types not in OpenAPI: %v", unexpectedExtras)
 	}
 }
 
@@ -96,6 +103,27 @@ func TestScreenshotSizeEntryIncludesLatestLargeIPhoneDimensions(t *testing.T) {
 	for _, dim := range expected {
 		if !containsScreenshotDimension(entry.Dimensions, dim) {
 			t.Fatalf("expected APP_IPHONE_67 to include %s, got %v", dim.String(), entry.Dimensions)
+		}
+	}
+}
+
+func TestScreenshotSizeEntryIncludesIPhone69Dimensions(t *testing.T) {
+	entry, ok := ScreenshotSizeEntryForDisplayType("APP_IPHONE_69")
+	if !ok {
+		t.Fatal("expected APP_IPHONE_69 entry in screenshot size catalog")
+	}
+
+	expected := []ScreenshotDimension{
+		{Width: 1260, Height: 2736},
+		{Width: 2736, Height: 1260},
+		{Width: 1290, Height: 2796},
+		{Width: 2796, Height: 1290},
+		{Width: 1320, Height: 2868},
+		{Width: 2868, Height: 1320},
+	}
+	for _, dim := range expected {
+		if !containsScreenshotDimension(entry.Dimensions, dim) {
+			t.Fatalf("expected APP_IPHONE_69 to include %s, got %v", dim.String(), entry.Dimensions)
 		}
 	}
 }
@@ -307,4 +335,21 @@ func containsScreenshotDimension(dims []ScreenshotDimension, target ScreenshotDi
 		}
 	}
 	return false
+}
+
+func differenceStrings(left, right []string) []string {
+	if len(left) == 0 {
+		return nil
+	}
+	rightSet := make(map[string]struct{}, len(right))
+	for _, value := range right {
+		rightSet[value] = struct{}{}
+	}
+	var diff []string
+	for _, value := range left {
+		if _, ok := rightSet[value]; !ok {
+			diff = append(diff, value)
+		}
+	}
+	return diff
 }

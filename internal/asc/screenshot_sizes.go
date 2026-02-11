@@ -69,6 +69,12 @@ func uniqueSortedDimensions(dims []ScreenshotDimension) []ScreenshotDimension {
 }
 
 var (
+	iphone69Dimensions = combineDimensions(
+		portraitLandscape(1260, 2736),
+		portraitLandscape(1290, 2796),
+		portraitLandscape(1320, 2868),
+		portraitLandscape(1284, 2778),
+	)
 	iphone67Dimensions = combineDimensions(
 		portraitLandscape(1260, 2736),
 		portraitLandscape(1290, 2796),
@@ -109,6 +115,7 @@ var (
 )
 
 var screenshotSizeRegistry = map[string][]ScreenshotDimension{
+	"APP_IPHONE_69":                  iphone69Dimensions,
 	"APP_IPHONE_67":                  iphone67Dimensions,
 	"APP_IPHONE_61":                  iphone61Dimensions,
 	"APP_IPHONE_65":                  iphone65Dimensions,
@@ -130,6 +137,7 @@ var screenshotSizeRegistry = map[string][]ScreenshotDimension{
 	"APP_WATCH_SERIES_3":             watchSeries3Dimensions,
 	"APP_APPLE_TV":                   appleTVDimensions,
 	"APP_APPLE_VISION_PRO":           visionProDimensions,
+	"IMESSAGE_APP_IPHONE_69":         iphone69Dimensions,
 	"IMESSAGE_APP_IPHONE_67":         iphone67Dimensions,
 	"IMESSAGE_APP_IPHONE_61":         iphone61Dimensions,
 	"IMESSAGE_APP_IPHONE_65":         iphone65Dimensions,

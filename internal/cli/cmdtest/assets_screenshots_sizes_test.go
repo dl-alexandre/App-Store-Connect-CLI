@@ -77,8 +77,8 @@ func TestAssetsScreenshotsSizesOutputSupportsIPhone69Alias(t *testing.T) {
 	if len(result.Sizes) != 1 {
 		t.Fatalf("expected one filtered entry, got %d", len(result.Sizes))
 	}
-	if result.Sizes[0].DisplayType != "APP_IPHONE_67" {
-		t.Fatalf("expected APP_IPHONE_67 from alias, got %q", result.Sizes[0].DisplayType)
+	if result.Sizes[0].DisplayType != "APP_IPHONE_69" {
+		t.Fatalf("expected APP_IPHONE_69, got %q", result.Sizes[0].DisplayType)
 	}
 }
 
@@ -106,8 +106,8 @@ func TestAssetsScreenshotsSizesOutputSupportsIMessageIPhone69Alias(t *testing.T)
 	if len(result.Sizes) != 1 {
 		t.Fatalf("expected one filtered entry, got %d", len(result.Sizes))
 	}
-	if result.Sizes[0].DisplayType != "IMESSAGE_APP_IPHONE_67" {
-		t.Fatalf("expected IMESSAGE_APP_IPHONE_67 from alias, got %q", result.Sizes[0].DisplayType)
+	if result.Sizes[0].DisplayType != "IMESSAGE_APP_IPHONE_69" {
+		t.Fatalf("expected IMESSAGE_APP_IPHONE_69, got %q", result.Sizes[0].DisplayType)
 	}
 }
 

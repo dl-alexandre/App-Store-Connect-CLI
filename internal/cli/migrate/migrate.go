@@ -49,8 +49,8 @@ func MigrateImportCommand() *ffcli.Command {
 	fs := flag.NewFlagSet("migrate import", flag.ExitOnError)
 
 	appID := fs.String("app", "", "App Store Connect app ID (or ASC_APP_ID)")
-	versionID := fs.String("version-id", "", "App Store version ID (required)")
-	fastlaneDir := fs.String("fastlane-dir", "", "Path to fastlane directory (required)")
+	versionID := fs.String("version-id", "", "App Store version ID (required unless Deliverfile app_version + platform)")
+	fastlaneDir := fs.String("fastlane-dir", "", "Path to fastlane directory (optional)")
 	dryRun := fs.Bool("dry-run", false, "Preview changes without uploading")
 	output := fs.String("output", shared.DefaultOutputFormat(), "Output format: json (default), table, markdown")
 	pretty := fs.Bool("pretty", false, "Pretty-print JSON output")
@@ -61,22 +61,34 @@ func MigrateImportCommand() *ffcli.Command {
 		ShortHelp:  "Import metadata from fastlane directory structure.",
 		LongHelp: `Import metadata from fastlane directory structure.
 
-Reads from the standard fastlane structure:
+Reads from Deliver-style structure using --fastlane-dir, Deliverfile values,
+or conventional metadata/ and screenshots/ directories:
   fastlane/
+  ├── Deliverfile
   ├── metadata/
   │   ├── en-US/
-  │   │   ├── name.txt           (App Info)
-  │   │   ├── subtitle.txt       (App Info)
-  │   │   ├── description.txt    (Version)
-  │   │   ├── keywords.txt       (Version)
-  │   │   ├── release_notes.txt  (Version)
+  │   │   ├── name.txt            (App Info)
+  │   │   ├── subtitle.txt        (App Info)
+  │   │   ├── privacy_url.txt     (App Info)
+  │   │   ├── description.txt     (Version)
+  │   │   ├── keywords.txt        (Version)
+  │   │   ├── release_notes.txt   (Version)
   │   │   ├── promotional_text.txt (Version)
-  │   │   ├── support_url.txt    (Version)
-  │   │   └── marketing_url.txt  (Version)
-  │   └── de-DE/
-  │       └── ...
-
-Note: privacy_url.txt is not supported (app-level, not localized).
+  │   │   ├── support_url.txt     (Version)
+  │   │   └── marketing_url.txt   (Version)
+  │   ├── review_information/
+  │   │   ├── first_name.txt
+  │   │   ├── last_name.txt
+  │   │   ├── email_address.txt
+  │   │   ├── phone_number.txt
+  │   │   ├── demo_user.txt
+  │   │   ├── demo_password.txt
+  │   │   ├── demo_required.txt
+  │   │   └── notes.txt
+  ├── screenshots/
+  │   ├── en-US/
+  │   │   ├── iphone_65_1.png
+  │   │   └── ...
 
 Examples:
   asc migrate import --app "APP_ID" --version-id "VERSION_ID" --fastlane-dir ./fastlane
@@ -84,175 +96,167 @@ Examples:
 		FlagSet:   fs,
 		UsageFunc: shared.DefaultUsageFunc,
 		Exec: func(ctx context.Context, args []string) error {
-			if strings.TrimSpace(*versionID) == "" {
-				fmt.Fprintln(os.Stderr, "Error: --version-id is required")
-				return flag.ErrHelp
-			}
-			if strings.TrimSpace(*fastlaneDir) == "" {
-				fmt.Fprintln(os.Stderr, "Error: --fastlane-dir is required")
-				return flag.ErrHelp
-			}
-
-			resolvedAppID := shared.ResolveAppID(*appID)
-			if resolvedAppID == "" {
-				fmt.Fprintln(os.Stderr, "Error: --app is required (or set ASC_APP_ID)")
-				return flag.ErrHelp
-			}
-
-			metadataDir := filepath.Join(*fastlaneDir, "metadata")
-
-			// Read metadata from fastlane structure
-			localizations, err := readFastlaneMetadata(metadataDir)
-			if err != nil {
-				if os.IsNotExist(err) {
-					return fmt.Errorf("migrate import: metadata directory not found: %s", metadataDir)
-				}
-				return fmt.Errorf("migrate import: %w", err)
-			}
-
-			// Read App Info metadata (name, subtitle)
-			appInfoLocs, err := readFastlaneAppInfoMetadata(metadataDir)
-			if err != nil {
-				if os.IsNotExist(err) {
-					return fmt.Errorf("migrate import: metadata directory not found: %s", metadataDir)
-				}
-				return fmt.Errorf("migrate import: %w", err)
-			}
-
-			if *dryRun {
-				result := &MigrateImportResult{
-					DryRun:               true,
-					VersionID:            strings.TrimSpace(*versionID),
-					Localizations:        localizations,
-					AppInfoLocalizations: appInfoLocs,
-				}
-				return printMigrateOutput(result, *output, *pretty)
-			}
-
-			client, err := shared.GetASCClient()
+			workDir, err := os.Getwd()
 			if err != nil {
 				return fmt.Errorf("migrate import: %w", err)
 			}
 
-			requestCtx, cancel := shared.ContextWithTimeout(ctx)
-			defer cancel()
-
-			// Fetch existing localizations to get their IDs
-			existingLocs, err := client.GetAppStoreVersionLocalizations(requestCtx, strings.TrimSpace(*versionID))
+			inputs, skipped, err := resolveImportInputs(importInputOptions{
+				WorkDir:     workDir,
+				FastlaneDir: strings.TrimSpace(*fastlaneDir),
+			})
 			if err != nil {
-				return fmt.Errorf("migrate import: failed to fetch existing localizations: %w", err)
+				return fmt.Errorf("migrate import: %w", err)
 			}
 
-			// Build a map of locale -> localization ID
-			localeToID := make(map[string]string)
-			for _, loc := range existingLocs.Data {
-				localeToID[loc.Attributes.Locale] = loc.ID
-			}
-
-			// Upload each localization
-			uploaded := make([]LocalizationUploadItem, 0, len(localizations))
-			for _, loc := range localizations {
-				attrs := asc.AppStoreVersionLocalizationAttributes{
-					Locale:          loc.Locale,
-					Description:     loc.Description,
-					Keywords:        loc.Keywords,
-					WhatsNew:        loc.WhatsNew,
-					PromotionalText: loc.PromotionalText,
-					SupportURL:      loc.SupportURL,
-					MarketingURL:    loc.MarketingURL,
-				}
-
-				// Check if localization already exists
-				if existingID, exists := localeToID[loc.Locale]; exists {
-					// Update existing localization
-					_, err := client.UpdateAppStoreVersionLocalization(requestCtx, existingID, attrs)
-					if err != nil {
-						return fmt.Errorf("migrate import: failed to update %s: %w", loc.Locale, err)
-					}
-				} else {
-					// Create new localization
-					_, err := client.CreateAppStoreVersionLocalization(requestCtx, strings.TrimSpace(*versionID), attrs)
-					if err != nil {
-						return fmt.Errorf("migrate import: failed to create %s: %w", loc.Locale, err)
-					}
-				}
-
-				uploaded = append(uploaded, LocalizationUploadItem{
-					Locale: loc.Locale,
-					Fields: countNonEmptyFields(loc),
+			metadataDir := inputs.MetadataDir
+			screenshotsDir := inputs.ScreenshotsDir
+			if inputs.DeliverfileConfig.SkipMetadata && metadataDir != "" {
+				skipped = append(skipped, SkippedItem{
+					Path:   metadataDir,
+					Reason: "skip_metadata in Deliverfile",
 				})
+				metadataDir = ""
+			}
+			if inputs.DeliverfileConfig.SkipScreenshots && screenshotsDir != "" {
+				skipped = append(skipped, SkippedItem{
+					Path:   screenshotsDir,
+					Reason: "skip_screenshots in Deliverfile",
+				})
+				screenshotsDir = ""
 			}
 
-			// Upload App Info localizations (name, subtitle)
-			appInfoUploaded := make([]LocalizationUploadItem, 0, len(appInfoLocs))
-			if len(appInfoLocs) > 0 {
-				// Get AppInfo ID for the app
-				appInfos, err := client.GetAppInfos(requestCtx, resolvedAppID)
+			var localizations []FastlaneLocalization
+			var appInfoLocs []AppInfoFastlaneLocalization
+			var reviewInfo *ReviewInformation
+			if metadataDir != "" {
+				localizations, err = readFastlaneMetadata(metadataDir)
 				if err != nil {
-					return fmt.Errorf("migrate import: failed to get app info: %w", err)
+					return fmt.Errorf("migrate import: %w", err)
 				}
-				if len(appInfos.Data) == 0 {
-					return fmt.Errorf("migrate import: no app info found for app")
-				}
-				appInfoID := shared.SelectBestAppInfoID(appInfos)
-				if strings.TrimSpace(appInfoID) == "" {
-					return fmt.Errorf("migrate import: failed to select app info for app")
-				}
-
-				// Get existing App Info localizations
-				existingAppInfoLocs, err := client.GetAppInfoLocalizations(requestCtx, appInfoID)
+				appInfoLocs, err = readFastlaneAppInfoMetadata(metadataDir)
 				if err != nil {
-					return fmt.Errorf("migrate import: failed to fetch app info localizations: %w", err)
+					return fmt.Errorf("migrate import: %w", err)
 				}
-
-				// Build locale -> ID map
-				appInfoLocaleToID := make(map[string]string)
-				for _, loc := range existingAppInfoLocs.Data {
-					appInfoLocaleToID[loc.Attributes.Locale] = loc.ID
+				reviewInfo, err = readFastlaneReviewInformation(metadataDir)
+				if err != nil {
+					return fmt.Errorf("migrate import: %w", err)
 				}
+			}
 
-				// Upload each App Info localization
-				for _, loc := range appInfoLocs {
-					attrs := asc.AppInfoLocalizationAttributes{
-						Locale:   loc.Locale,
-						Name:     loc.Name,
-						Subtitle: loc.Subtitle,
-					}
-
-					if existingID, exists := appInfoLocaleToID[loc.Locale]; exists {
-						_, err := client.UpdateAppInfoLocalization(requestCtx, existingID, attrs)
-						if err != nil {
-							return fmt.Errorf("migrate import: failed to update app info %s: %w", loc.Locale, err)
-						}
-					} else {
-						_, err := client.CreateAppInfoLocalization(requestCtx, appInfoID, attrs)
-						if err != nil {
-							return fmt.Errorf("migrate import: failed to create app info %s: %w", loc.Locale, err)
-						}
-					}
-
-					fields := 0
-					if loc.Name != "" {
-						fields++
-					}
-					if loc.Subtitle != "" {
-						fields++
-					}
-					appInfoUploaded = append(appInfoUploaded, LocalizationUploadItem{
-						Locale: loc.Locale,
-						Fields: fields,
-					})
+			var screenshotPlan []ScreenshotPlan
+			var skippedScreenshots []SkippedItem
+			if screenshotsDir != "" {
+				screenshotPlan, skippedScreenshots, err = discoverScreenshotPlan(screenshotsDir)
+				if err != nil {
+					return fmt.Errorf("migrate import: %w", err)
 				}
+				skipped = append(skipped, skippedScreenshots...)
+			}
+
+			locales := collectLocales(localizations, appInfoLocs, screenshotPlan)
+			metadataFiles := buildMetadataFilePlans(localizations)
+			appInfoFiles := buildAppInfoFilePlans(appInfoLocs)
+
+			if strings.TrimSpace(*versionID) == "" && (strings.TrimSpace(inputs.DeliverfileConfig.AppVersion) == "" || strings.TrimSpace(inputs.DeliverfileConfig.Platform) == "") {
+				fmt.Fprintln(os.Stderr, "Error: --version-id is required (or set Deliverfile app_version and platform)")
+				return flag.ErrHelp
+			}
+			if strings.TrimSpace(*appID) == "" && strings.TrimSpace(inputs.DeliverfileConfig.AppIdentifier) == "" && shared.ResolveAppID("") == "" {
+				fmt.Fprintln(os.Stderr, "Error: --app is required (or set ASC_APP_ID or Deliverfile app_identifier)")
+				return flag.ErrHelp
+			}
+
+			var client *asc.Client
+			var requestCtx context.Context
+			var cancel context.CancelFunc
+			needsClient := !*dryRun ||
+				(strings.TrimSpace(*appID) == "" && strings.TrimSpace(inputs.DeliverfileConfig.AppIdentifier) != "") ||
+				(strings.TrimSpace(*versionID) == "" && strings.TrimSpace(inputs.DeliverfileConfig.AppVersion) != "" && strings.TrimSpace(inputs.DeliverfileConfig.Platform) != "")
+			if needsClient {
+				client, err = shared.GetASCClient()
+				if err != nil {
+					return fmt.Errorf("migrate import: %w", err)
+				}
+				requestCtx, cancel = shared.ContextWithTimeout(ctx)
+				defer cancel()
+			} else {
+				requestCtx = ctx
+			}
+
+			resolvedAppID, err := resolveAppID(requestCtx, client, *appID, inputs.DeliverfileConfig)
+			if err != nil {
+				return fmt.Errorf("migrate import: %w", err)
+			}
+			resolvedVersionID, err := resolveVersionID(requestCtx, client, *versionID, resolvedAppID, inputs.DeliverfileConfig)
+			if err != nil {
+				return fmt.Errorf("migrate import: %w", err)
 			}
 
 			result := &MigrateImportResult{
-				DryRun:               false,
-				VersionID:            strings.TrimSpace(*versionID),
+				DryRun:               *dryRun,
+				VersionID:            resolvedVersionID,
+				AppID:                resolvedAppID,
+				DeliverfilePath:      inputs.DeliverfilePath,
+				MetadataDir:          metadataDir,
+				ScreenshotsDir:       screenshotsDir,
+				Locales:              locales,
 				Localizations:        localizations,
 				AppInfoLocalizations: appInfoLocs,
-				Uploaded:             uploaded,
-				AppInfoUploaded:      appInfoUploaded,
+				MetadataFiles:        metadataFiles,
+				AppInfoFiles:         appInfoFiles,
+				ReviewInformation:    reviewInfo,
+				ScreenshotPlan:       screenshotPlan,
+				Skipped:              skipped,
 			}
+
+			if *dryRun {
+				return printMigrateOutput(result, *output, *pretty)
+			}
+
+			if client == nil {
+				client, err = shared.GetASCClient()
+				if err != nil {
+					return fmt.Errorf("migrate import: %w", err)
+				}
+			}
+			if requestCtx == nil {
+				requestCtx, cancel = shared.ContextWithTimeout(ctx)
+				defer cancel()
+			}
+
+			localeToID := make(map[string]string)
+			if len(localizations) > 0 || len(screenshotPlan) > 0 {
+				existingLocs, err := client.GetAppStoreVersionLocalizations(requestCtx, strings.TrimSpace(resolvedVersionID), asc.WithAppStoreVersionLocalizationsLimit(200))
+				if err != nil {
+					return fmt.Errorf("migrate import: failed to fetch existing localizations: %w", err)
+				}
+				for _, loc := range existingLocs.Data {
+					localeToID[loc.Attributes.Locale] = loc.ID
+				}
+			}
+
+			uploaded, err := uploadVersionLocalizations(requestCtx, client, resolvedVersionID, localizations, localeToID)
+			if err != nil {
+				return err
+			}
+			appInfoUploaded, err := uploadAppInfoLocalizations(requestCtx, client, resolvedAppID, appInfoLocs)
+			if err != nil {
+				return err
+			}
+			reviewResult, err := uploadReviewInformation(requestCtx, client, resolvedVersionID, reviewInfo)
+			if err != nil {
+				return err
+			}
+			screenshotResults, err := uploadScreenshots(requestCtx, client, resolvedVersionID, localeToID, screenshotPlan)
+			if err != nil {
+				return err
+			}
+
+			result.Uploaded = uploaded
+			result.AppInfoUploaded = appInfoUploaded
+			result.ReviewInfoResult = reviewResult
+			result.ScreenshotResults = screenshotResults
 
 			return printMigrateOutput(result, *output, *pretty)
 		},
@@ -384,25 +388,55 @@ type FastlaneLocalization struct {
 
 // AppInfoFastlaneLocalization holds app-level metadata (name, subtitle) from fastlane.
 type AppInfoFastlaneLocalization struct {
-	Locale   string `json:"locale"`
-	Name     string `json:"name,omitempty"`
-	Subtitle string `json:"subtitle,omitempty"`
+	Locale     string `json:"locale"`
+	Name       string `json:"name,omitempty"`
+	Subtitle   string `json:"subtitle,omitempty"`
+	PrivacyURL string `json:"privacyUrl,omitempty"`
 }
 
 // LocalizationUploadItem represents an uploaded localization.
 type LocalizationUploadItem struct {
-	Locale string `json:"locale"`
-	Fields int    `json:"fields"`
+	Locale         string `json:"locale"`
+	Fields         int    `json:"fields"`
+	Action         string `json:"action,omitempty"`
+	LocalizationID string `json:"localizationId,omitempty"`
+}
+
+type LocalizationFilePlan struct {
+	Locale string   `json:"locale"`
+	Files  []string `json:"files"`
+}
+
+type ReviewInfoResult struct {
+	Action   string `json:"action,omitempty"`
+	DetailID string `json:"detailId,omitempty"`
+}
+
+type SkippedItem struct {
+	Path   string `json:"path"`
+	Reason string `json:"reason"`
 }
 
 // MigrateImportResult is the result of a migrate import operation.
 type MigrateImportResult struct {
 	DryRun               bool                          `json:"dryRun"`
 	VersionID            string                        `json:"versionId"`
-	Localizations        []FastlaneLocalization        `json:"localizations"`
+	AppID                string                        `json:"appId,omitempty"`
+	DeliverfilePath      string                        `json:"deliverfilePath,omitempty"`
+	MetadataDir          string                        `json:"metadataDir,omitempty"`
+	ScreenshotsDir       string                        `json:"screenshotsDir,omitempty"`
+	Locales              []string                      `json:"locales,omitempty"`
+	Localizations        []FastlaneLocalization        `json:"localizations,omitempty"`
 	AppInfoLocalizations []AppInfoFastlaneLocalization `json:"appInfoLocalizations,omitempty"`
+	MetadataFiles        []LocalizationFilePlan        `json:"metadataFiles,omitempty"`
+	AppInfoFiles         []LocalizationFilePlan        `json:"appInfoFiles,omitempty"`
+	ReviewInformation    *ReviewInformation            `json:"reviewInformation,omitempty"`
+	ScreenshotPlan       []ScreenshotPlan              `json:"screenshotPlan,omitempty"`
+	Skipped              []SkippedItem                 `json:"skipped,omitempty"`
 	Uploaded             []LocalizationUploadItem      `json:"uploaded,omitempty"`
 	AppInfoUploaded      []LocalizationUploadItem      `json:"appInfoUploaded,omitempty"`
+	ReviewInfoResult     *ReviewInfoResult             `json:"reviewInfoResult,omitempty"`
+	ScreenshotResults    []ScreenshotUploadResult      `json:"screenshotResults,omitempty"`
 }
 
 // MigrateExportResult is the result of a migrate export operation.
@@ -420,6 +454,7 @@ func readFastlaneMetadata(metadataDir string) ([]FastlaneLocalization, error) {
 		return nil, fmt.Errorf("failed to read metadata directory: %w", err)
 	}
 
+	seen := make(map[string]bool)
 	var localizations []FastlaneLocalization
 	for _, entry := range entries {
 		if !entry.IsDir() {
@@ -431,8 +466,17 @@ func readFastlaneMetadata(metadataDir string) ([]FastlaneLocalization, error) {
 			continue // Skip special directories
 		}
 
+		normalized, err := normalizeLocale(locale)
+		if err != nil {
+			return nil, fmt.Errorf("invalid locale %q in metadata: %w", locale, err)
+		}
+		if seen[normalized] {
+			return nil, fmt.Errorf("duplicate locale %q in metadata", normalized)
+		}
+		seen[normalized] = true
+
 		localeDir := filepath.Join(metadataDir, locale)
-		loc := FastlaneLocalization{Locale: locale}
+		loc := FastlaneLocalization{Locale: normalized}
 
 		// Read each metadata file (version-level localization fields only)
 		loc.Description = readFileIfExists(filepath.Join(localeDir, "description.txt"))
@@ -455,6 +499,7 @@ func readFastlaneAppInfoMetadata(metadataDir string) ([]AppInfoFastlaneLocalizat
 		return nil, fmt.Errorf("failed to read metadata directory: %w", err)
 	}
 
+	seen := make(map[string]bool)
 	var localizations []AppInfoFastlaneLocalization
 	for _, entry := range entries {
 		if !entry.IsDir() {
@@ -466,16 +511,27 @@ func readFastlaneAppInfoMetadata(metadataDir string) ([]AppInfoFastlaneLocalizat
 			continue
 		}
 
+		normalized, err := normalizeLocale(locale)
+		if err != nil {
+			return nil, fmt.Errorf("invalid locale %q in metadata: %w", locale, err)
+		}
+		if seen[normalized] {
+			return nil, fmt.Errorf("duplicate locale %q in metadata", normalized)
+		}
+		seen[normalized] = true
+
 		localeDir := filepath.Join(metadataDir, locale)
 		name := readFileIfExists(filepath.Join(localeDir, "name.txt"))
 		subtitle := readFileIfExists(filepath.Join(localeDir, "subtitle.txt"))
+		privacyURL := readFileIfExists(filepath.Join(localeDir, "privacy_url.txt"))
 
 		// Only include if at least one field has content
-		if name != "" || subtitle != "" {
+		if name != "" || subtitle != "" || privacyURL != "" {
 			localizations = append(localizations, AppInfoFastlaneLocalization{
-				Locale:   locale,
-				Name:     name,
-				Subtitle: subtitle,
+				Locale:     normalized,
+				Name:       name,
+				Subtitle:   subtitle,
+				PrivacyURL: privacyURL,
 			})
 		}
 	}
@@ -560,6 +616,57 @@ func countNonEmptyFields(loc FastlaneLocalization) int {
 		}
 	}
 	return count
+}
+
+func countAppInfoFields(loc AppInfoFastlaneLocalization) int {
+	count := 0
+	if loc.Name != "" {
+		count++
+	}
+	if loc.Subtitle != "" {
+		count++
+	}
+	if loc.PrivacyURL != "" {
+		count++
+	}
+	return count
+}
+
+func versionLocalizationFiles(loc FastlaneLocalization) []string {
+	files := []string{}
+	if loc.Description != "" {
+		files = append(files, "description.txt")
+	}
+	if loc.Keywords != "" {
+		files = append(files, "keywords.txt")
+	}
+	if loc.WhatsNew != "" {
+		files = append(files, "release_notes.txt")
+	}
+	if loc.PromotionalText != "" {
+		files = append(files, "promotional_text.txt")
+	}
+	if loc.SupportURL != "" {
+		files = append(files, "support_url.txt")
+	}
+	if loc.MarketingURL != "" {
+		files = append(files, "marketing_url.txt")
+	}
+	return files
+}
+
+func appInfoLocalizationFiles(loc AppInfoFastlaneLocalization) []string {
+	files := []string{}
+	if loc.Name != "" {
+		files = append(files, "name.txt")
+	}
+	if loc.Subtitle != "" {
+		files = append(files, "subtitle.txt")
+	}
+	if loc.PrivacyURL != "" {
+		files = append(files, "privacy_url.txt")
+	}
+	return files
 }
 
 // ValidationIssue represents a validation error or warning.

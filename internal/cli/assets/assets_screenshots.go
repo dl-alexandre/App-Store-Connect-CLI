@@ -298,14 +298,7 @@ func normalizeScreenshotDisplayType(input string) (string, error) {
 }
 
 func normalizeScreenshotDisplayTypeAlias(value string) string {
-	switch value {
-	case "APP_IPHONE_69":
-		return "APP_IPHONE_67"
-	case "IMESSAGE_APP_IPHONE_69":
-		return "IMESSAGE_APP_IPHONE_67"
-	default:
-		return value
-	}
+	return value
 }
 
 func validateScreenshotDimensions(files []string, displayType string) error {
@@ -382,6 +375,11 @@ func uploadScreenshotAsset(ctx context.Context, client *asc.Client, setID, fileP
 		AssetID:  created.Data.ID,
 		State:    state,
 	}, nil
+}
+
+// UploadScreenshotAsset uploads a screenshot file to a set.
+func UploadScreenshotAsset(ctx context.Context, client *asc.Client, setID, filePath string) (asc.AssetUploadResultItem, error) {
+	return uploadScreenshotAsset(ctx, client, setID, filePath)
 }
 
 func waitForScreenshotDelivery(ctx context.Context, client *asc.Client, screenshotID string) (string, error) {

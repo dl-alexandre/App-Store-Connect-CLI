@@ -63,8 +63,8 @@ func TestAssetsScreenshotsSizesCommandSupportsIPhone69Alias(t *testing.T) {
 	if len(result.Sizes) != 1 {
 		t.Fatalf("expected 1 size entry, got %d", len(result.Sizes))
 	}
-	if result.Sizes[0].DisplayType != "APP_IPHONE_67" {
-		t.Fatalf("expected APP_IPHONE_67 from alias, got %q", result.Sizes[0].DisplayType)
+	if result.Sizes[0].DisplayType != "APP_IPHONE_69" {
+		t.Fatalf("expected APP_IPHONE_69, got %q", result.Sizes[0].DisplayType)
 	}
 }
 
@@ -92,8 +92,8 @@ func TestAssetsScreenshotsSizesCommandSupportsIMessageIPhone69Alias(t *testing.T
 	if len(result.Sizes) != 1 {
 		t.Fatalf("expected 1 size entry, got %d", len(result.Sizes))
 	}
-	if result.Sizes[0].DisplayType != "IMESSAGE_APP_IPHONE_67" {
-		t.Fatalf("expected IMESSAGE_APP_IPHONE_67 from alias, got %q", result.Sizes[0].DisplayType)
+	if result.Sizes[0].DisplayType != "IMESSAGE_APP_IPHONE_69" {
+		t.Fatalf("expected IMESSAGE_APP_IPHONE_69, got %q", result.Sizes[0].DisplayType)
 	}
 }
 
@@ -102,9 +102,9 @@ func TestNormalizeScreenshotDisplayTypeAliasIPhone69Variants(t *testing.T) {
 		input string
 		want  string
 	}{
-		{input: "IPHONE_69", want: "APP_IPHONE_67"},
-		{input: "APP_IPHONE_69", want: "APP_IPHONE_67"},
-		{input: "imessage_app_iphone_69", want: "IMESSAGE_APP_IPHONE_67"},
+		{input: "IPHONE_69", want: "APP_IPHONE_69"},
+		{input: "APP_IPHONE_69", want: "APP_IPHONE_69"},
+		{input: "imessage_app_iphone_69", want: "IMESSAGE_APP_IPHONE_69"},
 	}
 
 	for _, tc := range testCases {

@@ -2,6 +2,7 @@ package migrate
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/asc"
 )
@@ -12,56 +13,142 @@ func printMigrateImportResultMarkdown(result *MigrateImportResult) error {
 		fmt.Println()
 	}
 	fmt.Printf("**Version ID:** %s\n\n", result.VersionID)
+	if result.AppID != "" {
+		fmt.Printf("**App ID:** %s\n\n", result.AppID)
+	}
+	if result.DeliverfilePath != "" {
+		fmt.Printf("**Deliverfile:** %s\n\n", result.DeliverfilePath)
+	}
+	if result.MetadataDir != "" {
+		fmt.Printf("**Metadata Dir:** %s\n\n", result.MetadataDir)
+	}
+	if result.ScreenshotsDir != "" {
+		fmt.Printf("**Screenshots Dir:** %s\n\n", result.ScreenshotsDir)
+	}
+	if len(result.Locales) > 0 {
+		fmt.Printf("**Locales:** %s\n\n", strings.Join(result.Locales, ", "))
+	}
 
-	// Version localizations
-	fmt.Println("### Version Localizations Found")
-	fmt.Println()
-	{
-		headers := []string{"Locale", "Fields"}
-		rows := make([][]string, 0, len(result.Localizations))
-		for _, loc := range result.Localizations {
-			rows = append(rows, []string{loc.Locale, fmt.Sprintf("%d", countNonEmptyFields(loc))})
+	if len(result.MetadataFiles) > 0 {
+		fmt.Println("### Version Metadata Files")
+		fmt.Println()
+		headers := []string{"Locale", "Files"}
+		rows := make([][]string, 0, len(result.MetadataFiles))
+		for _, item := range result.MetadataFiles {
+			rows = append(rows, []string{item.Locale, strings.Join(item.Files, "<br>")})
 		}
 		asc.RenderMarkdown(headers, rows)
 	}
 
-	// App Info localizations
-	if len(result.AppInfoLocalizations) > 0 {
+	if len(result.AppInfoFiles) > 0 {
 		fmt.Println()
-		fmt.Println("### App Info Localizations Found")
+		fmt.Println("### App Info Metadata Files")
 		fmt.Println()
-		headers := []string{"Locale", "Name", "Subtitle"}
-		rows := make([][]string, 0, len(result.AppInfoLocalizations))
-		for _, loc := range result.AppInfoLocalizations {
-			name := "-"
-			if loc.Name != "" {
-				name = "✓"
+		headers := []string{"Locale", "Files"}
+		rows := make([][]string, 0, len(result.AppInfoFiles))
+		for _, item := range result.AppInfoFiles {
+			rows = append(rows, []string{item.Locale, strings.Join(item.Files, "<br>")})
+		}
+		asc.RenderMarkdown(headers, rows)
+	}
+
+	if result.ReviewInformation != nil {
+		fmt.Println()
+		fmt.Println("### Review Information")
+		fmt.Println()
+		headers := []string{"Field", "Value"}
+		rows := make([][]string, 0, 8)
+		addReviewRow := func(label string, value *string) {
+			if value == nil {
+				return
 			}
-			subtitle := "-"
-			if loc.Subtitle != "" {
-				subtitle = "✓"
-			}
-			rows = append(rows, []string{loc.Locale, name, subtitle})
+			rows = append(rows, []string{label, *value})
+		}
+		addReviewRow("Contact First Name", result.ReviewInformation.ContactFirstName)
+		addReviewRow("Contact Last Name", result.ReviewInformation.ContactLastName)
+		addReviewRow("Contact Phone", result.ReviewInformation.ContactPhone)
+		addReviewRow("Contact Email", result.ReviewInformation.ContactEmail)
+		addReviewRow("Demo Account Name", result.ReviewInformation.DemoAccountName)
+		addReviewRow("Demo Account Password", result.ReviewInformation.DemoAccountPassword)
+		addReviewRow("Notes", result.ReviewInformation.Notes)
+		if result.ReviewInformation.DemoAccountRequired != nil {
+			rows = append(rows, []string{"Demo Account Required", fmt.Sprintf("%t", *result.ReviewInformation.DemoAccountRequired)})
+		}
+		if len(rows) > 0 {
+			asc.RenderMarkdown(headers, rows)
+		}
+	}
+
+	if len(result.ScreenshotPlan) > 0 {
+		fmt.Println()
+		fmt.Println("### Screenshot Plan")
+		fmt.Println()
+		headers := []string{"Locale", "Display Type", "Files"}
+		rows := make([][]string, 0, len(result.ScreenshotPlan))
+		for _, plan := range result.ScreenshotPlan {
+			rows = append(rows, []string{plan.Locale, plan.DisplayType, strings.Join(plan.Files, "<br>")})
+		}
+		asc.RenderMarkdown(headers, rows)
+	}
+
+	if len(result.Skipped) > 0 {
+		fmt.Println()
+		fmt.Println("### Skipped")
+		fmt.Println()
+		headers := []string{"Path", "Reason"}
+		rows := make([][]string, 0, len(result.Skipped))
+		for _, item := range result.Skipped {
+			rows = append(rows, []string{item.Path, item.Reason})
 		}
 		asc.RenderMarkdown(headers, rows)
 	}
 
 	if len(result.Uploaded) > 0 {
 		fmt.Println()
-		fmt.Println("### Uploaded")
+		fmt.Println("### Version Metadata Uploaded")
 		fmt.Println()
-		for _, u := range result.Uploaded {
-			fmt.Printf("- %s (%d fields)\n", u.Locale, u.Fields)
+		headers := []string{"Locale", "Fields", "Action"}
+		rows := make([][]string, 0, len(result.Uploaded))
+		for _, item := range result.Uploaded {
+			rows = append(rows, []string{item.Locale, fmt.Sprintf("%d", item.Fields), item.Action})
 		}
+		asc.RenderMarkdown(headers, rows)
 	}
 
 	if len(result.AppInfoUploaded) > 0 {
 		fmt.Println()
 		fmt.Println("### App Info Uploaded")
 		fmt.Println()
-		for _, u := range result.AppInfoUploaded {
-			fmt.Printf("- %s (%d fields)\n", u.Locale, u.Fields)
+		headers := []string{"Locale", "Fields", "Action"}
+		rows := make([][]string, 0, len(result.AppInfoUploaded))
+		for _, item := range result.AppInfoUploaded {
+			rows = append(rows, []string{item.Locale, fmt.Sprintf("%d", item.Fields), item.Action})
 		}
+		asc.RenderMarkdown(headers, rows)
+	}
+
+	if result.ReviewInfoResult != nil {
+		fmt.Println()
+		fmt.Println("### Review Information Result")
+		fmt.Println()
+		fmt.Printf("- %s (%s)\n", result.ReviewInfoResult.Action, result.ReviewInfoResult.DetailID)
+	}
+
+	if len(result.ScreenshotResults) > 0 {
+		fmt.Println()
+		fmt.Println("### Screenshot Uploads")
+		fmt.Println()
+		headers := []string{"Locale", "Display Type", "Uploaded", "Skipped"}
+		rows := make([][]string, 0, len(result.ScreenshotResults))
+		for _, item := range result.ScreenshotResults {
+			rows = append(rows, []string{
+				item.Locale,
+				item.DisplayType,
+				fmt.Sprintf("%d", len(item.Uploaded)),
+				fmt.Sprintf("%d", len(item.Skipped)),
+			})
+		}
+		asc.RenderMarkdown(headers, rows)
 	}
 
 	return nil
@@ -73,48 +160,119 @@ func printMigrateImportResultTable(result *MigrateImportResult) error {
 		fmt.Println()
 	}
 	fmt.Printf("Version ID: %s\n\n", result.VersionID)
+	if result.AppID != "" {
+		fmt.Printf("App ID: %s\n\n", result.AppID)
+	}
 
-	// Version localizations
-	fmt.Println("Version Localizations:")
-	{
-		headers := []string{"Locale", "Fields", "Status"}
-		rows := make([][]string, 0, len(result.Localizations))
-		for _, loc := range result.Localizations {
-			status := "found"
-			for _, u := range result.Uploaded {
-				if u.Locale == loc.Locale {
-					status = "uploaded"
-					break
-				}
-			}
-			rows = append(rows, []string{loc.Locale, fmt.Sprintf("%d", countNonEmptyFields(loc)), status})
+	if len(result.MetadataFiles) > 0 {
+		fmt.Println("Version Metadata Files:")
+		headers := []string{"Locale", "Files"}
+		rows := make([][]string, 0, len(result.MetadataFiles))
+		for _, item := range result.MetadataFiles {
+			rows = append(rows, []string{item.Locale, strings.Join(item.Files, ", ")})
 		}
 		asc.RenderTable(headers, rows)
 	}
 
-	// App Info localizations
-	if len(result.AppInfoLocalizations) > 0 {
+	if len(result.AppInfoFiles) > 0 {
 		fmt.Println()
-		fmt.Println("App Info Localizations:")
-		headers := []string{"Locale", "Name", "Subtitle", "Status"}
-		rows := make([][]string, 0, len(result.AppInfoLocalizations))
-		for _, loc := range result.AppInfoLocalizations {
-			status := "found"
-			for _, u := range result.AppInfoUploaded {
-				if u.Locale == loc.Locale {
-					status = "uploaded"
-					break
-				}
+		fmt.Println("App Info Metadata Files:")
+		headers := []string{"Locale", "Files"}
+		rows := make([][]string, 0, len(result.AppInfoFiles))
+		for _, item := range result.AppInfoFiles {
+			rows = append(rows, []string{item.Locale, strings.Join(item.Files, ", ")})
+		}
+		asc.RenderTable(headers, rows)
+	}
+
+	if result.ReviewInformation != nil {
+		fmt.Println()
+		fmt.Println("Review Information:")
+		headers := []string{"Field", "Value"}
+		rows := make([][]string, 0, 8)
+		addReviewRow := func(label string, value *string) {
+			if value == nil {
+				return
 			}
-			name := "-"
-			if loc.Name != "" {
-				name = "yes"
-			}
-			subtitle := "-"
-			if loc.Subtitle != "" {
-				subtitle = "yes"
-			}
-			rows = append(rows, []string{loc.Locale, name, subtitle, status})
+			rows = append(rows, []string{label, *value})
+		}
+		addReviewRow("Contact First Name", result.ReviewInformation.ContactFirstName)
+		addReviewRow("Contact Last Name", result.ReviewInformation.ContactLastName)
+		addReviewRow("Contact Phone", result.ReviewInformation.ContactPhone)
+		addReviewRow("Contact Email", result.ReviewInformation.ContactEmail)
+		addReviewRow("Demo Account Name", result.ReviewInformation.DemoAccountName)
+		addReviewRow("Demo Account Password", result.ReviewInformation.DemoAccountPassword)
+		addReviewRow("Notes", result.ReviewInformation.Notes)
+		if result.ReviewInformation.DemoAccountRequired != nil {
+			rows = append(rows, []string{"Demo Account Required", fmt.Sprintf("%t", *result.ReviewInformation.DemoAccountRequired)})
+		}
+		if len(rows) > 0 {
+			asc.RenderTable(headers, rows)
+		}
+	}
+
+	if len(result.ScreenshotPlan) > 0 {
+		fmt.Println()
+		fmt.Println("Screenshot Plan:")
+		headers := []string{"Locale", "Display Type", "Files"}
+		rows := make([][]string, 0, len(result.ScreenshotPlan))
+		for _, plan := range result.ScreenshotPlan {
+			rows = append(rows, []string{plan.Locale, plan.DisplayType, strings.Join(plan.Files, ", ")})
+		}
+		asc.RenderTable(headers, rows)
+	}
+
+	if len(result.Skipped) > 0 {
+		fmt.Println()
+		fmt.Println("Skipped:")
+		headers := []string{"Path", "Reason"}
+		rows := make([][]string, 0, len(result.Skipped))
+		for _, item := range result.Skipped {
+			rows = append(rows, []string{item.Path, item.Reason})
+		}
+		asc.RenderTable(headers, rows)
+	}
+
+	if len(result.Uploaded) > 0 {
+		fmt.Println()
+		fmt.Println("Version Metadata Uploaded:")
+		headers := []string{"Locale", "Fields", "Action"}
+		rows := make([][]string, 0, len(result.Uploaded))
+		for _, item := range result.Uploaded {
+			rows = append(rows, []string{item.Locale, fmt.Sprintf("%d", item.Fields), item.Action})
+		}
+		asc.RenderTable(headers, rows)
+	}
+
+	if len(result.AppInfoUploaded) > 0 {
+		fmt.Println()
+		fmt.Println("App Info Uploaded:")
+		headers := []string{"Locale", "Fields", "Action"}
+		rows := make([][]string, 0, len(result.AppInfoUploaded))
+		for _, item := range result.AppInfoUploaded {
+			rows = append(rows, []string{item.Locale, fmt.Sprintf("%d", item.Fields), item.Action})
+		}
+		asc.RenderTable(headers, rows)
+	}
+
+	if result.ReviewInfoResult != nil {
+		fmt.Println()
+		fmt.Println("Review Information Result:")
+		fmt.Printf("%s (%s)\n", result.ReviewInfoResult.Action, result.ReviewInfoResult.DetailID)
+	}
+
+	if len(result.ScreenshotResults) > 0 {
+		fmt.Println()
+		fmt.Println("Screenshot Uploads:")
+		headers := []string{"Locale", "Display Type", "Uploaded", "Skipped"}
+		rows := make([][]string, 0, len(result.ScreenshotResults))
+		for _, item := range result.ScreenshotResults {
+			rows = append(rows, []string{
+				item.Locale,
+				item.DisplayType,
+				fmt.Sprintf("%d", len(item.Uploaded)),
+				fmt.Sprintf("%d", len(item.Skipped)),
+			})
 		}
 		asc.RenderTable(headers, rows)
 	}

@@ -1534,14 +1534,17 @@ asc build-localizations get --id "LOCALIZATION_ID"
 
 ### Migrate (Fastlane Compatibility)
 
-Validate and migrate metadata between ASC's `.strings` format and Fastlane directory structure.
+Validate and migrate metadata between ASC's `.strings` format and Deliver-style directory layout.
 
 ```bash
 # Validate metadata against App Store Connect character limits (offline)
-asc migrate validate --fastlane-dir ./metadata
+asc migrate validate --fastlane-dir ./fastlane
 
-# Import metadata from fastlane format to App Store Connect
-asc migrate import --app "123456789" --version-id "VERSION_ID" --fastlane-dir ./metadata
+# Import metadata, review info, and screenshots from Deliver-style layout
+asc migrate import --app "123456789" --version-id "VERSION_ID" --fastlane-dir ./fastlane
+
+# Import from project root using Deliverfile (app_identifier + app_version + platform)
+asc migrate import --dry-run
 
 # Export metadata from App Store Connect to fastlane format
 asc migrate export --app "123456789" --version-id "VERSION_ID" --output-dir ./exported-metadata

@@ -29,8 +29,8 @@ var ageRatingOverrideV2Values = map[string]struct{}{
 }
 
 var koreaAgeRatingOverrideValues = map[string]struct{}{
-	"NONE":         {},
-	"FIFTEEN_PLUS": {},
+	"NONE":          {},
+	"FIFTEEN_PLUS":  {},
 	"NINETEEN_PLUS": {},
 }
 

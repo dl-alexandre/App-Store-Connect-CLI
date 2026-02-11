@@ -170,15 +170,15 @@ func fetchScreenshotSets(ctx context.Context, client *asc.Client, localizations 
 
 func mapAgeRatingDeclaration(attrs asc.AgeRatingDeclarationAttributes) *validation.AgeRatingDeclaration {
 	return &validation.AgeRatingDeclaration{
-		Advertising:            attrs.Advertising,
-		Gambling:               attrs.Gambling,
-		HealthOrWellnessTopics: attrs.HealthOrWellnessTopics,
-		LootBox:                attrs.LootBox,
-		MessagingAndChat:       attrs.MessagingAndChat,
-		ParentalControls:       attrs.ParentalControls,
-		AgeAssurance:           attrs.AgeAssurance,
-		UnrestrictedWebAccess:  attrs.UnrestrictedWebAccess,
-		UserGeneratedContent:   attrs.UserGeneratedContent,
+		Advertising:                                 attrs.Advertising,
+		Gambling:                                    attrs.Gambling,
+		HealthOrWellnessTopics:                      attrs.HealthOrWellnessTopics,
+		LootBox:                                     attrs.LootBox,
+		MessagingAndChat:                            attrs.MessagingAndChat,
+		ParentalControls:                            attrs.ParentalControls,
+		AgeAssurance:                                attrs.AgeAssurance,
+		UnrestrictedWebAccess:                       attrs.UnrestrictedWebAccess,
+		UserGeneratedContent:                        attrs.UserGeneratedContent,
 		AlcoholTobaccoOrDrugUseOrReferences:         attrs.AlcoholTobaccoOrDrugUseOrReferences,
 		Contests:                                    attrs.Contests,
 		GamblingSimulated:                           attrs.GamblingSimulated,
@@ -192,11 +192,11 @@ func mapAgeRatingDeclaration(attrs asc.AgeRatingDeclarationAttributes) *validati
 		ViolenceCartoonOrFantasy:                    attrs.ViolenceCartoonOrFantasy,
 		ViolenceRealistic:                           attrs.ViolenceRealistic,
 		ViolenceRealisticProlongedGraphicOrSadistic: attrs.ViolenceRealisticProlongedGraphicOrSadistic,
-		KidsAgeBand:               attrs.KidsAgeBand,
-		AgeRatingOverride:         attrs.AgeRatingOverride,
-		AgeRatingOverrideV2:       attrs.AgeRatingOverrideV2,
-		KoreaAgeRatingOverride:    attrs.KoreaAgeRatingOverride,
-		DeveloperAgeRatingInfoURL: attrs.DeveloperAgeRatingInfoURL,
+		KidsAgeBand:                                 attrs.KidsAgeBand,
+		AgeRatingOverride:                           attrs.AgeRatingOverride,
+		AgeRatingOverrideV2:                         attrs.AgeRatingOverrideV2,
+		KoreaAgeRatingOverride:                      attrs.KoreaAgeRatingOverride,
+		DeveloperAgeRatingInfoURL:                   attrs.DeveloperAgeRatingInfoURL,
 	}
 }
 

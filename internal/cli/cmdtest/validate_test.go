@@ -21,11 +21,11 @@ type validateFixture struct {
 	app              string
 	version          string
 	appInfos         string
-	appInfoLocs       string
-	versionLocs       string
-	ageRating         string
-	screenshotSets    map[string]string
-	screenshotsBySet  map[string]string
+	appInfoLocs      string
+	versionLocs      string
+	ageRating        string
+	screenshotSets   map[string]string
+	screenshotsBySet map[string]string
 }
 
 func newValidateTestClient(t *testing.T, fixture validateFixture) *asc.Client {
@@ -88,9 +88,9 @@ func jsonResponse(status int, body string) (*http.Response, error) {
 
 func validValidateFixture() validateFixture {
 	return validateFixture{
-		app: `{"data":{"type":"apps","id":"app-1","attributes":{"primaryLocale":"en-US"}}}`,
-		version: `{"data":{"type":"appStoreVersions","id":"ver-1","attributes":{"platform":"IOS","versionString":"1.0"}}}`,
-		appInfos: `{"data":[{"type":"appInfos","id":"info-1","attributes":{"state":"PREPARE_FOR_SUBMISSION"}}]}`,
+		app:         `{"data":{"type":"apps","id":"app-1","attributes":{"primaryLocale":"en-US"}}}`,
+		version:     `{"data":{"type":"appStoreVersions","id":"ver-1","attributes":{"platform":"IOS","versionString":"1.0"}}}`,
+		appInfos:    `{"data":[{"type":"appInfos","id":"info-1","attributes":{"state":"PREPARE_FOR_SUBMISSION"}}]}`,
 		appInfoLocs: `{"data":[{"type":"appInfoLocalizations","id":"info-loc-1","attributes":{"locale":"en-US","name":"My App","subtitle":"Subtitle"}}]}`,
 		versionLocs: `{"data":[{"type":"appStoreVersionLocalizations","id":"ver-loc-1","attributes":{"locale":"en-US","description":"Description","keywords":"keyword","whatsNew":"Notes","promotionalText":"Promo","supportUrl":"https://support.example.com","marketingUrl":"https://marketing.example.com"}}]}`,
 		ageRating: `{"data":{"type":"ageRatingDeclarations","id":"age-1","attributes":{

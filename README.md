@@ -27,6 +27,8 @@ Apps shipping with asc-cli. [Add yours via PR](https://github.com/rudrankriyam/A
 | DoubleMemory | [Open](https://doublememory.com) | Shaomeng Zhang | iOS |
 | kora: Music Reviews & Ratings | [Open](https://apps.apple.com/app/id6502549140) | adamjhf | iOS |
 | MileIO | [Open](https://apps.apple.com/app/id6758225631) | Juergen | iOS |
+| Repetti | [Open](https://apps.apple.com/us/app/repetti-the-chores-list-app/id6758055413) | rursache | iOS |
+| TV Show Tracker | [Open](https://apps.apple.com/us/app/tv-show-tracker-tv-club/id6497563903) | rursache | iOS |
 <!-- WALL-OF-APPS:END -->
 
 ### Add Your App to the Wall
@@ -1255,14 +1257,14 @@ Notes:
 # List apps (useful for finding app IDs)
 asc apps
 
-# Generate a wall of your apps (app/link/creator/platform, table by default)
+# View the community Wall of Apps
 asc apps wall
 
-# Generate markdown for README/docs embedding
+# Generate markdown wall output
 asc apps wall --output markdown
 
 # Filter and sort wall output
-asc apps wall --include-platforms IOS,MAC_OS --sort -releaseDate --limit 20
+asc apps wall --include-platforms iOS,macOS --sort -name --limit 20
 
 # Sort apps by name or bundle ID
 asc apps --sort name

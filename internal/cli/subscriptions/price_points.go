@@ -219,6 +219,7 @@ func SubscriptionsPricePointsEqualizationsCommand() *ffcli.Command {
 	fs := flag.NewFlagSet("price-points equalizations", flag.ExitOnError)
 
 	pricePointID := fs.String("id", "", "Subscription price point ID")
+	paginate := fs.Bool("paginate", false, "Automatically fetch all pages (aggregate results)")
 	output := fs.String("output", shared.DefaultOutputFormat(), "Output format: json (default), table, markdown")
 	pretty := fs.Bool("pretty", false, "Pretty-print JSON output")
 
@@ -229,7 +230,8 @@ func SubscriptionsPricePointsEqualizationsCommand() *ffcli.Command {
 		LongHelp: `List equalized price points for a subscription price point.
 
 Examples:
-  asc subscriptions price-points equalizations --id "PRICE_POINT_ID"`,
+  asc subscriptions price-points equalizations --id "PRICE_POINT_ID"
+  asc subscriptions price-points equalizations --id "PRICE_POINT_ID" --paginate`,
 		FlagSet:   fs,
 		UsageFunc: shared.DefaultUsageFunc,
 		Exec: func(ctx context.Context, args []string) error {
@@ -247,9 +249,29 @@ Examples:
 			requestCtx, cancel := shared.ContextWithTimeout(ctx)
 			defer cancel()
 
-			resp, err := client.GetSubscriptionPricePointEqualizations(requestCtx, id)
+			// When paginating, request with limit=200 to minimize API calls
+			var resp *asc.SubscriptionPricePointsResponse
+			if *paginate {
+				resp, err = client.GetSubscriptionPricePointEqualizations(requestCtx, id, asc.WithSubscriptionPricePointsLimit(200))
+			} else {
+				resp, err = client.GetSubscriptionPricePointEqualizations(requestCtx, id)
+			}
 			if err != nil {
 				return fmt.Errorf("subscriptions price-points equalizations: %w", err)
+			}
+
+			if *paginate {
+				allPages, pErr := asc.PaginateAll(ctx, resp, func(_ context.Context, nextURL string) (asc.PaginatedResponse, error) {
+					pageCtx, pageCancel := shared.ContextWithTimeout(ctx)
+					defer pageCancel()
+					return client.GetSubscriptionPricePointEqualizations(pageCtx, id, asc.WithSubscriptionPricePointsNextURL(nextURL))
+				})
+				if pErr != nil {
+					return fmt.Errorf("subscriptions price-points equalizations: %w", pErr)
+				}
+				if typed, ok := allPages.(*asc.SubscriptionPricePointsResponse); ok {
+					resp = typed
+				}
 			}
 
 			return shared.PrintOutput(resp, *output, *pretty)

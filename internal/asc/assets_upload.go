@@ -7,6 +7,10 @@ import (
 	"encoding/hex"
 	"fmt"
 	"hash"
+	"image"
+	_ "image/gif"
+	_ "image/jpeg"
+	_ "image/png"
 	"io"
 	"net/http"
 	"os"
@@ -103,6 +107,33 @@ func ValidateAssetFile(path string) error {
 // ValidateImageFile validates that a file exists and is safe to read.
 func ValidateImageFile(path string) error {
 	return ValidateAssetFile(path)
+}
+
+// ImageDimensions represents decoded image dimensions.
+type ImageDimensions struct {
+	Width  int
+	Height int
+}
+
+// ReadImageDimensions validates and decodes image dimensions from disk.
+func ReadImageDimensions(path string) (ImageDimensions, error) {
+	if err := ValidateImageFile(path); err != nil {
+		return ImageDimensions{}, err
+	}
+	file, err := os.Open(path)
+	if err != nil {
+		return ImageDimensions{}, err
+	}
+	defer file.Close()
+
+	cfg, _, err := image.DecodeConfig(file)
+	if err != nil {
+		return ImageDimensions{}, fmt.Errorf("decode image dimensions for %q: %w", path, err)
+	}
+	if cfg.Width <= 0 || cfg.Height <= 0 {
+		return ImageDimensions{}, fmt.Errorf("invalid image dimensions %dx%d for %q", cfg.Width, cfg.Height, path)
+	}
+	return ImageDimensions{Width: cfg.Width, Height: cfg.Height}, nil
 }
 
 // ComputeChecksum computes a checksum for a file on disk.

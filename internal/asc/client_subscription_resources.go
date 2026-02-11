@@ -847,8 +847,22 @@ func (c *Client) GetSubscriptionPricePoint(ctx context.Context, pricePointID str
 }
 
 // GetSubscriptionPricePointEqualizations retrieves equalizations for a price point.
-func (c *Client) GetSubscriptionPricePointEqualizations(ctx context.Context, pricePointID string) (*SubscriptionPricePointsResponse, error) {
+func (c *Client) GetSubscriptionPricePointEqualizations(ctx context.Context, pricePointID string, opts ...SubscriptionPricePointsOption) (*SubscriptionPricePointsResponse, error) {
+	query := &subscriptionPricePointsQuery{}
+	for _, opt := range opts {
+		opt(query)
+	}
+
 	path := fmt.Sprintf("/v1/subscriptionPricePoints/%s/equalizations", strings.TrimSpace(pricePointID))
+	if query.nextURL != "" {
+		if err := validateNextURL(query.nextURL); err != nil {
+			return nil, fmt.Errorf("subscriptionPricePointEqualizations: %w", err)
+		}
+		path = query.nextURL
+	} else if queryString := buildSubscriptionPricePointsQuery(query); queryString != "" {
+		path += "?" + queryString
+	}
+
 	data, err := c.do(ctx, http.MethodGet, path, nil)
 	if err != nil {
 		return nil, err

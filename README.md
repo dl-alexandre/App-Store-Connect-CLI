@@ -27,6 +27,9 @@ Apps shipping with asc-cli. [Add yours via PR](https://github.com/rudrankriyam/A
 | DoubleMemory | [Open](https://doublememory.com) | Shaomeng Zhang | iOS |
 | kora: Music Reviews & Ratings | [Open](https://apps.apple.com/app/id6502549140) | adamjhf | iOS |
 | MileIO | [Open](https://apps.apple.com/app/id6758225631) | Juergen | iOS |
+| Repetti | [Open](https://apps.apple.com/us/app/repetti-the-chores-list-app/id6758055413) | rursache | iOS |
+| TV Show Tracker | [Open](https://apps.apple.com/us/app/tv-show-tracker-tv-club/id6497563903) | rursache | iOS |
+| Unlimited Clipboard History | [Open](https://apps.apple.com/us/app/unlimited-clipboard-history/id6705136056) | yspreen | iOS |
 <!-- WALL-OF-APPS:END -->
 
 ### Add Your App to the Wall
@@ -104,6 +107,7 @@ Agent Skills for automating `asc` workflows including builds, TestFlight, metada
   - [Localizations](#localizations)
   - [Build Localizations](#build-localizations)
   - [Migrate (Fastlane Compatibility)](#migrate-fastlane-compatibility)
+  - [Validate (Pre-Submission)](#validate-pre-submission)
   - [Submit](#submit)
   - [Utilities](#utilities)
   - [Output Formats](#output-formats)
@@ -1186,6 +1190,10 @@ asc encryption documents get --id "DOC_ID"
 # List screenshots for a version localization
 asc assets screenshots list --version-localization "LOC_ID"
 
+# List supported screenshot sizes
+asc assets screenshots sizes
+asc assets screenshots sizes --display-type "APP_IPHONE_65"
+
 # Upload screenshots
 asc assets screenshots upload --version-localization "LOC_ID" --path "./screenshots/" --device-type IPHONE_65
 
@@ -1255,14 +1263,14 @@ Notes:
 # List apps (useful for finding app IDs)
 asc apps
 
-# Generate a wall of your apps (app/link/creator/platform, table by default)
+# View the community Wall of Apps
 asc apps wall
 
-# Generate markdown for README/docs embedding
+# Generate markdown wall output
 asc apps wall --output markdown
 
 # Filter and sort wall output
-asc apps wall --include-platforms IOS,MAC_OS --sort -releaseDate --limit 20
+asc apps wall --include-platforms iOS,macOS --sort -name --limit 20
 
 # Sort apps by name or bundle ID
 asc apps --sort name
@@ -1552,6 +1560,27 @@ asc migrate export --app "123456789" --version-id "VERSION_ID" --output-dir ./ex
 | Name | 30 chars |
 | Subtitle | 30 chars |
 
+### Validate (Pre-Submission)
+
+Run client-side checks before submission to catch metadata, screenshot, and age rating issues early.
+
+```bash
+# Validate release readiness for a version
+asc validate --app "123456789" --version-id "VERSION_ID"
+
+# Validate with platform-specific screenshot checks and table output
+asc validate --app "123456789" --version-id "VERSION_ID" --platform IOS --output table
+
+# Treat warnings as errors for CI gating
+asc validate --app "123456789" --version-id "VERSION_ID" --strict
+```
+
+**Checks included:**
+- Metadata length limits (description, keywords, release notes, promotional text, name, subtitle)
+- Required field presence (localizations, required text fields)
+- Screenshot size compatibility (per display type)
+- Age rating completeness
+
 ### Submit
 
 ```bash
@@ -1658,6 +1687,7 @@ make install  # Installs to /usr/local/bin
 
 ## Documentation
 
+- [ASC.md](ASC.md) - Command catalog (generate in your repo with `asc init`)
 - [CLAUDE.md](CLAUDE.md) - Development guidelines for AI assistants
 - [CONTRIBUTING.md](CONTRIBUTING.md) - Contribution guidelines
 - [docs/openapi/README.md](docs/openapi/README.md) - Offline OpenAPI snapshot + update steps
@@ -1700,3 +1730,8 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 <p align="center">
   Primarily Built with Cursor and GPT-5.2 Codex Extra High
+</p>
+
+<p align="center">
+  <sub>This project is an independent, unofficial tool and is not affiliated with, endorsed by, or sponsored by Apple Inc. App Store Connect, TestFlight, Xcode Cloud, and Apple are trademarks of Apple Inc., registered in the U.S. and other countries.</sub>
+</p>

@@ -185,6 +185,19 @@ func assetUploadResultItemRows(results []AssetUploadResultItem) ([]string, [][]s
 	return headers, rows
 }
 
+func screenshotSizesRows(result *ScreenshotSizesResult) ([]string, [][]string) {
+	headers := []string{"Display Type", "Family", "Dimensions"}
+	rows := make([][]string, 0, len(result.Sizes))
+	for _, item := range result.Sizes {
+		rows = append(rows, []string{
+			item.DisplayType,
+			item.Family,
+			formatScreenshotDimensions(item.Dimensions),
+		})
+	}
+	return headers, rows
+}
+
 func assetDeleteResultRows(result *AssetDeleteResult) ([]string, [][]string) {
 	headers := []string{"ID", "Deleted"}
 	rows := [][]string{{result.ID, fmt.Sprintf("%t", result.Deleted)}}

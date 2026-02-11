@@ -25,12 +25,14 @@ func AssetsScreenshotsCommand() *ffcli.Command {
 
 Examples:
   asc assets screenshots list --version-localization "LOC_ID"
+  asc assets screenshots sizes --display-type "APP_IPHONE_65"
   asc assets screenshots upload --version-localization "LOC_ID" --path "./screenshots" --device-type "IPHONE_65"
   asc assets screenshots delete --id "SCREENSHOT_ID" --confirm`,
 		FlagSet:   fs,
 		UsageFunc: shared.DefaultUsageFunc,
 		Subcommands: []*ffcli.Command{
 			AssetsScreenshotsListCommand(),
+			AssetsScreenshotsSizesCommand(),
 			AssetsScreenshotsUploadCommand(),
 			AssetsScreenshotsDeleteCommand(),
 		},
@@ -99,6 +101,49 @@ Examples:
 	}
 }
 
+// AssetsScreenshotsSizesCommand returns the screenshots sizes subcommand.
+func AssetsScreenshotsSizesCommand() *ffcli.Command {
+	fs := flag.NewFlagSet("sizes", flag.ExitOnError)
+
+	displayType := fs.String("display-type", "", "Filter by screenshot display type (e.g., APP_IPHONE_65)")
+	output := fs.String("output", shared.DefaultOutputFormat(), "Output format: json (default), table, markdown")
+	pretty := fs.Bool("pretty", false, "Pretty-print JSON output")
+
+	return &ffcli.Command{
+		Name:       "sizes",
+		ShortUsage: "asc assets screenshots sizes [--display-type \"APP_IPHONE_65\"]",
+		ShortHelp:  "List supported screenshot display sizes.",
+		LongHelp: `List supported screenshot display sizes.
+
+Examples:
+  asc assets screenshots sizes
+  asc assets screenshots sizes --display-type "APP_IPHONE_65"
+  asc assets screenshots sizes --output table`,
+		FlagSet:   fs,
+		UsageFunc: shared.DefaultUsageFunc,
+		Exec: func(ctx context.Context, args []string) error {
+			filter := strings.TrimSpace(*displayType)
+			result := asc.ScreenshotSizesResult{
+				Sizes: asc.ScreenshotSizeCatalog(),
+			}
+
+			if filter != "" {
+				normalized, err := normalizeScreenshotDisplayType(filter)
+				if err != nil {
+					return fmt.Errorf("assets screenshots sizes: %w", err)
+				}
+				entry, ok := asc.ScreenshotSizeEntryForDisplayType(normalized)
+				if !ok {
+					return fmt.Errorf("assets screenshots sizes: unsupported screenshot display type %q", normalized)
+				}
+				result.Sizes = []asc.ScreenshotSizeEntry{entry}
+			}
+
+			return shared.PrintOutput(&result, *output, *pretty)
+		},
+	}
+}
+
 // AssetsScreenshotsUploadCommand returns the screenshots upload subcommand.
 func AssetsScreenshotsUploadCommand() *ffcli.Command {
 	fs := flag.NewFlagSet("upload", flag.ExitOnError)
@@ -144,6 +189,10 @@ Examples:
 
 			files, err := collectAssetFiles(pathValue)
 			if err != nil {
+				return fmt.Errorf("assets screenshots upload: %w", err)
+			}
+
+			if err := validateScreenshotDimensions(files, displayType); err != nil {
 				return fmt.Errorf("assets screenshots upload: %w", err)
 			}
 
@@ -238,13 +287,27 @@ func normalizeScreenshotDisplayType(input string) (string, error) {
 	if value == "" {
 		return "", fmt.Errorf("device type is required")
 	}
-	if !strings.HasPrefix(value, "APP_") {
+	if !strings.HasPrefix(value, "APP_") && !strings.HasPrefix(value, "IMESSAGE_") {
 		value = "APP_" + value
 	}
+	value = normalizeScreenshotDisplayTypeAlias(value)
 	if !asc.IsValidScreenshotDisplayType(value) {
 		return "", fmt.Errorf("unsupported screenshot display type %q", value)
 	}
 	return value, nil
+}
+
+func normalizeScreenshotDisplayTypeAlias(value string) string {
+	return value
+}
+
+func validateScreenshotDimensions(files []string, displayType string) error {
+	for _, filePath := range files {
+		if err := asc.ValidateScreenshotDimensions(filePath, displayType); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func ensureScreenshotSet(ctx context.Context, client *asc.Client, localizationID, displayType string) (asc.Resource[asc.AppScreenshotSetAttributes], error) {

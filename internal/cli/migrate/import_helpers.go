@@ -186,7 +186,7 @@ func uploadAppInfoLocalizations(ctx context.Context, client *asc.Client, appID s
 	if len(appInfos.Data) == 0 {
 		return nil, fmt.Errorf("migrate import: no app info found for app")
 	}
-	appInfoID := selectBestAppInfoID(appInfos)
+	appInfoID := shared.SelectBestAppInfoID(appInfos)
 	if strings.TrimSpace(appInfoID) == "" {
 		return nil, fmt.Errorf("migrate import: failed to select app info for app")
 	}

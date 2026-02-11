@@ -430,8 +430,23 @@ type Client struct {
 	notaryBaseURL string // override for testing; empty uses NotaryBaseURL constant
 }
 
-// NewClient creates a new ASC client
+// NewClient creates a new ASC client.
 func NewClient(keyID, issuerID, privateKeyPath string) (*Client, error) {
+	return newClientWithHTTPClient(keyID, issuerID, privateKeyPath, &http.Client{
+		Timeout: ResolveTimeout(),
+	})
+}
+
+// NewClientWithHTTPClient creates a new ASC client using the provided HTTP client.
+// If httpClient is nil, a default client with ASC timeouts is used.
+func NewClientWithHTTPClient(keyID, issuerID, privateKeyPath string, httpClient *http.Client) (*Client, error) {
+	if httpClient == nil {
+		httpClient = &http.Client{Timeout: ResolveTimeout()}
+	}
+	return newClientWithHTTPClient(keyID, issuerID, privateKeyPath, httpClient)
+}
+
+func newClientWithHTTPClient(keyID, issuerID, privateKeyPath string, httpClient *http.Client) (*Client, error) {
 	if err := auth.ValidateKeyFile(privateKeyPath); err != nil {
 		return nil, fmt.Errorf("invalid private key: %w", err)
 	}
@@ -442,9 +457,7 @@ func NewClient(keyID, issuerID, privateKeyPath string) (*Client, error) {
 	}
 
 	return &Client{
-		httpClient: &http.Client{
-			Timeout: ResolveTimeout(),
-		},
+		httpClient: httpClient,
 		keyID:      keyID,
 		issuerID:   issuerID,
 		privateKey: key,

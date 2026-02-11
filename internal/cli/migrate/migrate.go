@@ -13,6 +13,7 @@ import (
 
 	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/asc"
 	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/shared"
+	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/validation"
 )
 
 // MigrateCommand returns the migrate command with subcommands.
@@ -344,7 +345,7 @@ Examples:
 			// Export App Info localizations (name, subtitle)
 			appInfos, err := client.GetAppInfos(requestCtx, resolvedAppID)
 			if err == nil && len(appInfos.Data) > 0 {
-				appInfoID := selectBestAppInfoID(appInfos)
+				appInfoID := shared.SelectBestAppInfoID(appInfos)
 				if strings.TrimSpace(appInfoID) == "" {
 					return fmt.Errorf("migrate export: failed to select app info for app")
 				}
@@ -668,16 +669,6 @@ func appInfoLocalizationFiles(loc AppInfoFastlaneLocalization) []string {
 	return files
 }
 
-// App Store metadata character limits
-const (
-	limitDescription     = 4000
-	limitKeywords        = 100
-	limitWhatsNew        = 4000
-	limitPromotionalText = 170
-	limitName            = 30
-	limitSubtitle        = 30
-)
-
 // ValidationIssue represents a validation error or warning.
 type ValidationIssue struct {
 	Locale   string `json:"locale"`
@@ -794,50 +785,50 @@ func validateVersionLocalization(loc FastlaneLocalization) []ValidationIssue {
 	var issues []ValidationIssue
 
 	descriptionLength := utf8.RuneCountInString(loc.Description)
-	if descriptionLength > limitDescription {
+	if descriptionLength > validation.LimitDescription {
 		issues = append(issues, ValidationIssue{
 			Locale:   loc.Locale,
 			Field:    "description",
 			Severity: "error",
-			Message:  fmt.Sprintf("exceeds %d character limit", limitDescription),
+			Message:  fmt.Sprintf("exceeds %d character limit", validation.LimitDescription),
 			Length:   descriptionLength,
-			Limit:    limitDescription,
+			Limit:    validation.LimitDescription,
 		})
 	}
 
 	keywordsLength := utf8.RuneCountInString(loc.Keywords)
-	if keywordsLength > limitKeywords {
+	if keywordsLength > validation.LimitKeywords {
 		issues = append(issues, ValidationIssue{
 			Locale:   loc.Locale,
 			Field:    "keywords",
 			Severity: "error",
-			Message:  fmt.Sprintf("exceeds %d character limit", limitKeywords),
+			Message:  fmt.Sprintf("exceeds %d character limit", validation.LimitKeywords),
 			Length:   keywordsLength,
-			Limit:    limitKeywords,
+			Limit:    validation.LimitKeywords,
 		})
 	}
 
 	whatsNewLength := utf8.RuneCountInString(loc.WhatsNew)
-	if whatsNewLength > limitWhatsNew {
+	if whatsNewLength > validation.LimitWhatsNew {
 		issues = append(issues, ValidationIssue{
 			Locale:   loc.Locale,
 			Field:    "whatsNew",
 			Severity: "error",
-			Message:  fmt.Sprintf("exceeds %d character limit", limitWhatsNew),
+			Message:  fmt.Sprintf("exceeds %d character limit", validation.LimitWhatsNew),
 			Length:   whatsNewLength,
-			Limit:    limitWhatsNew,
+			Limit:    validation.LimitWhatsNew,
 		})
 	}
 
 	promotionalTextLength := utf8.RuneCountInString(loc.PromotionalText)
-	if promotionalTextLength > limitPromotionalText {
+	if promotionalTextLength > validation.LimitPromotionalText {
 		issues = append(issues, ValidationIssue{
 			Locale:   loc.Locale,
 			Field:    "promotionalText",
 			Severity: "error",
-			Message:  fmt.Sprintf("exceeds %d character limit", limitPromotionalText),
+			Message:  fmt.Sprintf("exceeds %d character limit", validation.LimitPromotionalText),
 			Length:   promotionalTextLength,
-			Limit:    limitPromotionalText,
+			Limit:    validation.LimitPromotionalText,
 		})
 	}
 
@@ -854,94 +845,31 @@ func validateVersionLocalization(loc FastlaneLocalization) []ValidationIssue {
 	return issues
 }
 
-func selectBestAppInfoID(appInfos *asc.AppInfosResponse) string {
-	if appInfos == nil || len(appInfos.Data) == 0 {
-		return ""
-	}
-
-	// Some apps have multiple appInfos (e.g. READY_FOR_SALE plus PREPARE_FOR_SUBMISSION).
-	// Updating name/subtitle is only allowed in certain states, so prefer the one that is
-	// actively editable for a submission.
-	const target = "PREPARE_FOR_SUBMISSION"
-
-	var firstNonLive string
-	for _, info := range appInfos.Data {
-		state := strings.ToUpper(appInfoAttrString(info.Attributes, "state"))
-		appStoreState := strings.ToUpper(appInfoAttrString(info.Attributes, "appStoreState"))
-
-		if state == target || appStoreState == target {
-			return info.ID
-		}
-		if firstNonLive == "" && isNonLiveAppInfoState(state, appStoreState) {
-			firstNonLive = info.ID
-		}
-	}
-	if firstNonLive != "" {
-		return firstNonLive
-	}
-	return appInfos.Data[0].ID
-}
-
-func isNonLiveAppInfoState(state, appStoreState string) bool {
-	isLive := func(value string) bool {
-		switch value {
-		case "READY_FOR_DISTRIBUTION", "READY_FOR_SALE":
-			return true
-		default:
-			return false
-		}
-	}
-
-	if state != "" && !isLive(state) {
-		return true
-	}
-	if appStoreState != "" && !isLive(appStoreState) {
-		return true
-	}
-	return false
-}
-
-func appInfoAttrString(attrs asc.AppInfoAttributes, key string) string {
-	if attrs == nil {
-		return ""
-	}
-	v, ok := attrs[key]
-	if !ok || v == nil {
-		return ""
-	}
-	switch t := v.(type) {
-	case string:
-		return strings.TrimSpace(t)
-	default:
-		return strings.TrimSpace(fmt.Sprint(t))
-	}
-}
-
 // validateAppInfoLocalization checks app-level metadata for issues.
 func validateAppInfoLocalization(loc AppInfoFastlaneLocalization) []ValidationIssue {
 	var issues []ValidationIssue
 
 	nameLength := utf8.RuneCountInString(loc.Name)
-	if nameLength > limitName {
+	if nameLength > validation.LimitName {
 		issues = append(issues, ValidationIssue{
 			Locale:   loc.Locale,
 			Field:    "name",
 			Severity: "error",
-			Message:  fmt.Sprintf("exceeds %d character limit", limitName),
+			Message:  fmt.Sprintf("exceeds %d character limit", validation.LimitName),
 			Length:   nameLength,
-			Limit:    limitName,
+			Limit:    validation.LimitName,
 		})
 	}
 
 	subtitleLength := utf8.RuneCountInString(loc.Subtitle)
-	if subtitleLength > limitSubtitle {
+	if subtitleLength > validation.LimitSubtitle {
 		issues = append(issues, ValidationIssue{
 			Locale:   loc.Locale,
 			Field:    "subtitle",
 			Severity: "error",
-			Message:  fmt.Sprintf("exceeds %d character limit", limitSubtitle),
+			Message:  fmt.Sprintf("exceeds %d character limit", validation.LimitSubtitle),
 			Length:   subtitleLength,
-			Limit:    limitSubtitle,
+			Limit:    validation.LimitSubtitle,
 		})
 	}
 

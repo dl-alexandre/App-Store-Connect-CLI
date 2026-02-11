@@ -39,7 +39,7 @@ func TestMigrateImportDryRunPlan(t *testing.T) {
 	if err := os.MkdirAll(screenshotsDir, 0o755); err != nil {
 		t.Fatalf("mkdir screenshots: %v", err)
 	}
-	writePNG(t, filepath.Join(screenshotsDir, "iphone_65_screen.png"), 1242, 2688)
+	writePNGForMigrate(t, filepath.Join(screenshotsDir, "iphone_65_screen.png"), 1242, 2688)
 
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -106,7 +106,7 @@ func TestMigrateImportDryRunSupportsIPhone69AliasAsAppIPhone67(t *testing.T) {
 	if err := os.MkdirAll(screenshotsDir, 0o755); err != nil {
 		t.Fatalf("mkdir screenshots: %v", err)
 	}
-	writePNG(t, filepath.Join(screenshotsDir, "iphone_69_screen.png"), 1320, 2868)
+	writePNGForMigrate(t, filepath.Join(screenshotsDir, "iphone_69_screen.png"), 1320, 2868)
 
 	cwd, err := os.Getwd()
 	if err != nil {
@@ -176,8 +176,8 @@ func TestMigrateImportUploadsAndSkipsExistingScreenshots(t *testing.T) {
 	if err := os.MkdirAll(screenshotsDir, 0o755); err != nil {
 		t.Fatalf("mkdir screenshots: %v", err)
 	}
-	writePNG(t, filepath.Join(screenshotsDir, "iphone_65_existing.png"), 1242, 2688)
-	writePNG(t, filepath.Join(screenshotsDir, "iphone_65_new.png"), 1242, 2688)
+	writePNGForMigrate(t, filepath.Join(screenshotsDir, "iphone_65_existing.png"), 1242, 2688)
+	writePNGForMigrate(t, filepath.Join(screenshotsDir, "iphone_65_new.png"), 1242, 2688)
 
 	originalTransport := http.DefaultTransport
 	t.Cleanup(func() {
@@ -198,33 +198,33 @@ func TestMigrateImportUploadsAndSkipsExistingScreenshots(t *testing.T) {
 		switch {
 		case req.Method == http.MethodGet && strings.HasPrefix(req.URL.Path, "/v1/appStoreVersions/") && strings.HasSuffix(req.URL.Path, "/appStoreVersionLocalizations"):
 			body := `{"data":[{"type":"appStoreVersionLocalizations","id":"loc-1","attributes":{"locale":"en-US"}}]}`
-			return jsonResponse(http.StatusOK, body), nil
+			return migrateJSONResponse(http.StatusOK, body), nil
 		case req.Method == http.MethodPatch && req.URL.Path == "/v1/appStoreVersionLocalizations/loc-1":
-			return jsonResponse(http.StatusOK, `{"data":{"type":"appStoreVersionLocalizations","id":"loc-1","attributes":{"locale":"en-US"}}}`), nil
+			return migrateJSONResponse(http.StatusOK, `{"data":{"type":"appStoreVersionLocalizations","id":"loc-1","attributes":{"locale":"en-US"}}}`), nil
 		case req.Method == http.MethodGet && req.URL.Path == "/v1/apps/APP_ID/appInfos":
 			body := `{"data":[{"type":"appInfos","id":"appinfo-1","attributes":{"state":"PREPARE_FOR_SUBMISSION"}}]}`
-			return jsonResponse(http.StatusOK, body), nil
+			return migrateJSONResponse(http.StatusOK, body), nil
 		case req.Method == http.MethodGet && req.URL.Path == "/v1/appInfos/appinfo-1/appInfoLocalizations":
-			return jsonResponse(http.StatusOK, `{"data":[]}`), nil
+			return migrateJSONResponse(http.StatusOK, `{"data":[]}`), nil
 		case req.Method == http.MethodPost && req.URL.Path == "/v1/appInfoLocalizations":
-			return jsonResponse(http.StatusCreated, `{"data":{"type":"appInfoLocalizations","id":"appinfo-loc-1","attributes":{"locale":"en-US"}}}`), nil
+			return migrateJSONResponse(http.StatusCreated, `{"data":{"type":"appInfoLocalizations","id":"appinfo-loc-1","attributes":{"locale":"en-US"}}}`), nil
 		case req.Method == http.MethodGet && req.URL.Path == "/v1/appStoreVersions/VERSION_ID/appStoreReviewDetail":
-			return jsonResponse(http.StatusNotFound, `{"errors":[{"status":"404","title":"not found"}]}`), nil
+			return migrateJSONResponse(http.StatusNotFound, `{"errors":[{"status":"404","title":"not found"}]}`), nil
 		case req.Method == http.MethodPost && req.URL.Path == "/v1/appStoreReviewDetails":
-			return jsonResponse(http.StatusCreated, `{"data":{"type":"appStoreReviewDetails","id":"review-1"}}`), nil
+			return migrateJSONResponse(http.StatusCreated, `{"data":{"type":"appStoreReviewDetails","id":"review-1"}}`), nil
 		case req.Method == http.MethodGet && req.URL.Path == "/v1/appStoreVersionLocalizations/loc-1/appScreenshotSets":
-			return jsonResponse(http.StatusOK, `{"data":[{"type":"appScreenshotSets","id":"set-1","attributes":{"screenshotDisplayType":"APP_IPHONE_65"}}]}`), nil
+			return migrateJSONResponse(http.StatusOK, `{"data":[{"type":"appScreenshotSets","id":"set-1","attributes":{"screenshotDisplayType":"APP_IPHONE_65"}}]}`), nil
 		case req.Method == http.MethodGet && req.URL.Path == "/v1/appScreenshotSets/set-1/appScreenshots":
 			body := `{"data":[{"type":"appScreenshots","id":"shot-existing","attributes":{"fileName":"iphone_65_existing.png"}}]}`
-			return jsonResponse(http.StatusOK, body), nil
+			return migrateJSONResponse(http.StatusOK, body), nil
 		case req.Method == http.MethodPost && req.URL.Path == "/v1/appScreenshots":
 			resp := `{"data":{"type":"appScreenshots","id":"shot-new","attributes":{"fileName":"iphone_65_new.png","fileSize":1234,"uploadOperations":[{"method":"PUT","url":"https://upload.example.com/upload/shot-new","length":1234,"offset":0}]}}}`
-			return jsonResponse(http.StatusCreated, resp), nil
+			return migrateJSONResponse(http.StatusCreated, resp), nil
 		case req.Method == http.MethodPatch && req.URL.Path == "/v1/appScreenshots/shot-new":
-			return jsonResponse(http.StatusOK, `{"data":{"type":"appScreenshots","id":"shot-new","attributes":{"fileName":"iphone_65_new.png"}}}`), nil
+			return migrateJSONResponse(http.StatusOK, `{"data":{"type":"appScreenshots","id":"shot-new","attributes":{"fileName":"iphone_65_new.png"}}}`), nil
 		case req.Method == http.MethodGet && req.URL.Path == "/v1/appScreenshots/shot-new":
 			body := `{"data":{"type":"appScreenshots","id":"shot-new","attributes":{"fileName":"iphone_65_new.png","assetDeliveryState":{"state":"COMPLETE"}}}}`
-			return jsonResponse(http.StatusOK, body), nil
+			return migrateJSONResponse(http.StatusOK, body), nil
 		default:
 			return nil, fmt.Errorf("unexpected request: %s %s", req.Method, req.URL.String())
 		}
@@ -325,7 +325,7 @@ func TestMigrateImportRejectsInvalidScreenshot(t *testing.T) {
 	}
 }
 
-func jsonResponse(status int, body string) *http.Response {
+func migrateJSONResponse(status int, body string) *http.Response {
 	return &http.Response{
 		StatusCode: status,
 		Body:       io.NopCloser(strings.NewReader(body)),
@@ -340,7 +340,7 @@ func writeFile(t *testing.T, path, content string) {
 	}
 }
 
-func writePNG(t *testing.T, path string, width, height int) {
+func writePNGForMigrate(t *testing.T, path string, width, height int) {
 	t.Helper()
 	img := image.NewRGBA(image.Rect(0, 0, width, height))
 	for y := 0; y < height; y++ {

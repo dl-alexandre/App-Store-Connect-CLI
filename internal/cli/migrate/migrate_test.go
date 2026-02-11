@@ -8,6 +8,8 @@ import (
 
 	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/asc"
 	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/asc/types"
+	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/shared"
+	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/validation"
 )
 
 func TestReadFileIfExists_FileExists(t *testing.T) {
@@ -243,6 +245,56 @@ func TestReadFastlaneMetadata_SkipsFiles(t *testing.T) {
 	}
 }
 
+func TestValidateVersionLocalization_UsesSharedLimits(t *testing.T) {
+	loc := FastlaneLocalization{
+		Locale:      "en-US",
+		Description: strings.Repeat("a", validation.LimitDescription+1),
+	}
+
+	issues := validateVersionLocalization(loc)
+	if len(issues) == 0 {
+		t.Fatalf("expected issues, got none")
+	}
+
+	found := false
+	for _, issue := range issues {
+		if issue.Field == "description" {
+			found = true
+			if issue.Limit != validation.LimitDescription {
+				t.Fatalf("expected limit %d, got %d", validation.LimitDescription, issue.Limit)
+			}
+		}
+	}
+	if !found {
+		t.Fatalf("expected description issue")
+	}
+}
+
+func TestValidateAppInfoLocalization_UsesSharedLimits(t *testing.T) {
+	loc := AppInfoFastlaneLocalization{
+		Locale: "en-US",
+		Name:   strings.Repeat("n", validation.LimitName+1),
+	}
+
+	issues := validateAppInfoLocalization(loc)
+	if len(issues) == 0 {
+		t.Fatalf("expected issues, got none")
+	}
+
+	found := false
+	for _, issue := range issues {
+		if issue.Field == "name" {
+			found = true
+			if issue.Limit != validation.LimitName {
+				t.Fatalf("expected limit %d, got %d", validation.LimitName, issue.Limit)
+			}
+		}
+	}
+	if !found {
+		t.Fatalf("expected name issue")
+	}
+}
+
 func TestSelectBestAppInfoID_PrefersPrepareForSubmission(t *testing.T) {
 	appInfos := &asc.AppInfosResponse{
 		Data: []types.Resource[asc.AppInfoAttributes]{
@@ -263,7 +315,7 @@ func TestSelectBestAppInfoID_PrefersPrepareForSubmission(t *testing.T) {
 		},
 	}
 
-	if got := selectBestAppInfoID(appInfos); got != "prep" {
+	if got := shared.SelectBestAppInfoID(appInfos); got != "prep" {
 		t.Fatalf("expected appInfoID %q, got %q", "prep", got)
 	}
 }
@@ -286,17 +338,17 @@ func TestSelectBestAppInfoID_FallsBackToNonReadyForSale(t *testing.T) {
 		},
 	}
 
-	if got := selectBestAppInfoID(appInfos); got != "not-ready" {
+	if got := shared.SelectBestAppInfoID(appInfos); got != "not-ready" {
 		t.Fatalf("expected appInfoID %q, got %q", "not-ready", got)
 	}
 }
 
 func TestSelectBestAppInfoID_EmptyInput(t *testing.T) {
-	if got := selectBestAppInfoID(nil); got != "" {
+	if got := shared.SelectBestAppInfoID(nil); got != "" {
 		t.Fatalf("expected empty appInfoID for nil input, got %q", got)
 	}
 
-	if got := selectBestAppInfoID(&asc.AppInfosResponse{}); got != "" {
+	if got := shared.SelectBestAppInfoID(&asc.AppInfosResponse{}); got != "" {
 		t.Fatalf("expected empty appInfoID for empty input, got %q", got)
 	}
 }
@@ -319,7 +371,7 @@ func TestSelectBestAppInfoID_UsesStateWhenAppStoreStateMissing(t *testing.T) {
 		},
 	}
 
-	if got := selectBestAppInfoID(appInfos); got != "editable" {
+	if got := shared.SelectBestAppInfoID(appInfos); got != "editable" {
 		t.Fatalf("expected appInfoID %q, got %q", "editable", got)
 	}
 }

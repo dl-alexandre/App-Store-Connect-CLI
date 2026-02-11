@@ -815,6 +815,50 @@ func TestGetSubscriptionPricePointEqualizations(t *testing.T) {
 	}
 }
 
+func TestGetSubscriptionPricePointEqualizations_WithLimit(t *testing.T) {
+	response := jsonResponse(http.StatusOK, `{"data":[{"type":"subscriptionPricePoints","id":"eq-1"}]}`)
+	client := newTestClient(t, func(req *http.Request) {
+		if req.Method != http.MethodGet {
+			t.Fatalf("expected GET, got %s", req.Method)
+		}
+		if req.URL.Path != "/v1/subscriptionPricePoints/price-1/equalizations" {
+			t.Fatalf("expected path /v1/subscriptionPricePoints/price-1/equalizations, got %s", req.URL.Path)
+		}
+		if req.URL.Query().Get("limit") != "200" {
+			t.Fatalf("expected limit=200, got %q", req.URL.Query().Get("limit"))
+		}
+		assertAuthorized(t, req)
+	}, response)
+
+	if _, err := client.GetSubscriptionPricePointEqualizations(
+		context.Background(),
+		"price-1",
+		WithSubscriptionPricePointsLimit(200),
+	); err != nil {
+		t.Fatalf("GetSubscriptionPricePointEqualizations() error: %v", err)
+	}
+}
+
+func TestGetSubscriptionPricePointEqualizations_UsesNextURL(t *testing.T) {
+	next := "https://api.appstoreconnect.apple.com/v1/subscriptionPricePoints/price-1/equalizations?cursor=abc&limit=200"
+	response := jsonResponse(http.StatusOK, `{"data":[]}`)
+	client := newTestClient(t, func(req *http.Request) {
+		if req.URL.String() != next {
+			t.Fatalf("expected next URL %q, got %q", next, req.URL.String())
+		}
+		assertAuthorized(t, req)
+	}, response)
+
+	if _, err := client.GetSubscriptionPricePointEqualizations(
+		context.Background(),
+		"price-1",
+		WithSubscriptionPricePointsLimit(200),
+		WithSubscriptionPricePointsNextURL(next),
+	); err != nil {
+		t.Fatalf("GetSubscriptionPricePointEqualizations() error: %v", err)
+	}
+}
+
 func TestCreateSubscriptionSubmission(t *testing.T) {
 	response := jsonResponse(http.StatusCreated, `{"data":{"type":"subscriptionSubmissions","id":"submit-1"}}`)
 	client := newTestClient(t, func(req *http.Request) {

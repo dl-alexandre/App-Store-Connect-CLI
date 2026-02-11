@@ -299,6 +299,7 @@ func init() {
 	})
 	registerRows(buildIconsRows)
 	registerRows(buildUploadsRows)
+	registerRows(buildsLatestNextRows)
 	registerRows(func(v *BuildUploadResponse) ([]string, [][]string) {
 		return buildUploadsRows(&BuildUploadsResponse{Data: []Resource[BuildUploadAttributes]{v.Data}})
 	})
@@ -441,6 +442,7 @@ func init() {
 	})
 	registerRows(buildExpireAllResultRows)
 	registerRows(appScreenshotListResultRows)
+	registerRows(screenshotSizesRows)
 	registerRows(appPreviewListResultRows)
 	registerDirect(func(v *AppScreenshotUploadResult, render func([]string, [][]string)) error {
 		h, r := appScreenshotUploadResultMainRows(v)

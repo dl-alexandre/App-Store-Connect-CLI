@@ -37,6 +37,47 @@ func TestInferScreenshotDisplayType_FromDimensionsOnly(t *testing.T) {
 	}
 }
 
+func TestInferScreenshotDisplayType_MapsIPhone69AliasToAppIPhone67(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "iphone_69_screen.png")
+	writePNG(t, path, 1290, 2796)
+
+	displayType, err := inferScreenshotDisplayType(path)
+	if err != nil {
+		t.Fatalf("inferScreenshotDisplayType() error: %v", err)
+	}
+	if displayType != "APP_IPHONE_67" {
+		t.Fatalf("expected APP_IPHONE_67, got %q", displayType)
+	}
+}
+
+func TestInferScreenshotDisplayType_AcceptsLatestLargeIPhoneDimensions(t *testing.T) {
+	testCases := []struct {
+		name   string
+		width  int
+		height int
+	}{
+		{name: "1320x2868", width: 1320, height: 2868},
+		{name: "1260x2736", width: 1260, height: 2736},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			dir := t.TempDir()
+			path := filepath.Join(dir, "screen.png")
+			writePNG(t, path, tc.width, tc.height)
+
+			displayType, err := inferScreenshotDisplayType(path)
+			if err != nil {
+				t.Fatalf("inferScreenshotDisplayType() error: %v", err)
+			}
+			if displayType != "APP_IPHONE_67" {
+				t.Fatalf("expected APP_IPHONE_67, got %q", displayType)
+			}
+		})
+	}
+}
+
 func TestInferScreenshotDisplayType_UnknownSize(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "screen.png")

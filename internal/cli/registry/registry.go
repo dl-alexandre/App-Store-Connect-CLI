@@ -6,8 +6,70 @@ import (
 
 	"github.com/peterbourgon/ff/v3/ffcli"
 
+	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/accessibility"
+	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/actors"
+	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/agerating"
+	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/agreements"
+	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/alternativedistribution"
+	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/analytics"
+	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/androidiosmapping"
+	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/app_events"
+	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/appclips"
+	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/apps"
+	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/assets"
+	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/auth"
+	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/backgroundassets"
+	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/betaapplocalizations"
+	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/betabuildlocalizations"
+	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/buildbundles"
+	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/buildlocalizations"
+	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/builds"
+	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/bundleids"
+	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/categories"
+	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/certificates"
 	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/completion"
+	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/crashes"
+	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/devices"
+	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/docs"
+	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/encryption"
+	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/eula"
+	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/feedback"
+	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/finance"
+	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/gamecenter"
+	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/iap"
+	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/initcmd"
+	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/install"
+	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/localizations"
+	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/marketplace"
+	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/merchantids"
+	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/migrate"
+	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/nominations"
+	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/notarization"
+	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/notify"
+	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/offercodes"
+	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/passtypeids"
+	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/performance"
+	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/preorders"
+	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/prerelease"
+	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/pricing"
+	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/productpages"
+	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/profiles"
+	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/promotedpurchases"
+	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/publish"
+	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/reviews"
+	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/routingcoverage"
+	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/sandbox"
 	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/shared"
+	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/signing"
+	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/submit"
+	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/subscriptions"
+	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/testflight"
+	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/users"
+	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/validate"
+	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/versions"
+	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/webhooks"
+	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/winbackoffers"
+	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/xcodecloud"
 )
 
 // VersionCommand returns a version subcommand.
@@ -25,69 +87,78 @@ func VersionCommand(version string) *ffcli.Command {
 }
 
 // Subcommands returns all root subcommands in display order.
-// Commands are organized by domain for maintainability.
 func Subcommands(version string) []*ffcli.Command {
-	var subs []*ffcli.Command
+	subs := []*ffcli.Command{
+		auth.AuthCommand(),
+		install.InstallCommand(),
+		initcmd.InitCommand(),
+		docs.DocsCommand(),
+		feedback.FeedbackCommand(),
+		crashes.CrashesCommand(),
+		reviews.ReviewsCommand(),
+		reviews.ReviewCommand(),
+		analytics.AnalyticsCommand(),
+		performance.PerformanceCommand(),
+		finance.FinanceCommand(),
+		apps.AppsCommand(),
+		appclips.AppClipsCommand(),
+		androidiosmapping.AndroidIosMappingCommand(),
+		apps.AppSetupCommand(),
+		apps.AppTagsCommand(),
+		marketplace.MarketplaceCommand(),
+		alternativedistribution.Command(),
+		webhooks.WebhooksCommand(),
+		nominations.NominationsCommand(),
+		bundleids.BundleIDsCommand(),
+		merchantids.MerchantIDsCommand(),
+		certificates.CertificatesCommand(),
+		passtypeids.PassTypeIDsCommand(),
+		profiles.ProfilesCommand(),
+		offercodes.OfferCodesCommand(),
+		winbackoffers.WinBackOffersCommand(),
+		users.UsersCommand(),
+		actors.ActorsCommand(),
+		devices.DevicesCommand(),
+		testflight.TestFlightCommand(),
+		builds.BuildsCommand(),
+		buildbundles.BuildBundlesCommand(),
+		publish.PublishCommand(),
+		versions.VersionsCommand(),
+		productpages.ProductPagesCommand(),
+		routingcoverage.RoutingCoverageCommand(),
+		apps.AppInfoCommand(),
+		apps.AppInfosCommand(),
+		eula.EULACommand(),
+		agreements.AgreementsCommand(),
+		pricing.PricingCommand(),
+		preorders.PreOrdersCommand(),
+		prerelease.PreReleaseVersionsCommand(),
+		localizations.LocalizationsCommand(),
+		assets.AssetsCommand(),
+		backgroundassets.BackgroundAssetsCommand(),
+		buildlocalizations.BuildLocalizationsCommand(),
+		betaapplocalizations.BetaAppLocalizationsCommand(),
+		betabuildlocalizations.BetaBuildLocalizationsCommand(),
+		sandbox.SandboxCommand(),
+		signing.SigningCommand(),
+		notarization.NotarizationCommand(),
+		iap.IAPCommand(),
+		app_events.Command(),
+		subscriptions.SubscriptionsCommand(),
+		submit.SubmitCommand(),
+		validate.ValidateCommand(),
+		xcodecloud.XcodeCloudCommand(),
+		categories.CategoriesCommand(),
+		agerating.AgeRatingCommand(),
+		accessibility.AccessibilityCommand(),
+		encryption.EncryptionCommand(),
+		promotedpurchases.PromotedPurchasesCommand(),
+		migrate.MigrateCommand(),
+		notify.NotifyCommand(),
+		gamecenter.GameCenterCommand(),
+		VersionCommand(version),
+	}
 
-	// Core commands (auth, init, install, docs)
-	subs = append(subs, CoreCommands()...)
-
-	// Feedback and reviews
-	subs = append(subs, FeedbackCommands()...)
-	subs = append(subs, ReviewCommands()...)
-
-	// Analytics and reporting
-	subs = append(subs, AnalyticsCommands()...)
-
-	// App management
-	subs = append(subs, AppCommands()...)
-
-	// Version and metadata
-	subs = append(subs, VersionCommands()...)
-
-	// Build management
-	subs = append(subs, BuildCommands()...)
-
-	// TestFlight
-	subs = append(subs, TestFlightCommands()...)
-
-	// Assets and localizations
-	subs = append(subs, AssetCommands()...)
-
-	// Sandbox
-	subs = append(subs, SandboxCommands()...)
-
-	// Signing
-	subs = append(subs, SigningCommands()...)
-
-	// In-app purchases
-	subs = append(subs, IAPCommands()...)
-
-	// Users and devices
-	subs = append(subs, UserCommands()...)
-
-	// Bundle IDs
-	subs = append(subs, BundleIDCommands()...)
-
-	// Webhooks and notifications
-	subs = append(subs, WebhookCommands()...)
-
-	// Submission
-	subs = append(subs, SubmissionCommands()...)
-
-	// Metadata
-	subs = append(subs, MetadataCommands()...)
-
-	// App Store metadata
-	subs = append(subs, AppStoreCommands()...)
-
-	// Game Center
-	subs = append(subs, GameCenterCommands()...)
-
-	// Version command
-	subs = append(subs, VersionCommand(version))
-
-	// Shell completion (must be last)
 	subs = append(subs, completion.CompletionCommand(subs))
 	return subs
 }

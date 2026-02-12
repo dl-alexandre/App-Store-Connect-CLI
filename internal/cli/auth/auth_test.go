@@ -271,11 +271,14 @@ func TestLoginStorageMessage_BypassModes(t *testing.T) {
 
 func TestAuthLoginCommand(t *testing.T) {
 	t.Run("local requires bypass", func(t *testing.T) {
-		// Unset ASC_BYPASS_KEYCHAIN to test the error when --local is used without --bypass-keychain
+		// Save original value BEFORE unsetting
+		origValue := os.Getenv("ASC_BYPASS_KEYCHAIN")
 		os.Unsetenv("ASC_BYPASS_KEYCHAIN")
 		t.Cleanup(func() {
-			if wasSet := os.Getenv("ASC_BYPASS_KEYCHAIN"); wasSet != "" {
-				os.Setenv("ASC_BYPASS_KEYCHAIN", wasSet)
+			if origValue != "" {
+				os.Setenv("ASC_BYPASS_KEYCHAIN", origValue)
+			} else {
+				os.Unsetenv("ASC_BYPASS_KEYCHAIN")
 			}
 		})
 		cmd := AuthLoginCommand()

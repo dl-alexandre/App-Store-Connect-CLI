@@ -71,10 +71,13 @@ make install-hooks  # Install local pre-commit hook (.githooks/pre-commit)
 
 - **Reproduce first**: Before fixing, run the failing test locally to confirm the issue. Don't assume you understand the bug.
 - **One change at a time**: Make one small fix, verify it works, then move to the next. Don't batch multiple changes.
+- **One logical change per commit**: Keep commits narrowly scoped and reviewable. Avoid mixing refactor + bug fix + test rewrites in a single commit.
 - **Never bypass checks**: Don't use `--no-verify`, don't push directly to `main`, don't skip tests to "get around" failures.
 - **Be honest about pre-existing issues**: If a test was failing before your changes, say so. Don't claim credit for "fixing" something you didn't break.
 - **Verify before claiming done**: Run the specific failing test again to confirm it's fixed, not just "all tests pass".
 - **Avoid broad skip logic**: Don't skip tests with generic string matches (e.g., "Keychain Error") that can hide regressions. Match specific error codes instead.
+- **Isolate test auth/env state**: Tests that touch auth must set/clear relevant env vars (`ASC_BYPASS_KEYCHAIN`, `ASC_PROFILE`, `ASC_KEY_ID`, `ASC_ISSUER_ID`, `ASC_PRIVATE_KEY_PATH`, `ASC_PRIVATE_KEY`, `ASC_PRIVATE_KEY_B64`, `ASC_STRICT_AUTH`) locally and restore exact original state.
+- **Strict skip policy**: `t.Skip` is allowed only for specific, documented, reproducible conditions (exact error code/condition). Generic skip patterns are not allowed.
 - **Use proper workflow**: Branch → change → test → PR. Not: main → change → push.
 
 ## Definition of Done (Single-Pass)

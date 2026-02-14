@@ -2,6 +2,7 @@ package asc
 
 import (
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -389,27 +390,11 @@ func TestOutputRegistrySingleToListHelperPanicsWithoutDataField(t *testing.T) {
 		Data []string
 	}
 
-	registerSingleToListRowsAdapter[single, list](func(v *list) ([]string, [][]string) {
-		return []string{"value"}, [][]string{{v.Data[0]}}
+	expectPanic(t, "expected panic when source Data field is missing", func() {
+		registerSingleToListRowsAdapter[single, list](func(v *list) ([]string, [][]string) {
+			return []string{"value"}, [][]string{{v.Data[0]}}
+		})
 	})
-
-	key := reflect.TypeOf(&single{})
-	t.Cleanup(func() {
-		delete(outputRegistry, key)
-	})
-
-	handler, ok := outputRegistry[key]
-	if !ok || handler == nil {
-		t.Fatal("expected helper handler")
-	}
-
-	defer func() {
-		if r := recover(); r == nil {
-			t.Fatal("expected panic when source Data field is missing")
-		}
-	}()
-
-	_, _, _ = handler(&single{Value: "missing-data"})
 }
 
 func TestOutputRegistrySingleToListHelperPanicsWhenTargetDataIsNotSlice(t *testing.T) {
@@ -420,27 +405,11 @@ func TestOutputRegistrySingleToListHelperPanicsWhenTargetDataIsNotSlice(t *testi
 		Data string
 	}
 
-	registerSingleToListRowsAdapter[single, list](func(v *list) ([]string, [][]string) {
-		return []string{"value"}, [][]string{{v.Data}}
+	expectPanic(t, "expected panic when target Data field is not slice", func() {
+		registerSingleToListRowsAdapter[single, list](func(v *list) ([]string, [][]string) {
+			return []string{"value"}, [][]string{{v.Data}}
+		})
 	})
-
-	key := reflect.TypeOf(&single{})
-	t.Cleanup(func() {
-		delete(outputRegistry, key)
-	})
-
-	handler, ok := outputRegistry[key]
-	if !ok || handler == nil {
-		t.Fatal("expected helper handler")
-	}
-
-	defer func() {
-		if r := recover(); r == nil {
-			t.Fatal("expected panic when target Data field is not slice")
-		}
-	}()
-
-	_, _, _ = handler(&single{Data: "not-slice"})
 }
 
 func TestOutputRegistrySingleToListHelperPanicsOnDataTypeMismatch(t *testing.T) {
@@ -451,38 +420,80 @@ func TestOutputRegistrySingleToListHelperPanicsOnDataTypeMismatch(t *testing.T) 
 		Data []string
 	}
 
-	registerSingleToListRowsAdapter[single, list](func(v *list) ([]string, [][]string) {
-		return []string{"value"}, nil
+	expectPanic(t, "expected panic when Data element types mismatch", func() {
+		registerSingleToListRowsAdapter[single, list](func(v *list) ([]string, [][]string) {
+			return []string{"value"}, nil
+		})
 	})
+}
 
-	key := reflect.TypeOf(&single{})
+func TestOutputRegistryRegisterRowsPanicsOnDuplicate(t *testing.T) {
+	type duplicate struct{}
+	key := reflect.TypeOf(&duplicate{})
 	t.Cleanup(func() {
 		delete(outputRegistry, key)
+		delete(directRenderRegistry, key)
 	})
 
-	handler, ok := outputRegistry[key]
-	if !ok || handler == nil {
-		t.Fatal("expected helper handler")
-	}
+	registerRows(func(v *duplicate) ([]string, [][]string) {
+		return []string{"value"}, [][]string{{"first"}}
+	})
 
-	defer func() {
-		if r := recover(); r == nil {
-			t.Fatal("expected panic when Data element types mismatch")
-		}
-	}()
+	expectPanic(t, "expected duplicate registration panic", func() {
+		registerRows(func(v *duplicate) ([]string, [][]string) {
+			return []string{"value"}, [][]string{{"second"}}
+		})
+	})
+}
 
-	_, _, _ = handler(&single{Data: 42})
+func TestOutputRegistryRegisterRowsErrPanicsWhenDirectRegistered(t *testing.T) {
+	type conflict struct{}
+	key := reflect.TypeOf(&conflict{})
+	t.Cleanup(func() {
+		delete(outputRegistry, key)
+		delete(directRenderRegistry, key)
+	})
+
+	registerDirect(func(v *conflict, render func([]string, [][]string)) error {
+		return nil
+	})
+
+	expectPanic(t, "expected conflict panic when rowsErr registers after direct", func() {
+		registerRowsErr(func(v *conflict) ([]string, [][]string, error) {
+			return nil, nil, nil
+		})
+	})
+}
+
+func TestOutputRegistryRegisterDirectPanicsWhenRowsRegistered(t *testing.T) {
+	type conflict struct{}
+	key := reflect.TypeOf(&conflict{})
+	t.Cleanup(func() {
+		delete(outputRegistry, key)
+		delete(directRenderRegistry, key)
+	})
+
+	registerRows(func(v *conflict) ([]string, [][]string) {
+		return []string{"value"}, [][]string{{"rows"}}
+	})
+
+	expectPanic(t, "expected conflict panic when direct registers after rows", func() {
+		registerDirect(func(v *conflict, render func([]string, [][]string)) error {
+			return nil
+		})
+	})
 }
 
 func contains(s, substr string) bool {
-	return len(s) >= len(substr) && searchString(s, substr)
+	return strings.Contains(s, substr)
 }
 
-func searchString(s, substr string) bool {
-	for i := 0; i <= len(s)-len(substr); i++ {
-		if s[i:i+len(substr)] == substr {
-			return true
+func expectPanic(t *testing.T, message string, fn func()) {
+	t.Helper()
+	defer func() {
+		if r := recover(); r == nil {
+			t.Fatal(message)
 		}
-	}
-	return false
+	}()
+	fn()
 }

@@ -1,35 +1,5 @@
 package asc
 
-func singleLinkageRows(data ResourceData) ([]string, [][]string) {
-	return linkagesRows(&LinkagesResponse{Data: []ResourceData{data}})
-}
-
-func registerSingleLinkageRows[T any](extract func(*T) ResourceData) {
-	registerRows(func(v *T) ([]string, [][]string) {
-		return singleLinkageRows(extract(v))
-	})
-}
-
-func registerIDStateRows[T any](extract func(*T) (string, string), rows func(string, string) ([]string, [][]string)) {
-	registerRows(func(v *T) ([]string, [][]string) {
-		id, state := extract(v)
-		return rows(id, state)
-	})
-}
-
-func registerIDBoolRows[T any](extract func(*T) (string, bool), rows func(string, bool) ([]string, [][]string)) {
-	registerRows(func(v *T) ([]string, [][]string) {
-		id, deleted := extract(v)
-		return rows(id, deleted)
-	})
-}
-
-func registerResponseDataRows[T any](rows func([]Resource[T]) ([]string, [][]string)) {
-	registerRows(func(v *Response[T]) ([]string, [][]string) {
-		return rows(v.Data)
-	})
-}
-
 //nolint:gochecknoinits // registry init is the idiomatic way to populate a type map
 func init() {
 	registerRows(feedbackRows)

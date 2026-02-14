@@ -18,6 +18,10 @@ var outputRegistry = map[reflect.Type]rowsFunc{}
 // directRenderRegistry maps types that need direct render control (multi-table output).
 var directRenderRegistry = map[reflect.Type]directRenderFunc{}
 
+func typeForPtr[T any]() reflect.Type {
+	return reflect.TypeFor[*T]()
+}
+
 func panicNilHelperFunction(kind string, t reflect.Type) {
 	panic(fmt.Sprintf("output registry: nil %s for %s", kind, t))
 }
@@ -49,7 +53,7 @@ func ensureRegistryTypesAvailable(types ...reflect.Type) {
 // registerRows registers a rows function for the given pointer type.
 // The function must accept a pointer and return (headers, rows).
 func registerRows[T any](fn func(*T) ([]string, [][]string)) {
-	t := reflect.TypeFor[*T]()
+	t := typeForPtr[T]()
 	if fn == nil {
 		panicNilHelperFunction("rows function", t)
 	}
@@ -62,7 +66,7 @@ func registerRows[T any](fn func(*T) ([]string, [][]string)) {
 
 // registerRowsErr registers a rows function that can return an error.
 func registerRowsErr[T any](fn func(*T) ([]string, [][]string, error)) {
-	t := reflect.TypeFor[*T]()
+	t := typeForPtr[T]()
 	if fn == nil {
 		panicNilHelperFunction("rows function", t)
 	}
@@ -73,7 +77,7 @@ func registerRowsErr[T any](fn func(*T) ([]string, [][]string, error)) {
 }
 
 func registerSingleLinkageRows[T any](extract func(*T) ResourceData) {
-	t := reflect.TypeFor[*T]()
+	t := typeForPtr[T]()
 	if extract == nil {
 		panicNilHelperFunction("linkage extractor", t)
 	}
@@ -83,7 +87,7 @@ func registerSingleLinkageRows[T any](extract func(*T) ResourceData) {
 }
 
 func registerIDStateRows[T any](extract func(*T) (string, string), rows func(string, string) ([]string, [][]string)) {
-	t := reflect.TypeFor[*T]()
+	t := typeForPtr[T]()
 	if extract == nil {
 		panicNilHelperFunction("id/state extractor", t)
 	}
@@ -97,7 +101,7 @@ func registerIDStateRows[T any](extract func(*T) (string, string), rows func(str
 }
 
 func registerIDBoolRows[T any](extract func(*T) (string, bool), rows func(string, bool) ([]string, [][]string)) {
-	t := reflect.TypeFor[*T]()
+	t := typeForPtr[T]()
 	if extract == nil {
 		panicNilHelperFunction("id/bool extractor", t)
 	}
@@ -111,7 +115,7 @@ func registerIDBoolRows[T any](extract func(*T) (string, bool), rows func(string
 }
 
 func registerResponseDataRows[T any](rows func([]Resource[T]) ([]string, [][]string)) {
-	t := reflect.TypeFor[*Response[T]]()
+	t := typeForPtr[Response[T]]()
 	if rows == nil {
 		panicNilHelperFunction("response-data rows function", t)
 	}
@@ -123,7 +127,7 @@ func registerResponseDataRows[T any](rows func([]Resource[T]) ([]string, [][]str
 // registerSingleResourceRowsAdapter registers rows rendering for list renderers
 // by adapting SingleResponse[T] into Response[T] with one item in Data.
 func registerSingleResourceRowsAdapter[T any](rows func(*Response[T]) ([]string, [][]string)) {
-	t := reflect.TypeFor[*SingleResponse[T]]()
+	t := typeForPtr[SingleResponse[T]]()
 	if rows == nil {
 		panicNilHelperFunction("rows function", t)
 	}
@@ -135,8 +139,8 @@ func registerSingleResourceRowsAdapter[T any](rows func(*Response[T]) ([]string,
 // registerRowsWithSingleResourceAdapter registers both list and single handlers
 // for row renderers that operate on Response[T].
 func registerRowsWithSingleResourceAdapter[T any](rows func(*Response[T]) ([]string, [][]string)) {
-	listType := reflect.TypeFor[*Response[T]]()
-	singleType := reflect.TypeFor[*SingleResponse[T]]()
+	listType := typeForPtr[Response[T]]()
+	singleType := typeForPtr[SingleResponse[T]]()
 	if rows == nil {
 		panicNilHelperFunction("rows function", listType)
 	}
@@ -215,8 +219,8 @@ func singleToListRowsAdapter[T any, U any](rows func(*U) ([]string, [][]string))
 // registerRowsWithSingleToListAdapter registers both list and single handlers
 // when list rendering expects a concrete list response type.
 func registerRowsWithSingleToListAdapter[T any, U any](rows func(*U) ([]string, [][]string)) {
-	listType := reflect.TypeFor[*U]()
-	singleType := reflect.TypeFor[*T]()
+	listType := typeForPtr[U]()
+	singleType := typeForPtr[T]()
 	if rows == nil {
 		panicNilHelperFunction("rows function", listType)
 	}
@@ -228,7 +232,7 @@ func registerRowsWithSingleToListAdapter[T any, U any](rows func(*U) ([]string, 
 
 // registerDirect registers a type that needs direct render control (multi-table output).
 func registerDirect[T any](fn func(*T, func([]string, [][]string)) error) {
-	t := reflect.TypeFor[*T]()
+	t := typeForPtr[T]()
 	if fn == nil {
 		panicNilHelperFunction("direct render function", t)
 	}

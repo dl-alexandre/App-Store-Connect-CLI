@@ -1166,12 +1166,16 @@ asc encryption documents get --id "DOC_ID"
 
 ### Screenshots & Video Previews
 
+> Local screenshot automation/generation commands are **experimental**.
+> If you face any issues, please file feedback at:
+> https://github.com/rudrankriyam/App-Store-Connect-CLI/issues/new/choose
+
 ```bash
-# Capture and frame screenshots locally
+# Capture and frame screenshots locally (experimental)
 asc screenshots capture --bundle-id "com.example.app" --name home
 asc screenshots frame --input "./screenshots/raw/home.png" --device iphone-air
 
-# Generate and approve review artifacts
+# Generate and approve review artifacts (experimental)
 asc screenshots review-generate --framed-dir "./screenshots/framed" --output-dir "./screenshots/review"
 asc screenshots review-open --output-dir "./screenshots/review"
 asc screenshots review-approve --all-ready --output-dir "./screenshots/review"

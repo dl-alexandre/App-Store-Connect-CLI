@@ -18,10 +18,14 @@ func ScreenshotsCommand() *ffcli.Command {
 	return &ffcli.Command{
 		Name:       "screenshots",
 		ShortUsage: "asc screenshots <subcommand> [flags]",
-		ShortHelp:  "Capture, frame, review, and upload App Store screenshots.",
+		ShortHelp:  "Capture, frame, review (experimental local workflow), and upload App Store screenshots.",
 		LongHelp: `Manage the full screenshot workflow from local capture to App Store upload.
 
-Local workflow:
+Local screenshot automation commands are experimental.
+If you face issues, please file feedback at:
+https://github.com/rudrankriyam/App-Store-Connect-CLI/issues/new/choose
+
+Local workflow (experimental):
   asc screenshots run --plan .asc/screenshots.json
   asc screenshots capture --bundle-id "com.example.app" --name home
   asc screenshots frame --input ./screenshots/raw/home.png --device iphone-air

@@ -23,7 +23,7 @@ func ShotsReviewOpenCommand() *ffcli.Command {
 	return &ffcli.Command{
 		Name:       "review-open",
 		ShortUsage: "asc screenshots review-open [flags]",
-		ShortHelp:  "Open review HTML report in the default browser.",
+		ShortHelp:  "Open review HTML report in the default browser (experimental).",
 		FlagSet:    fs,
 		UsageFunc:  shared.DefaultUsageFunc,
 		Exec: func(ctx context.Context, args []string) error {

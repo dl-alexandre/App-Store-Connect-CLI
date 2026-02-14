@@ -95,7 +95,7 @@ func TestRenderByRegistryUsesRowsRegistryRenderer(t *testing.T) {
 		Value string
 	}
 
-	key := reflect.TypeOf(&registered{})
+	key := typeKey[registered]()
 	cleanupRegistryTypes(t, key)
 
 	registerRows(func(v *registered) ([]string, [][]string) {
@@ -117,7 +117,7 @@ func TestRenderByRegistryUsesRowsRegistryRenderer(t *testing.T) {
 func TestRenderByRegistryUsesRowsRegistryRendererWithTypedNilPointer(t *testing.T) {
 	type registered struct{}
 
-	key := reflect.TypeOf(&registered{})
+	key := typeKey[registered]()
 	cleanupRegistryTypes(t, key)
 
 	registerRows(func(*registered) ([]string, [][]string) {
@@ -139,7 +139,7 @@ func TestRenderByRegistryUsesRowsRegistryRendererWithTypedNilPointer(t *testing.
 func TestRenderByRegistryPropagatesRowsRegistryErrors(t *testing.T) {
 	type registered struct{}
 
-	key := reflect.TypeOf(&registered{})
+	key := typeKey[registered]()
 	cleanupRegistryTypes(t, key)
 
 	wantErr := errors.New("rows renderer failed")
@@ -164,7 +164,7 @@ func TestRenderByRegistryUsesDirectRenderer(t *testing.T) {
 		Value string
 	}
 
-	key := reflect.TypeOf(&registered{})
+	key := typeKey[registered]()
 	cleanupRegistryTypes(t, key)
 
 	registerDirect(func(v *registered, render func([]string, [][]string)) error {
@@ -187,7 +187,7 @@ func TestRenderByRegistryUsesDirectRenderer(t *testing.T) {
 func TestRenderByRegistryUsesDirectRendererWithTypedNilPointer(t *testing.T) {
 	type registered struct{}
 
-	key := reflect.TypeOf(&registered{})
+	key := typeKey[registered]()
 	cleanupRegistryTypes(t, key)
 
 	registerDirect(func(_ *registered, render func([]string, [][]string)) error {
@@ -210,7 +210,7 @@ func TestRenderByRegistryUsesDirectRendererWithTypedNilPointer(t *testing.T) {
 func TestRenderByRegistryPropagatesDirectRendererErrors(t *testing.T) {
 	type registered struct{}
 
-	key := reflect.TypeOf(&registered{})
+	key := typeKey[registered]()
 	cleanupRegistryTypes(t, key)
 
 	wantErr := errors.New("direct renderer failed")
@@ -233,7 +233,7 @@ func TestRenderByRegistryPropagatesDirectRendererErrors(t *testing.T) {
 func TestRenderByRegistryPrefersDirectRegistryWhenBothHandlersExist(t *testing.T) {
 	type registered struct{}
 
-	key := reflect.TypeOf(&registered{})
+	key := typeKey[registered]()
 	cleanupRegistryTypes(t, key)
 
 	rowsHandlerCalled := seedRowsAndDirectHandlersForTest(
@@ -259,7 +259,7 @@ func TestRenderByRegistryPrefersDirectRegistryWhenBothHandlersExist(t *testing.T
 func TestRenderByRegistryPrefersDirectRegistryErrorWhenBothHandlersExist(t *testing.T) {
 	type registered struct{}
 
-	key := reflect.TypeOf(&registered{})
+	key := typeKey[registered]()
 	cleanupRegistryTypes(t, key)
 
 	wantErr := errors.New("direct failed")
@@ -303,7 +303,7 @@ func TestOutputRegistrySingleLinkageHelperRegistration(t *testing.T) {
 func TestOutputRegistrySingleLinkageHelperPanicsOnNilExtractor(t *testing.T) {
 	type linkage struct{}
 
-	key := reflect.TypeOf(&linkage{})
+	key := typeKey[linkage]()
 	cleanupRegistryTypes(t, key)
 
 	expectNilRegistryPanic(t, "linkage extractor", func() {
@@ -344,7 +344,7 @@ func TestOutputRegistryIDStateHelperRegistration(t *testing.T) {
 func TestOutputRegistryIDStateHelperPanicsOnNilExtractor(t *testing.T) {
 	type state struct{}
 
-	key := reflect.TypeOf(&state{})
+	key := typeKey[state]()
 	cleanupRegistryTypes(t, key)
 
 	expectNilRegistryPanic(t, "id/state extractor", func() {
@@ -371,7 +371,7 @@ func TestOutputRegistryIDStateHelperNilExtractorPanicsBeforeConflictChecks(t *te
 func TestOutputRegistryIDStateHelperPanicsOnNilRows(t *testing.T) {
 	type state struct{}
 
-	key := reflect.TypeOf(&state{})
+	key := typeKey[state]()
 	cleanupRegistryTypes(t, key)
 
 	expectNilRegistryPanic(t, "id/state rows function", func() {
@@ -414,7 +414,7 @@ func TestOutputRegistryIDBoolHelperRegistration(t *testing.T) {
 func TestOutputRegistryIDBoolHelperPanicsOnNilRows(t *testing.T) {
 	type idBool struct{}
 
-	key := reflect.TypeOf(&idBool{})
+	key := typeKey[idBool]()
 	cleanupRegistryTypes(t, key)
 
 	expectNilRegistryPanic(t, "id/bool rows function", func() {
@@ -429,7 +429,7 @@ func TestOutputRegistryIDBoolHelperPanicsOnNilRows(t *testing.T) {
 func TestOutputRegistryIDBoolHelperPanicsOnNilExtractor(t *testing.T) {
 	type idBool struct{}
 
-	key := reflect.TypeOf(&idBool{})
+	key := typeKey[idBool]()
 	cleanupRegistryTypes(t, key)
 
 	expectNilRegistryPanic(t, "id/bool extractor", func() {
@@ -476,7 +476,7 @@ func TestOutputRegistryResponseDataHelperRegistration(t *testing.T) {
 func TestOutputRegistryResponseDataHelperPanicsOnNilRows(t *testing.T) {
 	type attrs struct{}
 
-	key := reflect.TypeOf(&Response[attrs]{})
+	key := typeKey[Response[attrs]]()
 	cleanupRegistryTypes(t, key)
 
 	expectNilRegistryPanic(t, "response-data rows function", func() {
@@ -508,7 +508,7 @@ func TestOutputRegistrySingleResourceHelperRegistration(t *testing.T) {
 		return []string{"ID", "Name"}, [][]string{{v.Data[0].ID, v.Data[0].Attributes.Name}}
 	})
 
-	key := reflect.TypeOf(&SingleResponse[helperAttrs]{})
+	key := typeKey[SingleResponse[helperAttrs]]()
 	cleanupRegistryTypes(t, key)
 
 	handler := requireOutputHandler(t, key, "SingleResponse helper")
@@ -530,7 +530,7 @@ func TestOutputRegistrySingleResourceHelperPanicsOnNilRowsFunction(t *testing.T)
 		Name string `json:"name"`
 	}
 
-	singleKey := reflect.TypeOf(&SingleResponse[helperAttrs]{})
+	singleKey := typeKey[SingleResponse[helperAttrs]]()
 	cleanupRegistryTypes(t, singleKey)
 
 	expectNilRowsFunctionPanic(t, func() {
@@ -564,8 +564,8 @@ func TestOutputRegistryRowsWithSingleResourceHelperRegistration(t *testing.T) {
 		return []string{"ID", "Name"}, [][]string{{v.Data[0].ID, v.Data[0].Attributes.Name}}
 	})
 
-	listKey := reflect.TypeOf(&Response[attrs]{})
-	singleKey := reflect.TypeOf(&SingleResponse[attrs]{})
+	listKey := typeKey[Response[attrs]]()
+	singleKey := typeKey[SingleResponse[attrs]]()
 	cleanupRegistryTypes(t, listKey, singleKey)
 
 	listHandler := requireOutputHandler(t, listKey, "list handler from rows+single-resource helper")
@@ -593,7 +593,7 @@ func TestOutputRegistryRowsWithSingleResourceHelperNoPartialRegistrationOnPanic(
 		Name string `json:"name"`
 	}
 
-	listKey := reflect.TypeOf(&Response[attrs]{})
+	listKey := typeKey[Response[attrs]]()
 	preregisterRowsForConflict[SingleResponse[attrs]](t, "ID")
 	cleanupRegistryTypes(t, listKey)
 
@@ -612,7 +612,7 @@ func TestOutputRegistryRowsWithSingleResourceHelperNoPartialRegistrationWhenList
 	}
 
 	preregisterRowsForConflict[Response[attrs]](t, "ID")
-	singleKey := reflect.TypeOf(&SingleResponse[attrs]{})
+	singleKey := typeKey[SingleResponse[attrs]]()
 	cleanupRegistryTypes(t, singleKey)
 
 	expectPanic(t, "expected conflict panic when list handler is already registered", func() {
@@ -629,8 +629,8 @@ func TestOutputRegistryRowsWithSingleResourceHelperNoPartialRegistrationWhenSing
 		Name string `json:"name"`
 	}
 
-	listKey := reflect.TypeOf(&Response[attrs]{})
-	singleKey := reflect.TypeOf(&SingleResponse[attrs]{})
+	listKey := typeKey[Response[attrs]]()
+	singleKey := typeKey[SingleResponse[attrs]]()
 	cleanupRegistryTypes(t, listKey, singleKey)
 
 	preregisterDirectForConflict[SingleResponse[attrs]](t)
@@ -649,8 +649,8 @@ func TestOutputRegistryRowsWithSingleResourceHelperNoPartialRegistrationWhenList
 		Name string `json:"name"`
 	}
 
-	listKey := reflect.TypeOf(&Response[attrs]{})
-	singleKey := reflect.TypeOf(&SingleResponse[attrs]{})
+	listKey := typeKey[Response[attrs]]()
+	singleKey := typeKey[SingleResponse[attrs]]()
 	cleanupRegistryTypes(t, listKey, singleKey)
 
 	preregisterDirectForConflict[Response[attrs]](t)
@@ -669,8 +669,8 @@ func TestOutputRegistryRowsWithSingleResourceHelperNoPartialRegistrationWhenRows
 		Name string `json:"name"`
 	}
 
-	listKey := reflect.TypeOf(&Response[attrs]{})
-	singleKey := reflect.TypeOf(&SingleResponse[attrs]{})
+	listKey := typeKey[Response[attrs]]()
+	singleKey := typeKey[SingleResponse[attrs]]()
 	cleanupRegistryTypes(t, listKey, singleKey)
 
 	expectNilRowsFunctionPanic(t, func() {
@@ -686,7 +686,7 @@ func TestOutputRegistryRowsWithSingleResourceHelperNilRowsPanicsBeforeConflictCh
 	}
 
 	preregisterRowsForConflict[Response[attrs]](t, "ID")
-	singleKey := reflect.TypeOf(&SingleResponse[attrs]{})
+	singleKey := typeKey[SingleResponse[attrs]]()
 	cleanupRegistryTypes(t, singleKey)
 
 	expectNilRowsFunctionPanic(t, func() {
@@ -711,7 +711,7 @@ func TestOutputRegistrySingleToListHelperRegistration(t *testing.T) {
 		return []string{"value"}, [][]string{{v.Data[0]}}
 	})
 
-	key := reflect.TypeOf(&single{})
+	key := typeKey[single]()
 	cleanupRegistryTypes(t, key)
 
 	handler := requireOutputHandler(t, key, "single-to-list helper")
@@ -738,8 +738,8 @@ func TestOutputRegistryRowsWithSingleToListHelperRegistration(t *testing.T) {
 		return []string{"value"}, [][]string{{v.Data[0]}}
 	})
 
-	singleKey := reflect.TypeOf(&single{})
-	listKey := reflect.TypeOf(&list{})
+	singleKey := typeKey[single]()
+	listKey := typeKey[list]()
 	cleanupRegistryTypes(t, singleKey, listKey)
 
 	singleHandler := requireOutputHandler(t, singleKey, "single handler from rows+single-to-list helper")
@@ -767,7 +767,7 @@ func TestOutputRegistryRowsWithSingleToListHelperNoPartialRegistrationOnPanic(t 
 	}
 
 	preregisterRowsForConflict[single](t, "value")
-	listKey := reflect.TypeOf(&list{})
+	listKey := typeKey[list]()
 	cleanupRegistryTypes(t, listKey)
 
 	expectPanic(t, "expected conflict panic when single handler is already registered", func() {
@@ -787,7 +787,7 @@ func TestOutputRegistryRowsWithSingleToListHelperNoPartialRegistrationWhenListRe
 		Data []string
 	}
 
-	singleKey := reflect.TypeOf(&single{})
+	singleKey := typeKey[single]()
 	preregisterRowsForConflict[list](t, "value")
 	cleanupRegistryTypes(t, singleKey)
 
@@ -808,8 +808,8 @@ func TestOutputRegistryRowsWithSingleToListHelperNoPartialRegistrationWhenSingle
 		Data []string
 	}
 
-	singleKey := reflect.TypeOf(&single{})
-	listKey := reflect.TypeOf(&list{})
+	singleKey := typeKey[single]()
+	listKey := typeKey[list]()
 	cleanupRegistryTypes(t, singleKey, listKey)
 
 	preregisterDirectForConflict[single](t)
@@ -831,8 +831,8 @@ func TestOutputRegistryRowsWithSingleToListHelperNoPartialRegistrationWhenListDi
 		Data []string
 	}
 
-	singleKey := reflect.TypeOf(&single{})
-	listKey := reflect.TypeOf(&list{})
+	singleKey := typeKey[single]()
+	listKey := typeKey[list]()
 	cleanupRegistryTypes(t, singleKey, listKey)
 
 	preregisterDirectForConflict[list](t)
@@ -854,8 +854,8 @@ func TestOutputRegistryRowsWithSingleToListHelperNoPartialRegistrationWhenAdapte
 		Data []string
 	}
 
-	singleKey := reflect.TypeOf(&single{})
-	listKey := reflect.TypeOf(&list{})
+	singleKey := typeKey[single]()
+	listKey := typeKey[list]()
 	cleanupRegistryTypes(t, singleKey, listKey)
 
 	expectPanic(t, "expected adapter panic for missing Data field", func() {
@@ -884,7 +884,7 @@ func TestOutputRegistrySingleToListHelperCopiesLinks(t *testing.T) {
 		return []string{"id", "self"}, [][]string{{v.Data[0].ID, v.Links.Self}}
 	})
 
-	key := reflect.TypeOf(&single{})
+	key := typeKey[single]()
 	cleanupRegistryTypes(t, key)
 
 	handler := requireOutputHandler(t, key, "single-to-list links helper")
@@ -899,6 +899,65 @@ func TestOutputRegistrySingleToListHelperCopiesLinks(t *testing.T) {
 		t.Fatalf("handler returned error: %v", err)
 	}
 	assertSingleRowEquals(t, headers, rows, []string{"id", "self"}, []string{"item-1", "https://example.test/items/1"})
+}
+
+func TestValidateSingleToListAdapterTypesSetsCopyLinksWhenAssignable(t *testing.T) {
+	type single struct {
+		Data  ResourceData
+		Links Links
+	}
+	type list struct {
+		Data  []ResourceData
+		Links Links
+	}
+
+	fields := validateSingleToListAdapterTypes[single, list]()
+	if !fields.copyLinks {
+		t.Fatal("expected copyLinks=true when source and target Links fields are assignable")
+	}
+	if fields.sourceDataField.Name != "Data" || fields.targetDataField.Name != "Data" {
+		t.Fatalf("expected Data fields, got source=%s target=%s", fields.sourceDataField.Name, fields.targetDataField.Name)
+	}
+	if fields.sourceLinksField.Name != "Links" || fields.targetLinksField.Name != "Links" {
+		t.Fatalf("expected Links fields, got source=%s target=%s", fields.sourceLinksField.Name, fields.targetLinksField.Name)
+	}
+}
+
+func TestValidateSingleToListAdapterTypesDisablesCopyLinksWhenMissingOnSource(t *testing.T) {
+	type single struct {
+		Data string
+	}
+	type list struct {
+		Data  []string
+		Links Links
+	}
+
+	fields := validateSingleToListAdapterTypes[single, list]()
+	if fields.copyLinks {
+		t.Fatal("expected copyLinks=false when source Links field is missing")
+	}
+}
+
+func TestValidateSingleToListAdapterTypesDisablesCopyLinksWhenTypesDiffer(t *testing.T) {
+	type sourceLinks struct {
+		Self string
+	}
+	type targetLinks struct {
+		Related string
+	}
+	type single struct {
+		Data  string
+		Links sourceLinks
+	}
+	type list struct {
+		Data  []string
+		Links targetLinks
+	}
+
+	fields := validateSingleToListAdapterTypes[single, list]()
+	if fields.copyLinks {
+		t.Fatal("expected copyLinks=false when source and target Links types are not assignable")
+	}
 }
 
 func TestOutputRegistrySingleToListHelperWorksWhenTargetHasNoLinks(t *testing.T) {
@@ -917,7 +976,7 @@ func TestOutputRegistrySingleToListHelperWorksWhenTargetHasNoLinks(t *testing.T)
 		return []string{"value"}, [][]string{{v.Data[0]}}
 	})
 
-	key := reflect.TypeOf(&single{})
+	key := typeKey[single]()
 	cleanupRegistryTypes(t, key)
 
 	handler := requireOutputHandler(t, key, "single-to-list no-target-links helper")
@@ -948,7 +1007,7 @@ func TestOutputRegistrySingleToListHelperLeavesTargetLinksZeroWhenSourceHasNoLin
 		return []string{"value", "self"}, [][]string{{v.Data[0], v.Links.Self}}
 	})
 
-	key := reflect.TypeOf(&single{})
+	key := typeKey[single]()
 	cleanupRegistryTypes(t, key)
 
 	handler := requireOutputHandler(t, key, "single-to-list missing-source-links helper")
@@ -1039,7 +1098,7 @@ func TestOutputRegistrySingleToListHelperPanicsOnNilRowsFunction(t *testing.T) {
 		Data []string
 	}
 
-	singleKey := reflect.TypeOf(&single{})
+	singleKey := typeKey[single]()
 	cleanupRegistryTypes(t, singleKey)
 
 	expectNilRowsFunctionPanic(t, func() {
@@ -1092,7 +1151,7 @@ func TestOutputRegistryRegisterRowsPanicsOnDuplicate(t *testing.T) {
 
 func TestOutputRegistryRegisterRowsPanicsOnNilFunction(t *testing.T) {
 	type nilRows struct{}
-	key := reflect.TypeOf(&nilRows{})
+	key := typeKey[nilRows]()
 	cleanupRegistryTypes(t, key)
 
 	expectNilRowsFunctionPanic(t, func() {
@@ -1104,7 +1163,7 @@ func TestOutputRegistryRegisterRowsPanicsOnNilFunction(t *testing.T) {
 
 func TestOutputRegistryRegisterRowsNilFunctionPanicIncludesType(t *testing.T) {
 	type nilRows struct{}
-	key := reflect.TypeOf(&nilRows{})
+	key := typeKey[nilRows]()
 	cleanupRegistryTypes(t, key)
 
 	expectPanicContains(t, key.String(), func() {
@@ -1159,7 +1218,7 @@ func TestOutputRegistryRegisterRowsErrPanicsOnDuplicate(t *testing.T) {
 
 func TestOutputRegistryRegisterRowsErrPanicsOnNilFunction(t *testing.T) {
 	type nilRowsErr struct{}
-	key := reflect.TypeOf(&nilRowsErr{})
+	key := typeKey[nilRowsErr]()
 	cleanupRegistryTypes(t, key)
 
 	expectNilRowsFunctionPanic(t, func() {
@@ -1207,7 +1266,7 @@ func TestOutputRegistryRegisterDirectPanicsOnDuplicate(t *testing.T) {
 
 func TestOutputRegistryRegisterDirectPanicsOnNilFunction(t *testing.T) {
 	type nilDirect struct{}
-	key := reflect.TypeOf(&nilDirect{})
+	key := typeKey[nilDirect]()
 	cleanupRegistryTypes(t, key)
 
 	expectNilDirectRenderFunctionPanic(t, func() {
@@ -1234,8 +1293,8 @@ func TestOutputRegistryRowsWithSingleToListHelperNoPartialRegistrationWhenRowsNi
 		Data []string
 	}
 
-	singleKey := reflect.TypeOf(&single{})
-	listKey := reflect.TypeOf(&list{})
+	singleKey := typeKey[single]()
+	listKey := typeKey[list]()
 	cleanupRegistryTypes(t, singleKey, listKey)
 
 	expectNilRowsFunctionPanic(t, func() {
@@ -1253,7 +1312,7 @@ func TestOutputRegistryRowsWithSingleToListHelperNilRowsPanicsBeforeConflictChec
 		Data []string
 	}
 
-	singleKey := reflect.TypeOf(&single{})
+	singleKey := typeKey[single]()
 	preregisterRowsForConflict[list](t, "value")
 	cleanupRegistryTypes(t, singleKey)
 
@@ -1272,7 +1331,7 @@ func TestOutputRegistryRowsWithSingleToListHelperAdapterValidationPanicsBeforeCo
 		Data []string
 	}
 
-	singleKey := reflect.TypeOf(&single{})
+	singleKey := typeKey[single]()
 	preregisterRowsForConflict[list](t, "value")
 	cleanupRegistryTypes(t, singleKey)
 
@@ -1301,6 +1360,15 @@ func TestEnsureRegistryTypeAvailablePanicsOnNilType(t *testing.T) {
 	expectInvalidNilRegistrationTypePanic(t, func() {
 		ensureRegistryTypeAvailable(nil)
 	})
+}
+
+func TestEnsureRegistryTypeAvailableAllowsUnregisteredType(t *testing.T) {
+	type available struct{}
+	key := typeKey[available]()
+	cleanupRegistryTypes(t, key)
+
+	ensureRegistryTypeAvailable(key)
+	assertRegistryTypeAbsent(t, key)
 }
 
 func TestEnsureRegistryTypeAvailablePanicsWhenOutputTypeRegistered(t *testing.T) {
@@ -1363,6 +1431,17 @@ func TestEnsureRegistryTypesAvailablePanicsWhenDirectTypeAlreadyRegistered(t *te
 
 func TestEnsureRegistryTypesAvailableAllowsEmptyInput(t *testing.T) {
 	ensureRegistryTypesAvailable()
+}
+
+func TestEnsureRegistryTypesAvailableAllowsDistinctUnregisteredTypes(t *testing.T) {
+	type first struct{}
+	type second struct{}
+	firstKey := typeKey[first]()
+	secondKey := typeKey[second]()
+	cleanupRegistryTypes(t, firstKey, secondKey)
+
+	ensureRegistryTypesAvailable(firstKey, secondKey)
+	assertRegistryTypesAbsent(t, firstKey, secondKey)
 }
 
 func TestIsRegistryTypeRegistered(t *testing.T) {

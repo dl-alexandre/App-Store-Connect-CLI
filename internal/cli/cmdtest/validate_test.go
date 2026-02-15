@@ -251,6 +251,46 @@ func TestValidateStrictExitBehavior(t *testing.T) {
 	})
 }
 
+func TestValidateSkipsWhatsNewOnInitialRelease(t *testing.T) {
+	fixture := validValidateFixture()
+	// Simulate an initial v1.0 release where Apple doesn't allow "What's New".
+	// The API can return an empty or missing `whatsNew` field; either way it
+	// should not produce a warning.
+	fixture.versionLocs = `{"data":[{"type":"appStoreVersionLocalizations","id":"ver-loc-1","attributes":{"locale":"en-US","description":"Description","keywords":"keyword","promotionalText":"Promo","supportUrl":"https://support.example.com","marketingUrl":"https://marketing.example.com"}}]}`
+
+	client := newValidateTestClient(t, fixture)
+	restore := validate.SetClientFactory(func() (*asc.Client, error) {
+		return client, nil
+	})
+	defer restore()
+
+	root := RootCommand("1.2.3")
+	stdout, stderr := captureOutput(t, func() {
+		if err := root.Parse([]string{"validate", "--app", "app-1", "--version-id", "ver-1", "--strict"}); err != nil {
+			t.Fatalf("parse error: %v", err)
+		}
+		if err := root.Run(context.Background()); err != nil {
+			t.Fatalf("expected no error with --strict, got %v", err)
+		}
+	})
+
+	if stderr != "" {
+		t.Fatalf("expected empty stderr, got %q", stderr)
+	}
+	var report validation.Report
+	if err := json.Unmarshal([]byte(stdout), &report); err != nil {
+		t.Fatalf("failed to parse JSON output: %v", err)
+	}
+	if report.Summary.Errors != 0 || report.Summary.Warnings != 0 {
+		t.Fatalf("expected no issues, got %+v", report.Summary)
+	}
+	for _, check := range report.Checks {
+		if check.ID == "metadata.required.whats_new" {
+			t.Fatalf("did not expect metadata.required.whats_new check for initial release")
+		}
+	}
+}
+
 func TestValidateMixedWarningAndError(t *testing.T) {
 	fixture := validValidateFixture()
 	fixture.versionLocs = `{"data":[{"type":"appStoreVersionLocalizations","id":"ver-loc-1","attributes":{"locale":"en-US","description":"","keywords":"keyword","supportUrl":"https://support.example.com"}}]}`

@@ -1,8 +1,11 @@
 package validation
 
-import "strings"
+import (
+	"strconv"
+	"strings"
+)
 
-func requiredFieldChecks(primaryLocale string, versionLocs []VersionLocalization, appInfoLocs []AppInfoLocalization) []CheckResult {
+func requiredFieldChecks(primaryLocale string, versionString string, versionLocs []VersionLocalization, appInfoLocs []AppInfoLocalization) []CheckResult {
 	var checks []CheckResult
 
 	if len(versionLocs) == 0 {
@@ -34,6 +37,12 @@ func requiredFieldChecks(primaryLocale string, versionLocs []VersionLocalization
 			})
 		}
 	}
+
+	// Apple doesn't support a "What's New" section on initial App Store releases.
+	// In practice, these initial releases commonly use versionString "1.0" (or
+	// equivalent like "1.0.0"), and attempting to set `whatsNew` is rejected by
+	// the API. Avoid warning users for an uneditable field.
+	skipWhatsNew := isInitialReleaseVersionString(versionString)
 
 	for _, loc := range versionLocs {
 		if strings.TrimSpace(loc.Description) == "" {
@@ -72,7 +81,7 @@ func requiredFieldChecks(primaryLocale string, versionLocs []VersionLocalization
 				Remediation:  "Provide a support URL for this localization",
 			})
 		}
-		if strings.TrimSpace(loc.WhatsNew) == "" {
+		if !skipWhatsNew && strings.TrimSpace(loc.WhatsNew) == "" {
 			checks = append(checks, CheckResult{
 				ID:           "metadata.required.whats_new",
 				Severity:     SeverityWarning,
@@ -141,4 +150,43 @@ func hasLocaleAppInfo(localizations []AppInfoLocalization, locale string) bool {
 		}
 	}
 	return false
+}
+
+func isInitialReleaseVersionString(versionString string) bool {
+	trimmed := strings.TrimSpace(versionString)
+	if trimmed == "" {
+		return false
+	}
+	parts := strings.Split(trimmed, ".")
+	// Require at least major.minor (e.g. "1.0") to avoid guessing.
+	if len(parts) < 2 {
+		return false
+	}
+
+	major, err := strconv.Atoi(parts[0])
+	if err != nil || major < 0 {
+		return false
+	}
+	minor, err := strconv.Atoi(parts[1])
+	if err != nil || minor < 0 {
+		return false
+	}
+	if major != 1 || minor != 0 {
+		return false
+	}
+
+	// Treat "1.0", "1.0.0", "1.0.0.0", ... as initial releases.
+	for _, part := range parts[2:] {
+		if part == "" {
+			return false
+		}
+		n, err := strconv.Atoi(part)
+		if err != nil || n < 0 {
+			return false
+		}
+		if n != 0 {
+			return false
+		}
+	}
+	return true
 }

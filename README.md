@@ -24,6 +24,7 @@ Apps shipping with asc-cli. [Add yours via PR](https://github.com/rudrankriyam/A
 | App | Link | Creator | Platform |
 |:----|:-----|:--------|:---------|
 | CodexMonitor | [Open](https://github.com/Dimillian/CodexMonitor) | Dimillian | macOS, iOS |
+| Dandelion | [Open](https://apps.apple.com/us/app/dandelion-write-and-let-go/id6757363901) | joeycast | iOS, macOS |
 | DoubleMemory | [Open](https://doublememory.com) | Shaomeng Zhang | iOS |
 | Fisherman SMS Filtering | [Open](https://apps.apple.com/app/id6449192504) | MGidnian | iOS |
 | kora: Music Reviews & Ratings | [Open](https://apps.apple.com/app/id6502549140) | adamjhf | iOS |
@@ -32,6 +33,13 @@ Apps shipping with asc-cli. [Add yours via PR](https://github.com/rudrankriyam/A
 | TV Show Tracker | [Open](https://apps.apple.com/us/app/tv-show-tracker-tv-club/id6497563903) | rursache | iOS |
 | Unlimited Clipboard History | [Open](https://apps.apple.com/us/app/unlimited-clipboard-history/id6705136056) | yspreen | macOS |
 <!-- WALL-OF-APPS:END -->
+
+### Add Your App to the Wall
+
+Use:
+`make generate app APP="Your App Name" LINK="https://apps.apple.com/app/id1234567890" CREATOR="your-github-handle" PLATFORM="iOS,macOS"`
+
+This command updates `docs/wall-of-apps.json` and re-syncs the generated Wall snippet in `README.md`.
 
 ## ASC Skills
 

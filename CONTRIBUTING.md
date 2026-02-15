@@ -84,8 +84,10 @@ The generator reads `docs/wall-of-apps.json` and updates the Wall snippet in `RE
 To add your app:
 
 1. Fork the repo
-2. Add an entry to `docs/wall-of-apps.json` (do not edit the Wall block in `README.md` directly)
-3. Run `make update-wall-of-apps`
+2. Run:
+   `make generate app APP="Your App Name" LINK="https://apps.apple.com/app/id1234567890" CREATOR="your-github-handle" PLATFORM="iOS,macOS"`
+   (this updates `docs/wall-of-apps.json` and syncs `README.md` in one step)
+3. Optional manual path: edit `docs/wall-of-apps.json` directly, then run `make update-wall-of-apps`
 4. Commit all generated changes:
    - `docs/wall-of-apps.json`
    - `README.md`

@@ -10,8 +10,7 @@
 
 ## Wall of Apps (only if this PR adds/updates a Wall app)
 
-- [ ] I edited `docs/wall-of-apps.json` (not the generated Wall block in `README.md` directly)
-- [ ] I ran `make update-wall-of-apps`
+- [ ] I ran `make generate app APP="..." LINK="..." CREATOR="..." PLATFORM="..."` (or manually edited `docs/wall-of-apps.json` + ran `make update-wall-of-apps`)
 - [ ] I committed all generated files:
   - `docs/wall-of-apps.json`
   - `README.md`

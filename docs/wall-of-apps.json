@@ -46,5 +46,11 @@
     "link": "https://apps.apple.com/app/id6449192504",
     "creator": "MGidnian",
     "platform": ["iOS"]
+  },
+  {
+    "app": "Dandelion",
+    "link": "https://apps.apple.com/us/app/dandelion-write-and-let-go/id6757363901",
+    "creator": "joeycast",
+    "platform": ["iOS", "macOS"]
   }
 ]

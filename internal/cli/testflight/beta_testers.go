@@ -28,6 +28,8 @@ Examples:
   asc testflight beta-testers list --app "APP_ID"
   asc testflight beta-testers get --id "TESTER_ID"
   asc testflight beta-testers add --app "APP_ID" --email "tester@example.com" --group "Beta"
+  asc testflight beta-testers export --app "APP_ID" --output "./testflight-testers.csv"
+  asc testflight beta-testers import --app "APP_ID" --input "./testflight-testers.csv" --dry-run
   asc testflight beta-testers remove --app "APP_ID" --email "tester@example.com"
   asc testflight beta-testers add-groups --id "TESTER_ID" --group "GROUP_ID"
   asc testflight beta-testers remove-groups --id "TESTER_ID" --group "GROUP_ID"
@@ -42,6 +44,8 @@ Examples:
 			BetaTestersListCommand(),
 			BetaTestersGetCommand(),
 			BetaTestersAddCommand(),
+			BetaTestersExportCommand(),
+			BetaTestersImportCommand(),
 			BetaTestersRemoveCommand(),
 			BetaTestersAddGroupsCommand(),
 			BetaTestersRemoveGroupsCommand(),

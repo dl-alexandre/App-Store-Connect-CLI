@@ -2,7 +2,6 @@ package assets
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -129,28 +128,14 @@ func downloadURLToFile(ctx context.Context, rawURL string, outputPath string, ov
 }
 
 func writeDownloadedFile(path string, reader io.Reader, overwrite bool) (int64, error) {
-	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
-		return 0, err
-	}
-
-	if !overwrite {
-		file, err := shared.OpenNewFileNoFollow(path, 0o600)
-		if err != nil {
-			if errors.Is(err, os.ErrExist) {
-				return 0, fmt.Errorf("output file already exists: %w", err)
-			}
-			return 0, err
-		}
-		defer file.Close()
-
-		written, err := io.Copy(file, reader)
-		if err != nil {
-			return 0, err
-		}
-		return written, file.Sync()
-	}
-
-	// Best-effort protection: refuse overwriting symlinks; use temp+rename.
-	// Important: do not remove the destination until the new file is fully written.
-	return shared.WriteFileNoSymlinkOverwrite(path, reader, 0o600, ".asc-download-*", ".asc-download-backup-*")
+	return shared.SafeWriteFileNoSymlink(
+		path,
+		0o600,
+		overwrite,
+		".asc-download-*",
+		".asc-download-backup-*",
+		func(f *os.File) (int64, error) {
+			return io.Copy(f, reader)
+		},
+	)
 }

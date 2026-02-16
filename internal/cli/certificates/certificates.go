@@ -40,6 +40,7 @@ Examples:
 		Subcommands: []*ffcli.Command{
 			CertificatesListCommand(),
 			CertificatesGetCommand(),
+			CertificatesCSRCommand(),
 			CertificatesCreateCommand(),
 			CertificatesUpdateCommand(),
 			CertificatesRevokeCommand(),

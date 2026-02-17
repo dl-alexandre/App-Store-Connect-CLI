@@ -281,7 +281,7 @@ func UploadVersionLocalizations(ctx context.Context, client versionLocalizationC
 		existingByLocale[item.Attributes.Locale] = item.ID
 	}
 
-	return uploadLocalizationValues(ctx, valuesByLocale, existingByLocale, func(locale string, values map[string]string, existingID string) (asc.LocalizationUploadLocaleResult, error) {
+	return uploadLocalizationValues(valuesByLocale, existingByLocale, func(locale string, values map[string]string, existingID string) (asc.LocalizationUploadLocaleResult, error) {
 		attributes := buildVersionLocalizationAttributes(locale, values, existingID == "")
 		if existingID == "" {
 			if dryRun {
@@ -331,7 +331,7 @@ func UploadAppInfoLocalizations(ctx context.Context, client appInfoLocalizationC
 		existingByLocale[item.Attributes.Locale] = item.ID
 	}
 
-	return uploadLocalizationValues(ctx, valuesByLocale, existingByLocale, func(locale string, values map[string]string, existingID string) (asc.LocalizationUploadLocaleResult, error) {
+	return uploadLocalizationValues(valuesByLocale, existingByLocale, func(locale string, values map[string]string, existingID string) (asc.LocalizationUploadLocaleResult, error) {
 		attributes := buildAppInfoLocalizationAttributes(locale, values, existingID == "")
 		if existingID == "" {
 			if dryRun {
@@ -378,7 +378,7 @@ func containsWhatsNewToken(value string) bool {
 	return strings.Contains(normalized, "whatsnew")
 }
 
-func uploadLocalizationValues(ctx context.Context, valuesByLocale map[string]map[string]string, existing map[string]string, handler func(locale string, values map[string]string, existingID string) (asc.LocalizationUploadLocaleResult, error)) ([]asc.LocalizationUploadLocaleResult, error) {
+func uploadLocalizationValues(valuesByLocale map[string]map[string]string, existing map[string]string, handler func(locale string, values map[string]string, existingID string) (asc.LocalizationUploadLocaleResult, error)) ([]asc.LocalizationUploadLocaleResult, error) {
 	locales := make([]string, 0, len(valuesByLocale))
 	for locale := range valuesByLocale {
 		locales = append(locales, locale)

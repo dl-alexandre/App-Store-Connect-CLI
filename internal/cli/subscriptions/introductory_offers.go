@@ -189,13 +189,13 @@ Examples:
 				return flag.ErrHelp
 			}
 
-			duration, err := normalizeSubscriptionOfferDuration(*offerDuration, true)
+			duration, err := normalizeSubscriptionOfferDuration(*offerDuration)
 			if err != nil {
 				fmt.Fprintln(os.Stderr, "Error:", err.Error())
 				return flag.ErrHelp
 			}
 
-			mode, err := normalizeSubscriptionOfferMode(*offerMode, true)
+			mode, err := normalizeSubscriptionOfferMode(*offerMode)
 			if err != nil {
 				fmt.Fprintln(os.Stderr, "Error:", err.Error())
 				return flag.ErrHelp

@@ -13,8 +13,7 @@ linters:
     - ineffassign
     - unused
     - misspell
-    # (intentionally NOT enabling `unparam` yet; creates large cleanup churn
-    # with current codebase conventions)
+    - unparam
 
 linters-settings:
   misspell:
@@ -30,4 +29,3 @@ issues:
     # massive rename churn; keep other style rules like ST1005.
     - linters: [stylecheck]
       text: "ST1003:"
-

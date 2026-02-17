@@ -279,7 +279,7 @@ func runOutputRegistryHelperRegistrations(t *testing.T) {
 			if err != nil {
 				t.Fatalf("handler returned error: %v", err)
 			}
-			assertRowContains(t, headers, rows, 2, "submission-123")
+			assertRowContains(t, headers, rows, "submission-123")
 		})
 
 		t.Run("id/state", func(t *testing.T) {
@@ -297,7 +297,7 @@ func runOutputRegistryHelperRegistrations(t *testing.T) {
 			if err != nil {
 				t.Fatalf("handler returned error: %v", err)
 			}
-			assertRowContains(t, headers, rows, 2, "release-1", "READY_FOR_SALE")
+			assertRowContains(t, headers, rows, "release-1", "READY_FOR_SALE")
 		})
 
 		t.Run("id/bool", func(t *testing.T) {
@@ -313,7 +313,7 @@ func runOutputRegistryHelperRegistrations(t *testing.T) {
 			if err != nil {
 				t.Fatalf("handler returned error: %v", err)
 			}
-			assertRowContains(t, headers, rows, 2, "domain-1", "true")
+			assertRowContains(t, headers, rows, "domain-1", "true")
 		})
 	})
 
@@ -335,7 +335,7 @@ func runOutputRegistryHelperRegistrations(t *testing.T) {
 			if err != nil {
 				t.Fatalf("handler returned error: %v", err)
 			}
-			assertRowContains(t, headers, rows, 2, "metric-1", "installs=12")
+			assertRowContains(t, headers, rows, "metric-1", "installs=12")
 		})
 
 		t.Run("typed nil pointer maps to zero-value data slice", func(t *testing.T) {
@@ -967,11 +967,12 @@ func seedRowsAndDirectHandlersForTest(typ reflect.Type, directFn directRenderFun
 	}
 }
 
-func assertRowContains(t *testing.T, headers []string, rows [][]string, minColumns int, expected ...string) {
+func assertRowContains(t *testing.T, headers []string, rows [][]string, expected ...string) {
 	t.Helper()
 	if len(headers) == 0 || len(rows) == 0 {
 		t.Fatalf("expected non-empty headers/rows, got headers=%v rows=%v", headers, rows)
 	}
+	const minColumns = 2
 	if len(rows[0]) < minColumns {
 		t.Fatalf("expected at least %d columns in row, got row=%v", minColumns, rows[0])
 	}

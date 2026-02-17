@@ -12,10 +12,10 @@ import (
 	"testing"
 )
 
-func rawResponse(status int, body string) *http.Response {
+func rawResponse(body string) *http.Response {
 	return &http.Response{
-		Status:     fmt.Sprintf("%d %s", status, http.StatusText(status)),
-		StatusCode: status,
+		Status:     fmt.Sprintf("%d %s", http.StatusOK, http.StatusText(http.StatusOK)),
+		StatusCode: http.StatusOK,
 		Header:     http.Header{"Content-Type": []string{"application/a-gzip"}},
 		Body:       io.NopCloser(strings.NewReader(body)),
 	}
@@ -56,7 +56,7 @@ func TestBuildSalesReportQuery(t *testing.T) {
 }
 
 func TestGetSalesReport_SendsRequest(t *testing.T) {
-	response := rawResponse(http.StatusOK, "gzdata")
+	response := rawResponse("gzdata")
 	client := newTestClient(t, func(req *http.Request) {
 		if req.Method != http.MethodGet {
 			t.Fatalf("expected GET, got %s", req.Method)
@@ -369,7 +369,7 @@ func TestGetAnalyticsReportSegment_SendsRequest(t *testing.T) {
 func TestDownloadAnalyticsReport_NoAuthHeader(t *testing.T) {
 	// Use an allowed host for the download URL
 	downloadURL := "https://mzstatic.com/report.gz"
-	response := rawResponse(http.StatusOK, "gzdata")
+	response := rawResponse("gzdata")
 	client := newTestClient(t, func(req *http.Request) {
 		if req.URL.String() != downloadURL {
 			t.Fatalf("expected URL %q, got %q", downloadURL, req.URL.String())
@@ -420,7 +420,7 @@ func TestDownloadAnalyticsReport_CDNHostRequiresSignature(t *testing.T) {
 
 func TestDownloadAnalyticsReport_CDNHostWithSignature(t *testing.T) {
 	downloadURL := "https://example.cloudfront.net/report.gz?Signature=abc&Key-Pair-Id=key"
-	response := rawResponse(http.StatusOK, "gzdata")
+	response := rawResponse("gzdata")
 	client := newTestClient(t, func(req *http.Request) {
 		if req.URL.String() != downloadURL {
 			t.Fatalf("expected URL %q, got %q", downloadURL, req.URL.String())

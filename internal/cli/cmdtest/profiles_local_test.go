@@ -29,7 +29,7 @@ func TestProfilesLocalInstall_ForceActionIsInstalledWhenNoExisting(t *testing.T)
 	uuid := "00000000-0000-0000-0000-0000000000AB"
 
 	sourcePath := filepath.Join(t.TempDir(), "profile.mobileprovision")
-	sourceBytes := buildMobileprovision(t, uuid, "Test Profile", "TEAM12345", "com.example.app", time.Now().Add(24*time.Hour))
+	sourceBytes := buildMobileprovision(t, uuid, "Test Profile", time.Now().Add(24*time.Hour))
 	if err := os.WriteFile(sourcePath, sourceBytes, 0o600); err != nil {
 		t.Fatalf("WriteFile(sourcePath) error: %v", err)
 	}
@@ -72,7 +72,7 @@ func TestProfilesLocalInstall_ForceActionIsReplacedWhenExisting(t *testing.T) {
 	uuid := "00000000-0000-0000-0000-0000000000AC"
 
 	sourcePath := filepath.Join(t.TempDir(), "profile.mobileprovision")
-	sourceBytes := buildMobileprovision(t, uuid, "Test Profile", "TEAM12345", "com.example.app", time.Now().Add(24*time.Hour))
+	sourceBytes := buildMobileprovision(t, uuid, "Test Profile", time.Now().Add(24*time.Hour))
 	if err := os.WriteFile(sourcePath, sourceBytes, 0o600); err != nil {
 		t.Fatalf("WriteFile(sourcePath) error: %v", err)
 	}
@@ -187,8 +187,8 @@ func TestProfilesLocal_InstallListCleanExpired(t *testing.T) {
 	activeSource := filepath.Join(t.TempDir(), "active.mobileprovision")
 	expiredSource := filepath.Join(t.TempDir(), "expired.mobileprovision")
 
-	activeBytes := buildMobileprovision(t, activeUUID, "Active Profile", "TEAM12345", "com.example.app", time.Now().Add(24*time.Hour))
-	expiredBytes := buildMobileprovision(t, expiredUUID, "Expired Profile", "TEAM12345", "com.example.app", time.Now().Add(-24*time.Hour))
+	activeBytes := buildMobileprovision(t, activeUUID, "Active Profile", time.Now().Add(24*time.Hour))
+	expiredBytes := buildMobileprovision(t, expiredUUID, "Expired Profile", time.Now().Add(-24*time.Hour))
 
 	if err := os.WriteFile(activeSource, activeBytes, 0o600); err != nil {
 		t.Fatalf("WriteFile(activeSource) error: %v", err)
@@ -293,7 +293,7 @@ func TestProfilesLocalList_SkipsUnreadableProfilesAndReports(t *testing.T) {
 
 	goodUUID := "00000000-0000-0000-0000-000000000003"
 	goodSource := filepath.Join(t.TempDir(), "good.mobileprovision")
-	goodBytes := buildMobileprovision(t, goodUUID, "Good Profile", "TEAM12345", "com.example.app", time.Now().Add(24*time.Hour))
+	goodBytes := buildMobileprovision(t, goodUUID, "Good Profile", time.Now().Add(24*time.Hour))
 	if err := os.WriteFile(goodSource, goodBytes, 0o600); err != nil {
 		t.Fatalf("WriteFile(goodSource) error: %v", err)
 	}
@@ -350,7 +350,7 @@ func TestProfilesLocalInstall_ByID_DownloadsAndInstalls(t *testing.T) {
 	})
 
 	uuid := "00000000-0000-0000-0000-0000000000AA"
-	content := buildMobileprovision(t, uuid, "Downloaded Profile", "TEAM12345", "com.example.app", time.Now().Add(24*time.Hour))
+	content := buildMobileprovision(t, uuid, "Downloaded Profile", time.Now().Add(24*time.Hour))
 	b64 := base64.StdEncoding.EncodeToString(content)
 
 	http.DefaultTransport = roundTripFunc(func(req *http.Request) (*http.Response, error) {
@@ -399,9 +399,11 @@ func TestProfilesLocalInstall_ByID_DownloadsAndInstalls(t *testing.T) {
 	}
 }
 
-func buildMobileprovision(t *testing.T, uuid, name, teamID, bundleID string, expires time.Time) []byte {
+func buildMobileprovision(t *testing.T, uuid, name string, expires time.Time) []byte {
 	t.Helper()
 
+	const teamID = "TEAM12345"
+	const bundleID = "com.example.app"
 	now := time.Now().UTC()
 	payload := map[string]any{
 		"UUID":           uuid,

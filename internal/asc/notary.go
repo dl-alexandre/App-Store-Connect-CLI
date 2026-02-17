@@ -365,9 +365,7 @@ func uploadSinglePartToS3(ctx context.Context, creds S3Credentials, data io.Read
 		req.Header.Set("X-Amz-Security-Token", creds.SessionToken)
 	}
 
-	if err := signS3Request(req, creds, payloadHash, now); err != nil {
-		return err
-	}
+	signS3Request(req, creds, payloadHash, now)
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -478,9 +476,7 @@ func createMultipartUpload(ctx context.Context, host, encodedPath string, creds 
 	if creds.SessionToken != "" {
 		req.Header.Set("X-Amz-Security-Token", creds.SessionToken)
 	}
-	if err := signS3Request(req, creds, payloadHash, now); err != nil {
-		return "", err
-	}
+	signS3Request(req, creds, payloadHash, now)
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -526,9 +522,7 @@ func uploadMultipartPart(ctx context.Context, host, encodedPath string, creds S3
 	if creds.SessionToken != "" {
 		req.Header.Set("X-Amz-Security-Token", creds.SessionToken)
 	}
-	if err := signS3Request(req, creds, payloadHash, now); err != nil {
-		return "", err
-	}
+	signS3Request(req, creds, payloadHash, now)
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -586,9 +580,7 @@ func completeMultipartUpload(ctx context.Context, host, encodedPath string, cred
 	if creds.SessionToken != "" {
 		req.Header.Set("X-Amz-Security-Token", creds.SessionToken)
 	}
-	if err := signS3Request(req, creds, payloadHash, now); err != nil {
-		return err
-	}
+	signS3Request(req, creds, payloadHash, now)
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -622,9 +614,7 @@ func abortMultipartUpload(ctx context.Context, host, encodedPath string, creds S
 	if creds.SessionToken != "" {
 		req.Header.Set("X-Amz-Security-Token", creds.SessionToken)
 	}
-	if err := signS3Request(req, creds, payloadHash, now); err != nil {
-		return err
-	}
+	signS3Request(req, creds, payloadHash, now)
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -744,7 +734,7 @@ func canonicalizeHeaders(headers map[string]string) (string, string) {
 	return canonicalBuilder.String(), signedHeaders
 }
 
-func signS3Request(req *http.Request, creds S3Credentials, payloadHash string, now time.Time) error {
+func signS3Request(req *http.Request, creds S3Credentials, payloadHash string, now time.Time) {
 	amzDate := now.Format("20060102T150405Z")
 	dateStamp := now.Format("20060102")
 
@@ -784,8 +774,6 @@ func signS3Request(req *http.Request, creds S3Credentials, payloadHash string, n
 	authHeader := fmt.Sprintf("AWS4-HMAC-SHA256 Credential=%s/%s, SignedHeaders=%s, Signature=%s",
 		creds.AccessKeyID, credentialScope, signedHeaders, signature)
 	req.Header.Set("Authorization", authHeader)
-
-	return nil
 }
 
 func calculateMultipartPartSize(contentLength int64) int64 {

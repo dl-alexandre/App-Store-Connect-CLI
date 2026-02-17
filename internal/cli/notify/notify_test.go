@@ -48,7 +48,7 @@ func TestNotifySlackValidationErrors(t *testing.T) {
 			root := SlackCommand()
 			root.FlagSet.SetOutput(io.Discard)
 
-			_, stderr := captureOutput(t, func() {
+			stderr := captureOutput(t, func() {
 				err := root.Parse(test.args)
 				if err != nil && !errors.Is(err, flag.ErrHelp) {
 					t.Fatalf("parse error: %v", err)
@@ -268,7 +268,7 @@ func TestNotifySlackBlocksValidationErrors(t *testing.T) {
 			root := SlackCommand()
 			root.FlagSet.SetOutput(io.Discard)
 
-			_, stderr := captureOutput(t, func() {
+			stderr := captureOutput(t, func() {
 				err := root.Parse(test.args)
 				if err != nil && !errors.Is(err, flag.ErrHelp) {
 					t.Fatalf("parse error: %v", err)
@@ -323,7 +323,7 @@ func TestNotifySlackRejectsInvalidWebhookHost(t *testing.T) {
 	cmd := SlackCommand()
 	cmd.FlagSet.SetOutput(io.Discard)
 
-	_, stderr := captureOutput(t, func() {
+	stderr := captureOutput(t, func() {
 		if err := cmd.Parse([]string{"--webhook", "https://example.com/services/test", "--message", "hi"}); err != nil {
 			t.Fatalf("parse error: %v", err)
 		}
@@ -345,7 +345,7 @@ func TestNotifySlackRejectsInsecureScheme(t *testing.T) {
 	cmd := SlackCommand()
 	cmd.FlagSet.SetOutput(io.Discard)
 
-	_, stderr := captureOutput(t, func() {
+	stderr := captureOutput(t, func() {
 		if err := cmd.Parse([]string{"--webhook", "http://hooks.slack.com/services/test", "--message", "hi"}); err != nil {
 			t.Fatalf("parse error: %v", err)
 		}
@@ -367,7 +367,7 @@ func TestNotifySlackRejectsMalformedWebhookURL(t *testing.T) {
 	cmd := SlackCommand()
 	cmd.FlagSet.SetOutput(io.Discard)
 
-	_, stderr := captureOutput(t, func() {
+	stderr := captureOutput(t, func() {
 		if err := cmd.Parse([]string{"--webhook", "http://localhost:80:80/services/test", "--message", "hi"}); err != nil {
 			t.Fatalf("parse error: %v", err)
 		}
@@ -462,7 +462,7 @@ func TestNotifyCommandHasUsageFunc(t *testing.T) {
 	}
 }
 
-func captureOutput(t *testing.T, fn func()) (string, string) {
+func captureOutput(t *testing.T, fn func()) string {
 	t.Helper()
 
 	oldStdout := os.Stdout
@@ -507,11 +507,11 @@ func captureOutput(t *testing.T, fn func()) (string, string) {
 	_ = wOut.Close()
 	_ = wErr.Close()
 
-	stdout := <-outC
+	<-outC
 	stderr := <-errC
 
 	os.Stdout = oldStdout
 	os.Stderr = oldStderr
 
-	return stdout, stderr
+	return stderr
 }

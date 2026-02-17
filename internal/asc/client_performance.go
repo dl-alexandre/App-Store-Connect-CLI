@@ -67,7 +67,7 @@ func (c *Client) DownloadPerfPowerMetricsForApp(ctx context.Context, appID strin
 		path += "?" + queryString
 	}
 
-	resp, err := c.doStream(ctx, "GET", path, nil, perfPowerMetricsAcceptHeader)
+	resp, err := c.doStream(ctx, path, perfPowerMetricsAcceptHeader)
 	if err != nil {
 		return nil, err
 	}
@@ -91,7 +91,7 @@ func (c *Client) DownloadPerfPowerMetricsForBuild(ctx context.Context, buildID s
 		path += "?" + queryString
 	}
 
-	resp, err := c.doStream(ctx, "GET", path, nil, perfPowerMetricsAcceptHeader)
+	resp, err := c.doStream(ctx, path, perfPowerMetricsAcceptHeader)
 	if err != nil {
 		return nil, err
 	}
@@ -100,7 +100,7 @@ func (c *Client) DownloadPerfPowerMetricsForBuild(ctx context.Context, buildID s
 }
 
 func (c *Client) fetchPerfPowerMetrics(ctx context.Context, path string) (*PerfPowerMetricsResponse, error) {
-	resp, err := c.doStream(ctx, "GET", path, nil, perfPowerMetricsAcceptHeader)
+	resp, err := c.doStream(ctx, path, perfPowerMetricsAcceptHeader)
 	if err != nil {
 		return nil, err
 	}
@@ -166,7 +166,7 @@ func (c *Client) GetDiagnosticSignatureLogs(ctx context.Context, signatureID str
 		path += "?" + queryString
 	}
 
-	resp, err := c.doStream(ctx, "GET", path, nil, diagnosticLogsAcceptHeader)
+	resp, err := c.doStream(ctx, path, diagnosticLogsAcceptHeader)
 	if err != nil {
 		return nil, err
 	}
@@ -197,7 +197,7 @@ func (c *Client) DownloadDiagnosticSignatureLogs(ctx context.Context, signatureI
 		path += "?" + queryString
 	}
 
-	resp, err := c.doStream(ctx, "GET", path, nil, diagnosticLogsAcceptHeader)
+	resp, err := c.doStream(ctx, path, diagnosticLogsAcceptHeader)
 	if err != nil {
 		return nil, err
 	}

@@ -1409,7 +1409,7 @@ func GameCenterMatchmakingQueueSizesCommand() *ffcli.Command {
 	output := shared.BindOutputFlags(fs)
 
 	return metricsQueueCommand("queue-sizes", fs, queueID, granularity, sort, limit, next, paginate, output.Output, output.Pretty, func(ctx context.Context, id string, opts ...asc.GCMatchmakingMetricsOption) (*asc.GameCenterMatchmakingQueueSizesResponse, error) {
-		return ascClient(ctx).GetGameCenterMatchmakingQueueSizes(ctx, id, opts...)
+		return ascClient().GetGameCenterMatchmakingQueueSizes(ctx, id, opts...)
 	})
 }
 
@@ -1429,7 +1429,7 @@ func GameCenterMatchmakingQueueRequestsCommand() *ffcli.Command {
 	output := shared.BindOutputFlags(fs)
 
 	return metricsQueueCommandWithFilters("queue-requests", fs, queueID, granularity, groupBy, filterResult, filterDetail, sort, limit, next, paginate, output.Output, output.Pretty, func(ctx context.Context, id string, opts ...asc.GCMatchmakingMetricsOption) (*asc.GameCenterMatchmakingQueueRequestsResponse, error) {
-		return ascClient(ctx).GetGameCenterMatchmakingQueueRequests(ctx, id, opts...)
+		return ascClient().GetGameCenterMatchmakingQueueRequests(ctx, id, opts...)
 	})
 }
 
@@ -1446,7 +1446,7 @@ func GameCenterMatchmakingQueueSessionsCommand() *ffcli.Command {
 	output := shared.BindOutputFlags(fs)
 
 	return metricsQueueCommand("queue-sessions", fs, queueID, granularity, sort, limit, next, paginate, output.Output, output.Pretty, func(ctx context.Context, id string, opts ...asc.GCMatchmakingMetricsOption) (*asc.GameCenterMatchmakingQueueSessionsResponse, error) {
-		return ascClient(ctx).GetGameCenterMatchmakingQueueSessions(ctx, id, opts...)
+		return ascClient().GetGameCenterMatchmakingQueueSessions(ctx, id, opts...)
 	})
 }
 
@@ -1463,7 +1463,7 @@ func GameCenterMatchmakingQueueExperimentSizesCommand() *ffcli.Command {
 	output := shared.BindOutputFlags(fs)
 
 	return metricsQueueCommand("experiment-queue-sizes", fs, queueID, granularity, sort, limit, next, paginate, output.Output, output.Pretty, func(ctx context.Context, id string, opts ...asc.GCMatchmakingMetricsOption) (*asc.GameCenterMatchmakingQueueExperimentSizesResponse, error) {
-		return ascClient(ctx).GetGameCenterMatchmakingQueueExperimentSizes(ctx, id, opts...)
+		return ascClient().GetGameCenterMatchmakingQueueExperimentSizes(ctx, id, opts...)
 	})
 }
 
@@ -1483,7 +1483,7 @@ func GameCenterMatchmakingQueueExperimentRequestsCommand() *ffcli.Command {
 	output := shared.BindOutputFlags(fs)
 
 	return metricsQueueCommandWithFilters("experiment-queue-requests", fs, queueID, granularity, groupBy, filterResult, filterDetail, sort, limit, next, paginate, output.Output, output.Pretty, func(ctx context.Context, id string, opts ...asc.GCMatchmakingMetricsOption) (*asc.GameCenterMatchmakingQueueExperimentRequestsResponse, error) {
-		return ascClient(ctx).GetGameCenterMatchmakingQueueExperimentRequests(ctx, id, opts...)
+		return ascClient().GetGameCenterMatchmakingQueueExperimentRequests(ctx, id, opts...)
 	})
 }
 
@@ -1503,7 +1503,7 @@ func GameCenterMatchmakingBooleanRuleResultsCommand() *ffcli.Command {
 	output := shared.BindOutputFlags(fs)
 
 	return metricsRuleCommand("rule-boolean-results", fs, ruleID, granularity, groupBy, filterResult, filterQueue, sort, limit, next, paginate, output.Output, output.Pretty, func(ctx context.Context, id string, opts ...asc.GCMatchmakingMetricsOption) (*asc.GameCenterMatchmakingBooleanRuleResultsResponse, error) {
-		return ascClient(ctx).GetGameCenterMatchmakingBooleanRuleResults(ctx, id, opts...)
+		return ascClient().GetGameCenterMatchmakingBooleanRuleResults(ctx, id, opts...)
 	})
 }
 
@@ -1523,7 +1523,7 @@ func GameCenterMatchmakingNumberRuleResultsCommand() *ffcli.Command {
 	output := shared.BindOutputFlags(fs)
 
 	return metricsRuleCommand("rule-number-results", fs, ruleID, granularity, groupBy, filterResult, filterQueue, sort, limit, next, paginate, output.Output, output.Pretty, func(ctx context.Context, id string, opts ...asc.GCMatchmakingMetricsOption) (*asc.GameCenterMatchmakingNumberRuleResultsResponse, error) {
-		return ascClient(ctx).GetGameCenterMatchmakingNumberRuleResults(ctx, id, opts...)
+		return ascClient().GetGameCenterMatchmakingNumberRuleResults(ctx, id, opts...)
 	})
 }
 
@@ -1543,7 +1543,7 @@ func GameCenterMatchmakingRuleErrorsCommand() *ffcli.Command {
 	output := shared.BindOutputFlags(fs)
 
 	return metricsRuleCommand("rule-errors", fs, ruleID, granularity, groupBy, filterResult, filterQueue, sort, limit, next, paginate, output.Output, output.Pretty, func(ctx context.Context, id string, opts ...asc.GCMatchmakingMetricsOption) (*asc.GameCenterMatchmakingRuleErrorsResponse, error) {
-		return ascClient(ctx).GetGameCenterMatchmakingRuleErrors(ctx, id, opts...)
+		return ascClient().GetGameCenterMatchmakingRuleErrors(ctx, id, opts...)
 	})
 }
 
@@ -1803,7 +1803,7 @@ Examples:
 	}
 }
 
-func ascClient(ctx context.Context) *asc.Client {
+func ascClient() *asc.Client {
 	client, _ := shared.GetASCClient()
 	return client
 }

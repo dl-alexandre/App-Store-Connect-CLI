@@ -17,17 +17,17 @@ func TestNormalizeSubscriptionEnums(t *testing.T) {
 		t.Fatal("expected validation error for period")
 	}
 
-	if got, err := normalizeSubscriptionOfferDuration("one_year", true); err != nil || got != asc.SubscriptionOfferDurationOneYear {
+	if got, err := normalizeSubscriptionOfferDuration("one_year"); err != nil || got != asc.SubscriptionOfferDurationOneYear {
 		t.Fatalf("expected ONE_YEAR, got %q err=%v", got, err)
 	}
-	if _, err := normalizeSubscriptionOfferDuration("bad", true); err == nil {
+	if _, err := normalizeSubscriptionOfferDuration("bad"); err == nil {
 		t.Fatal("expected validation error for offer duration")
 	}
 
-	if got, err := normalizeSubscriptionOfferMode("free_trial", true); err != nil || got != asc.SubscriptionOfferModeFreeTrial {
+	if got, err := normalizeSubscriptionOfferMode("free_trial"); err != nil || got != asc.SubscriptionOfferModeFreeTrial {
 		t.Fatalf("expected FREE_TRIAL, got %q err=%v", got, err)
 	}
-	if _, err := normalizeSubscriptionOfferMode("bad", true); err == nil {
+	if _, err := normalizeSubscriptionOfferMode("bad"); err == nil {
 		t.Fatal("expected validation error for offer mode")
 	}
 
@@ -47,7 +47,7 @@ func TestNormalizeSubscriptionEnums(t *testing.T) {
 }
 
 func TestNormalizeSubscriptionCustomerEligibilities(t *testing.T) {
-	got, err := normalizeSubscriptionCustomerEligibilities("new,existing,expired", true)
+	got, err := normalizeSubscriptionCustomerEligibilities("new,existing,expired")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -58,10 +58,10 @@ func TestNormalizeSubscriptionCustomerEligibilities(t *testing.T) {
 		t.Fatalf("unexpected first eligibility: %q", got[0])
 	}
 
-	if _, err := normalizeSubscriptionCustomerEligibilities("", true); err == nil {
+	if _, err := normalizeSubscriptionCustomerEligibilities(""); err == nil {
 		t.Fatal("expected required error for empty eligibilities")
 	}
-	if _, err := normalizeSubscriptionCustomerEligibilities("new,bad", true); err == nil {
+	if _, err := normalizeSubscriptionCustomerEligibilities("new,bad"); err == nil {
 		t.Fatal("expected validation error for invalid eligibility")
 	}
 }

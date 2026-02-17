@@ -71,11 +71,7 @@ type Result struct {
 func CheckAndUpdate(ctx context.Context, opts Options) (Result, error) {
 	res := Result{}
 
-	normalized, err := opts.withDefaults()
-	if err != nil {
-		return res, err
-	}
-	opts = normalized
+	opts = opts.withDefaults()
 	res.ExecutablePath = opts.ExecutablePath
 
 	if opts.NoUpdate || envBool(noUpdateEnvVar) || envBool(skipUpdateEnvVar) {
@@ -142,7 +138,7 @@ func CheckAndUpdate(ctx context.Context, opts Options) (Result, error) {
 	return res, nil
 }
 
-func (opts Options) withDefaults() (Options, error) {
+func (opts Options) withDefaults() Options {
 	if opts.Repo == "" {
 		opts.Repo = defaultRepo
 	}
@@ -186,7 +182,7 @@ func (opts Options) withDefaults() (Options, error) {
 			opts.CachePath = path
 		}
 	}
-	return opts, nil
+	return opts
 }
 
 func envBool(name string) bool {

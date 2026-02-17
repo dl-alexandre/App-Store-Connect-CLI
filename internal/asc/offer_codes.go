@@ -126,7 +126,7 @@ func (c *Client) GetSubscriptionOfferCodeOneTimeUseCodeValues(ctx context.Contex
 	oneTimeUseCodeID = strings.TrimSpace(oneTimeUseCodeID)
 	path := fmt.Sprintf("/v1/subscriptionOfferCodeOneTimeUseCodes/%s/values", oneTimeUseCodeID)
 
-	resp, err := c.doStream(ctx, "GET", path, nil, "text/csv")
+	resp, err := c.doStream(ctx, path, "text/csv")
 	if err != nil {
 		return nil, err
 	}
@@ -140,7 +140,7 @@ func (c *Client) GetInAppPurchaseOfferCodeOneTimeUseCodeValues(ctx context.Conte
 	oneTimeUseCodeID = strings.TrimSpace(oneTimeUseCodeID)
 	path := fmt.Sprintf("/v1/inAppPurchaseOfferCodeOneTimeUseCodes/%s/values", oneTimeUseCodeID)
 
-	resp, err := c.doStream(ctx, "GET", path, nil, "text/csv")
+	resp, err := c.doStream(ctx, path, "text/csv")
 	if err != nil {
 		return nil, err
 	}

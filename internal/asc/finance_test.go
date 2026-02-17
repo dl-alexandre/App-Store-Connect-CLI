@@ -35,7 +35,7 @@ func TestBuildFinanceReportQuery(t *testing.T) {
 }
 
 func TestDownloadFinanceReport_SendsRequest(t *testing.T) {
-	response := rawResponse(http.StatusOK, "gzdata")
+	response := rawResponse("gzdata")
 	client := newTestClient(t, func(req *http.Request) {
 		if req.Method != http.MethodGet {
 			t.Fatalf("expected GET, got %s", req.Method)

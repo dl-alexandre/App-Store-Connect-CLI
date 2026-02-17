@@ -425,8 +425,8 @@ func validateAnalyticsDownloadURL(downloadURL string) error {
 	return fmt.Errorf("rejected analytics download URL from untrusted host %q", parsedURL.Host)
 }
 
-func (c *Client) doStream(ctx context.Context, method, path string, body io.Reader, accept string) (*http.Response, error) {
-	req, err := c.newRequest(ctx, method, path, body)
+func (c *Client) doStream(ctx context.Context, path string, accept string) (*http.Response, error) {
+	req, err := c.newRequest(ctx, "GET", path, nil)
 	if err != nil {
 		return nil, err
 	}

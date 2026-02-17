@@ -389,10 +389,3 @@ func TestRunKoubouGenerate_NotFoundIncludesPinnedInstallHint(t *testing.T) {
 		t.Fatalf("expected pinned install command in error, got %v", err)
 	}
 }
-
-func max(a, b int) int {
-	if a > b {
-		return a
-	}
-	return b
-}

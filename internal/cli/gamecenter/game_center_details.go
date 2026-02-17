@@ -1106,7 +1106,7 @@ func GameCenterDetailsClassicMatchmakingCommand() *ffcli.Command {
 	output := shared.BindOutputFlags(fs)
 
 	return detailsMetricsCommand("classic-matchmaking", fs, detailID, granularity, groupBy, filterResult, sort, limit, next, paginate, output.Output, output.Pretty, func(ctx context.Context, id string, opts ...asc.GCMatchmakingMetricsOption) (*asc.GameCenterMetricsResponse, error) {
-		return ascClient(ctx).GetGameCenterDetailsClassicMatchmakingRequests(ctx, id, opts...)
+		return ascClient().GetGameCenterDetailsClassicMatchmakingRequests(ctx, id, opts...)
 	})
 }
 
@@ -1125,7 +1125,7 @@ func GameCenterDetailsRuleBasedMatchmakingCommand() *ffcli.Command {
 	output := shared.BindOutputFlags(fs)
 
 	return detailsMetricsCommand("rule-based-matchmaking", fs, detailID, granularity, groupBy, filterResult, sort, limit, next, paginate, output.Output, output.Pretty, func(ctx context.Context, id string, opts ...asc.GCMatchmakingMetricsOption) (*asc.GameCenterMetricsResponse, error) {
-		return ascClient(ctx).GetGameCenterDetailsRuleBasedMatchmakingRequests(ctx, id, opts...)
+		return ascClient().GetGameCenterDetailsRuleBasedMatchmakingRequests(ctx, id, opts...)
 	})
 }
 

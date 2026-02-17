@@ -4939,7 +4939,7 @@ func TestGetCiXcodeVersionMacOsVersions_WithLimit(t *testing.T) {
 
 func TestDownloadCiArtifact_NoAuthHeader(t *testing.T) {
 	downloadURL := "https://appstoreconnect.apple.com/artifacts/artifact.zip"
-	response := rawResponse(http.StatusOK, "artifact-data")
+	response := rawResponse("artifact-data")
 	client := newTestClient(t, func(req *http.Request) {
 		if req.URL.String() != downloadURL {
 			t.Fatalf("expected URL %q, got %q", downloadURL, req.URL.String())
@@ -4958,7 +4958,7 @@ func TestDownloadCiArtifact_NoAuthHeader(t *testing.T) {
 
 func TestDownloadCiArtifact_ICloudContentHostAllowed(t *testing.T) {
 	downloadURL := "https://cvws.icloud-content.com/artifact.zip"
-	response := rawResponse(http.StatusOK, "artifact-data")
+	response := rawResponse("artifact-data")
 	client := newTestClient(t, func(req *http.Request) {
 		if req.URL.String() != downloadURL {
 			t.Fatalf("expected URL %q, got %q", downloadURL, req.URL.String())
@@ -5009,7 +5009,7 @@ func TestDownloadCiArtifact_CDNHostRequiresSignature(t *testing.T) {
 
 func TestDownloadCiArtifact_CDNHostWithSignature(t *testing.T) {
 	downloadURL := "https://example.cloudfront.net/artifact.zip?Signature=abc&Key-Pair-Id=key"
-	response := rawResponse(http.StatusOK, "artifact-data")
+	response := rawResponse("artifact-data")
 	client := newTestClient(t, func(req *http.Request) {
 		if req.URL.String() != downloadURL {
 			t.Fatalf("expected URL %q, got %q", downloadURL, req.URL.String())

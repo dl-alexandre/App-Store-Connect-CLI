@@ -108,13 +108,10 @@ var subscriptionCustomerEligibilityMap = map[string]asc.SubscriptionCustomerElig
 	string(asc.SubscriptionCustomerEligibilityExpired):  asc.SubscriptionCustomerEligibilityExpired,
 }
 
-func normalizeSubscriptionOfferDuration(value string, required bool) (asc.SubscriptionOfferDuration, error) {
+func normalizeSubscriptionOfferDuration(value string) (asc.SubscriptionOfferDuration, error) {
 	normalized := strings.ToUpper(strings.TrimSpace(value))
 	if normalized == "" {
-		if required {
-			return "", fmt.Errorf("--offer-duration is required")
-		}
-		return "", nil
+		return "", fmt.Errorf("--offer-duration is required")
 	}
 	if duration, ok := subscriptionOfferDurationMap[normalized]; ok {
 		return duration, nil
@@ -164,13 +161,10 @@ func normalizeSubscriptionGracePeriodRenewalType(value string, required bool) (a
 	return "", fmt.Errorf("--renewal-type must be one of: %s", strings.Join(subscriptionGracePeriodRenewalTypeValues, ", "))
 }
 
-func normalizeSubscriptionOfferMode(value string, required bool) (asc.SubscriptionOfferMode, error) {
+func normalizeSubscriptionOfferMode(value string) (asc.SubscriptionOfferMode, error) {
 	normalized := strings.ToUpper(strings.TrimSpace(value))
 	if normalized == "" {
-		if required {
-			return "", fmt.Errorf("--offer-mode is required")
-		}
-		return "", nil
+		return "", fmt.Errorf("--offer-mode is required")
 	}
 	if mode, ok := subscriptionOfferModeMap[normalized]; ok {
 		return mode, nil
@@ -192,13 +186,10 @@ func normalizeSubscriptionOfferEligibility(value string, required bool) (asc.Sub
 	return "", fmt.Errorf("--offer-eligibility must be one of: %s", strings.Join(subscriptionOfferEligibilityValues, ", "))
 }
 
-func normalizeSubscriptionCustomerEligibilities(value string, required bool) ([]asc.SubscriptionCustomerEligibility, error) {
+func normalizeSubscriptionCustomerEligibilities(value string) ([]asc.SubscriptionCustomerEligibility, error) {
 	values := shared.SplitCSVUpper(value)
 	if len(values) == 0 {
-		if required {
-			return nil, fmt.Errorf("--customer-eligibilities is required")
-		}
-		return nil, nil
+		return nil, fmt.Errorf("--customer-eligibilities is required")
 	}
 
 	eligibilities := make([]asc.SubscriptionCustomerEligibility, 0, len(values))

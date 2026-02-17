@@ -370,7 +370,7 @@ func (c *Client) GetSalesReport(ctx context.Context, params SalesReportParams) (
 		path += "?" + queryString
 	}
 
-	resp, err := c.doStream(ctx, "GET", path, nil, "application/a-gzip")
+	resp, err := c.doStream(ctx, path, "application/a-gzip")
 	if err != nil {
 		return nil, err
 	}

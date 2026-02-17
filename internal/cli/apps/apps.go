@@ -247,22 +247,15 @@ func appsList(ctx context.Context, output string, pretty bool, bundleID string, 
 	}
 
 	if paginate {
-		// Fetch first page with limit set for consistent pagination
 		paginateOpts := append(opts, asc.WithAppsLimit(200))
-		firstPage, err := client.GetApps(requestCtx, paginateOpts...)
-		if err != nil {
-			return fmt.Errorf("apps: failed to fetch: %w", err)
-		}
-
-		// Fetch all remaining pages
-		var apps asc.PaginatedResponse
-		err = shared.WithSpinner("", func() error {
-			var paginateErr error
-			apps, paginateErr = asc.PaginateAll(requestCtx, firstPage, func(ctx context.Context, nextURL string) (asc.PaginatedResponse, error) {
+		apps, err := shared.PaginateWithSpinner(requestCtx,
+			func(ctx context.Context) (asc.PaginatedResponse, error) {
+				return client.GetApps(ctx, paginateOpts...)
+			},
+			func(ctx context.Context, nextURL string) (asc.PaginatedResponse, error) {
 				return client.GetApps(ctx, asc.WithAppsNextURL(nextURL))
-			})
-			return paginateErr
-		})
+			},
+		)
 		if err != nil {
 			return fmt.Errorf("apps: %w", err)
 		}

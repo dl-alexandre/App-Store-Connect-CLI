@@ -241,18 +241,14 @@ Examples:
 					return flag.ErrHelp
 				}
 				paginateOpts := append(opts, asc.WithBuildIconsLimit(200))
-				firstPage, err := client.GetBuildIcons(requestCtx, buildValue, paginateOpts...)
-				if err != nil {
-					return fmt.Errorf("builds icons list: failed to fetch: %w", err)
-				}
-				var resp asc.PaginatedResponse
-				err = shared.WithSpinner("", func() error {
-					var paginateErr error
-					resp, paginateErr = asc.PaginateAll(requestCtx, firstPage, func(ctx context.Context, nextURL string) (asc.PaginatedResponse, error) {
+				resp, err := shared.PaginateWithSpinner(requestCtx,
+					func(ctx context.Context) (asc.PaginatedResponse, error) {
+						return client.GetBuildIcons(ctx, buildValue, paginateOpts...)
+					},
+					func(ctx context.Context, nextURL string) (asc.PaginatedResponse, error) {
 						return client.GetBuildIcons(ctx, buildValue, asc.WithBuildIconsNextURL(nextURL))
-					})
-					return paginateErr
-				})
+					},
+				)
 				if err != nil {
 					return fmt.Errorf("builds icons list: %w", err)
 				}

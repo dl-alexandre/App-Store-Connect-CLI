@@ -90,19 +90,14 @@ Examples:
 
 			if *paginate {
 				paginateOpts := append(opts, asc.WithCiIssuesLimit(200))
-				firstPage, err := client.GetCiBuildActionIssues(requestCtx, resolvedActionID, paginateOpts...)
-				if err != nil {
-					return fmt.Errorf("xcode-cloud issues list: failed to fetch: %w", err)
-				}
-
-				var resp asc.PaginatedResponse
-				err = shared.WithSpinner("", func() error {
-					var paginateErr error
-					resp, paginateErr = asc.PaginateAll(requestCtx, firstPage, func(ctx context.Context, nextURL string) (asc.PaginatedResponse, error) {
+				resp, err := shared.PaginateWithSpinner(requestCtx,
+					func(ctx context.Context) (asc.PaginatedResponse, error) {
+						return client.GetCiBuildActionIssues(ctx, resolvedActionID, paginateOpts...)
+					},
+					func(ctx context.Context, nextURL string) (asc.PaginatedResponse, error) {
 						return client.GetCiBuildActionIssues(ctx, resolvedActionID, asc.WithCiIssuesNextURL(nextURL))
-					})
-					return paginateErr
-				})
+					},
+				)
 				if err != nil {
 					return fmt.Errorf("xcode-cloud issues list: %w", err)
 				}

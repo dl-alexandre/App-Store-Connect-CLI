@@ -147,22 +147,15 @@ func executeReviewsList(ctx context.Context, appID, output string, pretty bool, 
 	}
 
 	if paginate {
-		// Fetch first page with limit set for consistent pagination
 		paginateOpts := append(opts, asc.WithLimit(200))
-		firstPage, err := client.GetReviews(requestCtx, appID, paginateOpts...)
-		if err != nil {
-			return fmt.Errorf("reviews: failed to fetch: %w", err)
-		}
-
-		// Fetch all remaining pages
-		var reviews asc.PaginatedResponse
-		err = shared.WithSpinner("", func() error {
-			var paginateErr error
-			reviews, paginateErr = asc.PaginateAll(requestCtx, firstPage, func(ctx context.Context, nextURL string) (asc.PaginatedResponse, error) {
+		reviews, err := shared.PaginateWithSpinner(requestCtx,
+			func(ctx context.Context) (asc.PaginatedResponse, error) {
+				return client.GetReviews(ctx, appID, paginateOpts...)
+			},
+			func(ctx context.Context, nextURL string) (asc.PaginatedResponse, error) {
 				return client.GetReviews(ctx, appID, asc.WithNextURL(nextURL))
-			})
-			return paginateErr
-		})
+			},
+		)
 		if err != nil {
 			return fmt.Errorf("reviews: %w", err)
 		}

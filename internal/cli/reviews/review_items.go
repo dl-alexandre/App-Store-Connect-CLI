@@ -103,19 +103,14 @@ Examples:
 
 			if *paginate {
 				paginateOpts := append(opts, asc.WithReviewSubmissionItemsLimit(200))
-				firstPage, err := client.GetReviewSubmissionItems(requestCtx, strings.TrimSpace(*submissionID), paginateOpts...)
-				if err != nil {
-					return fmt.Errorf("review items-list: failed to fetch: %w", err)
-				}
-
-				var resp asc.PaginatedResponse
-				err = shared.WithSpinner("", func() error {
-					var paginateErr error
-					resp, paginateErr = asc.PaginateAll(requestCtx, firstPage, func(ctx context.Context, nextURL string) (asc.PaginatedResponse, error) {
+				resp, err := shared.PaginateWithSpinner(requestCtx,
+					func(ctx context.Context) (asc.PaginatedResponse, error) {
+						return client.GetReviewSubmissionItems(ctx, strings.TrimSpace(*submissionID), paginateOpts...)
+					},
+					func(ctx context.Context, nextURL string) (asc.PaginatedResponse, error) {
 						return client.GetReviewSubmissionItems(ctx, strings.TrimSpace(*submissionID), asc.WithReviewSubmissionItemsNextURL(nextURL))
-					})
-					return paginateErr
-				})
+					},
+				)
 				if err != nil {
 					return fmt.Errorf("review items-list: %w", err)
 				}

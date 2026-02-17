@@ -485,22 +485,15 @@ Examples:
 			}
 
 			if *paginate {
-				// Fetch first page with limit set for consistent pagination
 				paginateOpts := append(opts, asc.WithBuildsLimit(200))
-				firstPage, err := client.GetBuilds(requestCtx, resolvedAppID, paginateOpts...)
-				if err != nil {
-					return fmt.Errorf("builds: failed to fetch: %w", err)
-				}
-
-				// Fetch all remaining pages
-				var builds asc.PaginatedResponse
-				err = shared.WithSpinner("", func() error {
-					var paginateErr error
-					builds, paginateErr = asc.PaginateAll(requestCtx, firstPage, func(ctx context.Context, nextURL string) (asc.PaginatedResponse, error) {
+				builds, err := shared.PaginateWithSpinner(requestCtx,
+					func(ctx context.Context) (asc.PaginatedResponse, error) {
+						return client.GetBuilds(ctx, resolvedAppID, paginateOpts...)
+					},
+					func(ctx context.Context, nextURL string) (asc.PaginatedResponse, error) {
 						return client.GetBuilds(ctx, resolvedAppID, asc.WithBuildsNextURL(nextURL))
-					})
-					return paginateErr
-				})
+					},
+				)
 				if err != nil {
 					return fmt.Errorf("builds: %w", err)
 				}

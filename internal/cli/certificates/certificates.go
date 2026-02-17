@@ -102,19 +102,14 @@ Examples:
 
 			if *paginate {
 				paginateOpts := append(opts, asc.WithCertificatesLimit(200))
-				firstPage, err := client.GetCertificates(requestCtx, paginateOpts...)
-				if err != nil {
-					return fmt.Errorf("certificates list: failed to fetch: %w", err)
-				}
-
-				var paginated asc.PaginatedResponse
-				err = shared.WithSpinner("", func() error {
-					var paginateErr error
-					paginated, paginateErr = asc.PaginateAll(requestCtx, firstPage, func(ctx context.Context, nextURL string) (asc.PaginatedResponse, error) {
+				paginated, err := shared.PaginateWithSpinner(requestCtx,
+					func(ctx context.Context) (asc.PaginatedResponse, error) {
+						return client.GetCertificates(ctx, paginateOpts...)
+					},
+					func(ctx context.Context, nextURL string) (asc.PaginatedResponse, error) {
 						return client.GetCertificates(ctx, asc.WithCertificatesNextURL(nextURL))
-					})
-					return paginateErr
-				})
+					},
+				)
 				if err != nil {
 					return fmt.Errorf("certificates list: %w", err)
 				}

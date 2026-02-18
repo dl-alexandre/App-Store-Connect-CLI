@@ -146,6 +146,15 @@ func (c *Client) DeleteGameCenterActivity(ctx context.Context, activityID string
 
 // AddGameCenterActivityAchievements adds achievements to an activity.
 func (c *Client) AddGameCenterActivityAchievements(ctx context.Context, activityID string, achievementIDs []string) error {
+	activityID = strings.TrimSpace(activityID)
+	achievementIDs = normalizeList(achievementIDs)
+	if activityID == "" {
+		return fmt.Errorf("activityID is required")
+	}
+	if len(achievementIDs) == 0 {
+		return fmt.Errorf("achievementIDs are required")
+	}
+
 	payload := RelationshipRequest{
 		Data: buildRelationshipData(ResourceTypeGameCenterAchievements, achievementIDs),
 	}
@@ -154,13 +163,22 @@ func (c *Client) AddGameCenterActivityAchievements(ctx context.Context, activity
 		return err
 	}
 
-	path := fmt.Sprintf("/v1/gameCenterActivities/%s/relationships/achievements", strings.TrimSpace(activityID))
+	path := fmt.Sprintf("/v1/gameCenterActivities/%s/relationships/achievements", activityID)
 	_, err = c.do(ctx, http.MethodPost, path, body)
 	return err
 }
 
 // RemoveGameCenterActivityAchievements removes achievements from an activity.
 func (c *Client) RemoveGameCenterActivityAchievements(ctx context.Context, activityID string, achievementIDs []string) error {
+	activityID = strings.TrimSpace(activityID)
+	achievementIDs = normalizeList(achievementIDs)
+	if activityID == "" {
+		return fmt.Errorf("activityID is required")
+	}
+	if len(achievementIDs) == 0 {
+		return fmt.Errorf("achievementIDs are required")
+	}
+
 	payload := RelationshipRequest{
 		Data: buildRelationshipData(ResourceTypeGameCenterAchievements, achievementIDs),
 	}
@@ -169,13 +187,22 @@ func (c *Client) RemoveGameCenterActivityAchievements(ctx context.Context, activ
 		return err
 	}
 
-	path := fmt.Sprintf("/v1/gameCenterActivities/%s/relationships/achievements", strings.TrimSpace(activityID))
+	path := fmt.Sprintf("/v1/gameCenterActivities/%s/relationships/achievements", activityID)
 	_, err = c.do(ctx, http.MethodDelete, path, body)
 	return err
 }
 
 // AddGameCenterActivityLeaderboards adds leaderboards to an activity.
 func (c *Client) AddGameCenterActivityLeaderboards(ctx context.Context, activityID string, leaderboardIDs []string) error {
+	activityID = strings.TrimSpace(activityID)
+	leaderboardIDs = normalizeList(leaderboardIDs)
+	if activityID == "" {
+		return fmt.Errorf("activityID is required")
+	}
+	if len(leaderboardIDs) == 0 {
+		return fmt.Errorf("leaderboardIDs are required")
+	}
+
 	payload := RelationshipRequest{
 		Data: buildRelationshipData(ResourceTypeGameCenterLeaderboards, leaderboardIDs),
 	}
@@ -184,13 +211,22 @@ func (c *Client) AddGameCenterActivityLeaderboards(ctx context.Context, activity
 		return err
 	}
 
-	path := fmt.Sprintf("/v1/gameCenterActivities/%s/relationships/leaderboards", strings.TrimSpace(activityID))
+	path := fmt.Sprintf("/v1/gameCenterActivities/%s/relationships/leaderboards", activityID)
 	_, err = c.do(ctx, http.MethodPost, path, body)
 	return err
 }
 
 // RemoveGameCenterActivityLeaderboards removes leaderboards from an activity.
 func (c *Client) RemoveGameCenterActivityLeaderboards(ctx context.Context, activityID string, leaderboardIDs []string) error {
+	activityID = strings.TrimSpace(activityID)
+	leaderboardIDs = normalizeList(leaderboardIDs)
+	if activityID == "" {
+		return fmt.Errorf("activityID is required")
+	}
+	if len(leaderboardIDs) == 0 {
+		return fmt.Errorf("leaderboardIDs are required")
+	}
+
 	payload := RelationshipRequest{
 		Data: buildRelationshipData(ResourceTypeGameCenterLeaderboards, leaderboardIDs),
 	}
@@ -199,7 +235,7 @@ func (c *Client) RemoveGameCenterActivityLeaderboards(ctx context.Context, activ
 		return err
 	}
 
-	path := fmt.Sprintf("/v1/gameCenterActivities/%s/relationships/leaderboards", strings.TrimSpace(activityID))
+	path := fmt.Sprintf("/v1/gameCenterActivities/%s/relationships/leaderboards", activityID)
 	_, err = c.do(ctx, http.MethodDelete, path, body)
 	return err
 }

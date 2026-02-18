@@ -322,6 +322,15 @@ func (c *Client) AddBetaGroupsToBuild(ctx context.Context, buildID string, group
 
 // AddBetaGroupsToBuildWithNotify adds beta groups to a build with optional notifications.
 func (c *Client) AddBetaGroupsToBuildWithNotify(ctx context.Context, buildID string, groupIDs []string, notify bool) error {
+	buildID = strings.TrimSpace(buildID)
+	groupIDs = normalizeList(groupIDs)
+	if buildID == "" {
+		return fmt.Errorf("buildID is required")
+	}
+	if len(groupIDs) == 0 {
+		return fmt.Errorf("groupIDs are required")
+	}
+
 	payload := RelationshipRequest{
 		Data: make([]RelationshipData, len(groupIDs)),
 	}
@@ -349,6 +358,15 @@ func (c *Client) AddBetaGroupsToBuildWithNotify(ctx context.Context, buildID str
 
 // RemoveBetaGroupsFromBuild removes beta groups from a build.
 func (c *Client) RemoveBetaGroupsFromBuild(ctx context.Context, buildID string, groupIDs []string) error {
+	buildID = strings.TrimSpace(buildID)
+	groupIDs = normalizeList(groupIDs)
+	if buildID == "" {
+		return fmt.Errorf("buildID is required")
+	}
+	if len(groupIDs) == 0 {
+		return fmt.Errorf("groupIDs are required")
+	}
+
 	payload := RelationshipRequest{
 		Data: make([]RelationshipData, len(groupIDs)),
 	}

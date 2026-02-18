@@ -230,8 +230,12 @@ func (c *Client) CreateAppEncryptionDeclaration(ctx context.Context, appID strin
 // AddBuildsToAppEncryptionDeclaration assigns builds to a declaration.
 func (c *Client) AddBuildsToAppEncryptionDeclaration(ctx context.Context, declarationID string, buildIDs []string) error {
 	declarationID = strings.TrimSpace(declarationID)
+	buildIDs = normalizeList(buildIDs)
 	if declarationID == "" {
 		return fmt.Errorf("declarationID is required")
+	}
+	if len(buildIDs) == 0 {
+		return fmt.Errorf("buildIDs are required")
 	}
 
 	payload := RelationshipRequest{

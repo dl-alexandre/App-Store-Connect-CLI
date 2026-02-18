@@ -736,7 +736,14 @@ func (c *Client) DeleteBetaGroup(ctx context.Context, groupID string) error {
 
 // AddBetaTestersToGroup adds testers to a beta group.
 func (c *Client) AddBetaTestersToGroup(ctx context.Context, groupID string, testerIDs []string) error {
+	groupID = strings.TrimSpace(groupID)
 	testerIDs = normalizeList(testerIDs)
+	if groupID == "" {
+		return fmt.Errorf("groupID is required")
+	}
+	if len(testerIDs) == 0 {
+		return fmt.Errorf("testerIDs are required")
+	}
 	payload := RelationshipRequest{
 		Data: make([]RelationshipData, 0, len(testerIDs)),
 	}
@@ -759,7 +766,14 @@ func (c *Client) AddBetaTestersToGroup(ctx context.Context, groupID string, test
 
 // RemoveBetaTestersFromGroup removes testers from a beta group.
 func (c *Client) RemoveBetaTestersFromGroup(ctx context.Context, groupID string, testerIDs []string) error {
+	groupID = strings.TrimSpace(groupID)
 	testerIDs = normalizeList(testerIDs)
+	if groupID == "" {
+		return fmt.Errorf("groupID is required")
+	}
+	if len(testerIDs) == 0 {
+		return fmt.Errorf("testerIDs are required")
+	}
 	payload := RelationshipRequest{
 		Data: make([]RelationshipData, 0, len(testerIDs)),
 	}

@@ -244,6 +244,9 @@ func (c *Client) GetUserVisibleAppsRelationships(ctx context.Context, userID str
 	for _, opt := range opts {
 		opt(query)
 	}
+	if query.nextURL == "" && userID == "" {
+		return nil, fmt.Errorf("userID is required")
+	}
 
 	path := fmt.Sprintf("/v1/users/%s/relationships/visibleApps", userID)
 	if query.nextURL != "" {
@@ -272,6 +275,12 @@ func (c *Client) GetUserVisibleAppsRelationships(ctx context.Context, userID str
 func (c *Client) AddUserVisibleApps(ctx context.Context, userID string, appIDs []string) error {
 	userID = strings.TrimSpace(userID)
 	appIDs = normalizeList(appIDs)
+	if userID == "" {
+		return fmt.Errorf("userID is required")
+	}
+	if len(appIDs) == 0 {
+		return fmt.Errorf("appIDs are required")
+	}
 	payload := RelationshipRequest{
 		Data: make([]RelationshipData, 0, len(appIDs)),
 	}
@@ -296,6 +305,12 @@ func (c *Client) AddUserVisibleApps(ctx context.Context, userID string, appIDs [
 func (c *Client) RemoveUserVisibleApps(ctx context.Context, userID string, appIDs []string) error {
 	userID = strings.TrimSpace(userID)
 	appIDs = normalizeList(appIDs)
+	if userID == "" {
+		return fmt.Errorf("userID is required")
+	}
+	if len(appIDs) == 0 {
+		return fmt.Errorf("appIDs are required")
+	}
 	payload := RelationshipRequest{
 		Data: make([]RelationshipData, 0, len(appIDs)),
 	}
@@ -320,6 +335,9 @@ func (c *Client) RemoveUserVisibleApps(ctx context.Context, userID string, appID
 func (c *Client) SetUserVisibleApps(ctx context.Context, userID string, appIDs []string) error {
 	userID = strings.TrimSpace(userID)
 	appIDs = normalizeList(appIDs)
+	if userID == "" {
+		return fmt.Errorf("userID is required")
+	}
 	payload := RelationshipRequest{
 		Data: make([]RelationshipData, 0, len(appIDs)),
 	}

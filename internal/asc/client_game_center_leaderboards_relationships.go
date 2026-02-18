@@ -57,6 +57,15 @@ func (c *Client) GetGameCenterLeaderboardSetReleasesRelationships(ctx context.Co
 
 // AddGameCenterLeaderboardSetMembers adds leaderboards to a leaderboard set.
 func (c *Client) AddGameCenterLeaderboardSetMembers(ctx context.Context, setID string, leaderboardIDs []string) error {
+	setID = strings.TrimSpace(setID)
+	leaderboardIDs = normalizeList(leaderboardIDs)
+	if setID == "" {
+		return fmt.Errorf("setID is required")
+	}
+	if len(leaderboardIDs) == 0 {
+		return fmt.Errorf("leaderboardIDs are required")
+	}
+
 	payload := RelationshipRequest{
 		Data: buildRelationshipData(ResourceTypeGameCenterLeaderboards, leaderboardIDs),
 	}
@@ -65,13 +74,22 @@ func (c *Client) AddGameCenterLeaderboardSetMembers(ctx context.Context, setID s
 		return err
 	}
 
-	path := fmt.Sprintf("/v1/gameCenterLeaderboardSets/%s/relationships/gameCenterLeaderboards", strings.TrimSpace(setID))
+	path := fmt.Sprintf("/v1/gameCenterLeaderboardSets/%s/relationships/gameCenterLeaderboards", setID)
 	_, err = c.do(ctx, http.MethodPost, path, body)
 	return err
 }
 
 // RemoveGameCenterLeaderboardSetMembers removes leaderboards from a leaderboard set.
 func (c *Client) RemoveGameCenterLeaderboardSetMembers(ctx context.Context, setID string, leaderboardIDs []string) error {
+	setID = strings.TrimSpace(setID)
+	leaderboardIDs = normalizeList(leaderboardIDs)
+	if setID == "" {
+		return fmt.Errorf("setID is required")
+	}
+	if len(leaderboardIDs) == 0 {
+		return fmt.Errorf("leaderboardIDs are required")
+	}
+
 	payload := RelationshipRequest{
 		Data: buildRelationshipData(ResourceTypeGameCenterLeaderboards, leaderboardIDs),
 	}
@@ -80,7 +98,7 @@ func (c *Client) RemoveGameCenterLeaderboardSetMembers(ctx context.Context, setI
 		return err
 	}
 
-	path := fmt.Sprintf("/v1/gameCenterLeaderboardSets/%s/relationships/gameCenterLeaderboards", strings.TrimSpace(setID))
+	path := fmt.Sprintf("/v1/gameCenterLeaderboardSets/%s/relationships/gameCenterLeaderboards", setID)
 	_, err = c.do(ctx, http.MethodDelete, path, body)
 	return err
 }

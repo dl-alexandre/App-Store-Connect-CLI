@@ -112,5 +112,11 @@
     "link": "https://apps.apple.com/app/id6756911679",
     "creator": "OscarGorog",
     "platform": ["iOS"]
+  },
+  {
+    "app": "ToMe: Save to Self",
+    "link": "https://apps.apple.com/app/id6755589008",
+    "creator": "framara",
+    "platform": ["iOS", "macOS"]
   }
 ]

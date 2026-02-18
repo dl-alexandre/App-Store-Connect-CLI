@@ -674,6 +674,7 @@ func TestRun_UnknownWorkflow(t *testing.T) {
 func TestRun_AfterAllHookFailure(t *testing.T) {
 	def := &Definition{
 		AfterAll: "exit 1",
+		Error:    "echo error_hook_fired",
 		Workflows: map[string]Workflow{
 			"test": {Steps: []Step{{Run: "echo main"}}},
 		},
@@ -696,6 +697,11 @@ func TestRun_AfterAllHookFailure(t *testing.T) {
 	}
 	if result.Steps[0].Status != "ok" {
 		t.Fatalf("expected step ok, got %q", result.Steps[0].Status)
+	}
+	// Error hook should fire on after_all failure
+	stdout := opts.Stdout.(*bytes.Buffer).String()
+	if !strings.Contains(stdout, "error_hook_fired") {
+		t.Fatalf("expected error hook to fire on after_all failure, got %q", stdout)
 	}
 }
 

@@ -90,6 +90,7 @@ func Run(ctx context.Context, def *Definition, opts RunOptions) (*RunResult, err
 	if hookErr := runHook(ctx, def.AfterAll, env, opts.DryRun, opts.Stdout, opts.Stderr); hookErr != nil {
 		result.Status = "error"
 		result.DurationMS = time.Since(start).Milliseconds()
+		_ = runHook(ctx, def.Error, env, opts.DryRun, opts.Stdout, opts.Stderr)
 		return result, fmt.Errorf("workflow: after_all hook failed: %w", hookErr)
 	}
 

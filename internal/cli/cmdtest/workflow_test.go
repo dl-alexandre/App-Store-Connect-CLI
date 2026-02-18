@@ -961,6 +961,9 @@ func TestWorkflowRun_StepFailure_PartialJSON(t *testing.T) {
 	if result["status"] != "error" {
 		t.Fatalf("expected status=error, got %v", result["status"])
 	}
+	if errMsg, ok := result["error"].(string); !ok || errMsg == "" {
+		t.Fatalf("expected top-level error message in JSON, got %v", result["error"])
+	}
 
 	// Check partial steps: step 1 ok, step 2 error, step 3 not reached
 	steps := result["steps"].([]any)
@@ -981,6 +984,141 @@ func TestWorkflowRun_StepFailure_PartialJSON(t *testing.T) {
 	// Error detail should be present
 	if step2["error"] == nil || step2["error"] == "" {
 		t.Fatal("expected error detail in failing step")
+	}
+}
+
+func TestWorkflowRun_BeforeAllHookFailure_PrintsErrorInJSON(t *testing.T) {
+	dir := t.TempDir()
+	path := writeWorkflowJSON(t, dir, `{
+		"before_all": "exit 1",
+		"error": "echo error_hook_fired",
+		"workflows": {
+			"test": {"steps": ["echo should-not-run"]}
+		}
+	}`)
+
+	root := RootCommand("1.2.3")
+	root.FlagSet.SetOutput(io.Discard)
+
+	stdout, stderr := captureOutput(t, func() {
+		if err := root.Parse([]string{"workflow", "run", "--file", path, "test"}); err != nil {
+			t.Fatalf("parse error: %v", err)
+		}
+		err := root.Run(context.Background())
+		if err == nil {
+			t.Fatal("expected error on before_all failure")
+		}
+		if _, ok := errors.AsType[ReportedError](err); !ok {
+			t.Fatalf("expected ReportedError, got %T: %v", err, err)
+		}
+	})
+
+	var result map[string]any
+	if err := json.Unmarshal([]byte(stdout), &result); err != nil {
+		t.Fatalf("expected JSON on failure, got %q: %v", stdout, err)
+	}
+	if result["status"] != "error" {
+		t.Fatalf("expected status=error, got %v", result["status"])
+	}
+	if errMsg, ok := result["error"].(string); !ok || !strings.Contains(errMsg, "before_all") {
+		t.Fatalf("expected JSON error message to mention before_all, got %v", result["error"])
+	}
+
+	steps := result["steps"].([]any)
+	if len(steps) != 0 {
+		t.Fatalf("expected 0 steps, got %d", len(steps))
+	}
+
+	hooks, ok := result["hooks"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected hooks object in JSON, got %T: %v", result["hooks"], result["hooks"])
+	}
+	beforeAll, ok := hooks["before_all"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected hooks.before_all object, got %T: %v", hooks["before_all"], hooks["before_all"])
+	}
+	if beforeAll["status"] != "error" {
+		t.Fatalf("expected hooks.before_all.status=error, got %v", beforeAll["status"])
+	}
+	if beforeAll["error"] == nil || beforeAll["error"] == "" {
+		t.Fatalf("expected hooks.before_all.error to be present, got %v", beforeAll["error"])
+	}
+
+	// Hooks and steps stream output to stderr (stdout is JSON-only).
+	if strings.Contains(stderr, "should-not-run") {
+		t.Fatalf("expected step output to not run, got stderr %q", stderr)
+	}
+	if !strings.Contains(stderr, "error_hook_fired") {
+		t.Fatalf("expected error hook output on stderr, got %q", stderr)
+	}
+}
+
+func TestWorkflowRun_AfterAllHookFailure_PrintsErrorInJSON(t *testing.T) {
+	dir := t.TempDir()
+	path := writeWorkflowJSON(t, dir, `{
+		"after_all": "exit 1",
+		"error": "echo error_hook_fired",
+		"workflows": {
+			"test": {"steps": ["echo step_ok"]}
+		}
+	}`)
+
+	root := RootCommand("1.2.3")
+	root.FlagSet.SetOutput(io.Discard)
+
+	stdout, stderr := captureOutput(t, func() {
+		if err := root.Parse([]string{"workflow", "run", "--file", path, "test"}); err != nil {
+			t.Fatalf("parse error: %v", err)
+		}
+		err := root.Run(context.Background())
+		if err == nil {
+			t.Fatal("expected error on after_all failure")
+		}
+		if _, ok := errors.AsType[ReportedError](err); !ok {
+			t.Fatalf("expected ReportedError, got %T: %v", err, err)
+		}
+	})
+
+	var result map[string]any
+	if err := json.Unmarshal([]byte(stdout), &result); err != nil {
+		t.Fatalf("expected JSON on failure, got %q: %v", stdout, err)
+	}
+	if result["status"] != "error" {
+		t.Fatalf("expected status=error, got %v", result["status"])
+	}
+	if errMsg, ok := result["error"].(string); !ok || !strings.Contains(errMsg, "after_all") {
+		t.Fatalf("expected JSON error message to mention after_all, got %v", result["error"])
+	}
+
+	steps := result["steps"].([]any)
+	if len(steps) != 1 {
+		t.Fatalf("expected 1 step, got %d", len(steps))
+	}
+	step1 := steps[0].(map[string]any)
+	if step1["status"] != "ok" {
+		t.Fatalf("expected step status ok, got %v", step1["status"])
+	}
+
+	hooks, ok := result["hooks"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected hooks object in JSON, got %T: %v", result["hooks"], result["hooks"])
+	}
+	afterAll, ok := hooks["after_all"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected hooks.after_all object, got %T: %v", hooks["after_all"], hooks["after_all"])
+	}
+	if afterAll["status"] != "error" {
+		t.Fatalf("expected hooks.after_all.status=error, got %v", afterAll["status"])
+	}
+	if afterAll["error"] == nil || afterAll["error"] == "" {
+		t.Fatalf("expected hooks.after_all.error to be present, got %v", afterAll["error"])
+	}
+
+	if !strings.Contains(stderr, "step_ok") {
+		t.Fatalf("expected step output on stderr, got %q", stderr)
+	}
+	if !strings.Contains(stderr, "error_hook_fired") {
+		t.Fatalf("expected error hook output on stderr, got %q", stderr)
 	}
 }
 

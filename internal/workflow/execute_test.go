@@ -528,6 +528,9 @@ func TestRun_StepFailure(t *testing.T) {
 	if result.Status != "error" {
 		t.Fatalf("expected status error, got %q", result.Status)
 	}
+	if result.Error == "" || !strings.Contains(result.Error, "step 2") {
+		t.Fatalf("expected result.Error to mention step 2, got %q", result.Error)
+	}
 	// Partial results: first step ok, second error, third not reached
 	if len(result.Steps) != 2 {
 		t.Fatalf("expected 2 steps (partial), got %d", len(result.Steps))
@@ -667,6 +670,21 @@ func TestRun_BeforeAllHookFailure(t *testing.T) {
 	if result.Status != "error" {
 		t.Fatalf("expected error status, got %q", result.Status)
 	}
+	if result.Error == "" || !strings.Contains(result.Error, "before_all") {
+		t.Fatalf("expected result.Error to mention before_all, got %q", result.Error)
+	}
+	if result.Hooks == nil || result.Hooks.BeforeAll == nil {
+		t.Fatal("expected hooks.before_all to be recorded")
+	}
+	if result.Hooks.BeforeAll.Status != "error" {
+		t.Fatalf("expected before_all hook status=error, got %q", result.Hooks.BeforeAll.Status)
+	}
+	if result.Hooks.BeforeAll.Error == "" {
+		t.Fatal("expected before_all hook error detail")
+	}
+	if result.Hooks.Error == nil || result.Hooks.Error.Status != "ok" {
+		t.Fatalf("expected error hook status=ok, got %+v", result.Hooks.Error)
+	}
 	// Steps should not have run
 	if len(result.Steps) != 0 {
 		t.Fatalf("expected 0 steps, got %d", len(result.Steps))
@@ -712,6 +730,12 @@ func TestRun_ErrorHook(t *testing.T) {
 	result, err := Run(context.Background(), def, opts)
 	if err == nil {
 		t.Fatal("expected error")
+	}
+	if result.Error == "" {
+		t.Fatal("expected result.Error to be populated on failure")
+	}
+	if result.Hooks == nil || result.Hooks.Error == nil || result.Hooks.Error.Status != "ok" {
+		t.Fatalf("expected hooks.error status=ok, got %+v", result.Hooks)
 	}
 	stdout := opts.Stdout.(*bytes.Buffer).String()
 	if !strings.Contains(stdout, "error_hook_ran") {
@@ -803,6 +827,21 @@ func TestRun_AfterAllHookFailure(t *testing.T) {
 	}
 	if result.Status != "error" {
 		t.Fatalf("expected error status, got %q", result.Status)
+	}
+	if result.Error == "" || !strings.Contains(result.Error, "after_all") {
+		t.Fatalf("expected result.Error to mention after_all, got %q", result.Error)
+	}
+	if result.Hooks == nil || result.Hooks.AfterAll == nil {
+		t.Fatal("expected hooks.after_all to be recorded")
+	}
+	if result.Hooks.AfterAll.Status != "error" {
+		t.Fatalf("expected after_all hook status=error, got %q", result.Hooks.AfterAll.Status)
+	}
+	if result.Hooks.AfterAll.Error == "" {
+		t.Fatal("expected after_all hook error detail")
+	}
+	if result.Hooks.Error == nil || result.Hooks.Error.Status != "ok" {
+		t.Fatalf("expected error hook status=ok, got %+v", result.Hooks.Error)
 	}
 	if !strings.Contains(err.Error(), "after_all") {
 		t.Fatalf("expected after_all in error, got %v", err)
@@ -942,7 +981,7 @@ func TestRun_ErrorHookFailure_OriginalErrorReturned(t *testing.T) {
 	}
 	opts := runOpts("test")
 
-	_, err := Run(context.Background(), def, opts)
+	result, err := Run(context.Background(), def, opts)
 	if err == nil {
 		t.Fatal("expected error")
 	}
@@ -952,6 +991,13 @@ func TestRun_ErrorHookFailure_OriginalErrorReturned(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), "step 1") {
 		t.Fatalf("expected step 1 error, got %v", err)
+	}
+	// But the error hook failure should be recorded in the structured result.
+	if result.Hooks == nil || result.Hooks.Error == nil || result.Hooks.Error.Status != "error" {
+		t.Fatalf("expected hooks.error status=error, got %+v", result.Hooks)
+	}
+	if !strings.Contains(result.Hooks.Error.Error, "exit status 42") {
+		t.Fatalf("expected error hook detail to mention exit status 42, got %q", result.Hooks.Error.Error)
 	}
 }
 

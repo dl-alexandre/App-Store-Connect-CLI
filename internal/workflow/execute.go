@@ -33,12 +33,36 @@ type StepResult struct {
 	Error          string `json:"error,omitempty"`
 }
 
+// HookResult records execution of a hook command (before_all/after_all/error).
+type HookResult struct {
+	Command    string `json:"command,omitempty"`
+	Status     string `json:"status"`
+	DurationMS int64  `json:"duration_ms"`
+	Error      string `json:"error,omitempty"`
+}
+
+// HooksResult records hook outcomes for a run.
+type HooksResult struct {
+	BeforeAll *HookResult `json:"before_all,omitempty"`
+	AfterAll  *HookResult `json:"after_all,omitempty"`
+	Error     *HookResult `json:"error,omitempty"`
+}
+
 // RunResult is the structured output of a workflow execution.
 type RunResult struct {
 	Workflow   string       `json:"workflow"`
 	Status     string       `json:"status"`
+	Error      string       `json:"error,omitempty"`
+	Hooks      *HooksResult `json:"hooks,omitempty"`
 	Steps      []StepResult `json:"steps"`
 	DurationMS int64        `json:"duration_ms"`
+}
+
+func (r *RunResult) ensureHooks() *HooksResult {
+	if r.Hooks == nil {
+		r.Hooks = &HooksResult{}
+	}
+	return r.Hooks
 }
 
 // Run executes a named workflow from the Definition.
@@ -65,36 +89,84 @@ func Run(ctx context.Context, def *Definition, opts RunOptions) (*RunResult, err
 		Steps:    make([]StepResult, 0),
 	}
 	start := time.Now()
+	defer func() {
+		// Include hooks and error hooks in total duration.
+		result.DurationMS = time.Since(start).Milliseconds()
+	}()
 
 	// before_all hook
-	if err := runHook(ctx, def.BeforeAll, env, opts.DryRun, opts.Stdout, opts.Stderr); err != nil {
-		result.Status = "error"
-		result.DurationMS = time.Since(start).Milliseconds()
-		_ = runHook(ctx, def.Error, env, opts.DryRun, opts.Stdout, opts.Stderr)
-		return result, fmt.Errorf("workflow: before_all hook failed: %w", err)
+	if hr, err := runHookAndRecord(ctx, def.BeforeAll, env, opts.DryRun, opts.Stdout, opts.Stderr); hr != nil {
+		result.ensureHooks().BeforeAll = hr
+		if err != nil {
+			wrapped := fmt.Errorf("workflow: before_all hook failed: %w", err)
+			result.Status = "error"
+			result.Error = wrapped.Error()
+
+			if ehr, hookErr := runHookAndRecord(ctx, def.Error, env, opts.DryRun, opts.Stdout, opts.Stderr); ehr != nil {
+				result.ensureHooks().Error = ehr
+				_ = hookErr // error hook failures never override the original error
+			}
+			return result, wrapped
+		}
 	}
 
 	// Execute steps
-	err := executeSteps(ctx, def, opts.WorkflowName, wf.Steps, env, 0, opts, result)
-	result.DurationMS = time.Since(start).Milliseconds()
-
-	if err != nil {
+	if err := executeSteps(ctx, def, opts.WorkflowName, wf.Steps, env, 0, opts, result); err != nil {
 		result.Status = "error"
-		_ = runHook(ctx, def.Error, env, opts.DryRun, opts.Stdout, opts.Stderr)
+		result.Error = err.Error()
+
+		if ehr, hookErr := runHookAndRecord(ctx, def.Error, env, opts.DryRun, opts.Stdout, opts.Stderr); ehr != nil {
+			result.ensureHooks().Error = ehr
+			_ = hookErr // error hook failures never override the original error
+		}
 		return result, err
 	}
 
 	// after_all hook
-	if hookErr := runHook(ctx, def.AfterAll, env, opts.DryRun, opts.Stdout, opts.Stderr); hookErr != nil {
-		result.Status = "error"
-		result.DurationMS = time.Since(start).Milliseconds()
-		_ = runHook(ctx, def.Error, env, opts.DryRun, opts.Stdout, opts.Stderr)
-		return result, fmt.Errorf("workflow: after_all hook failed: %w", hookErr)
+	if hr, err := runHookAndRecord(ctx, def.AfterAll, env, opts.DryRun, opts.Stdout, opts.Stderr); hr != nil {
+		result.ensureHooks().AfterAll = hr
+		if err != nil {
+			wrapped := fmt.Errorf("workflow: after_all hook failed: %w", err)
+			result.Status = "error"
+			result.Error = wrapped.Error()
+
+			if ehr, hookErr := runHookAndRecord(ctx, def.Error, env, opts.DryRun, opts.Stdout, opts.Stderr); ehr != nil {
+				result.ensureHooks().Error = ehr
+				_ = hookErr // error hook failures never override the original error
+			}
+			return result, wrapped
+		}
 	}
 
 	result.Status = "ok"
-	result.DurationMS = time.Since(start).Milliseconds()
 	return result, nil
+}
+
+func runHookAndRecord(ctx context.Context, command string, env map[string]string, dryRun bool, stdout, stderr io.Writer) (*HookResult, error) {
+	command = strings.TrimSpace(command)
+	if command == "" {
+		return nil, nil
+	}
+
+	start := time.Now()
+	err := runHook(ctx, command, env, dryRun, stdout, stderr)
+
+	hr := &HookResult{
+		Command:    command,
+		DurationMS: time.Since(start).Milliseconds(),
+	}
+	if dryRun {
+		hr.Status = "dry-run"
+		return hr, nil
+	}
+	if err != nil {
+		hr.Status = "error"
+		hr.Error = err.Error()
+		return hr, err
+	}
+
+	hr.Status = "ok"
+	return hr, nil
 }
 
 func executeSteps(ctx context.Context, def *Definition, workflowName string, steps []Step, env map[string]string, depth int, opts RunOptions, result *RunResult) error {

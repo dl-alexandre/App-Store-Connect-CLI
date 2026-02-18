@@ -1,8 +1,8 @@
-# Workflows (Fastlane-Style Lanes)
+# Workflows
 
 `asc workflow` lets you define named, multi-step automation sequences in a repo-local file: `.asc/workflow.json`.
 
-This is designed as a Fastlane-style "lanes" replacement: a single, versioned workflow file that composes existing `asc` commands and normal shell commands.
+This is designed as a single, versioned workflow file that composes existing `asc` commands and normal shell commands.
 
 ## Quick Start
 
@@ -77,9 +77,9 @@ Notes:
       "description": "Submit a version for App Store review",
       "steps": [
         {
-          "workflow": "sync-metadata",
+          "workflow": "preflight",
           "with": {
-            "FASTLANE_DIR": "./fastlane/metadata"
+            "NOTE": "running private sub-workflow"
           }
         },
         {
@@ -88,13 +88,13 @@ Notes:
         }
       ]
     },
-    "sync-metadata": {
+    "preflight": {
       "private": true,
       "description": "Private helper workflow (callable only via workflow steps)",
       "steps": [
         {
-          "name": "migrate_validate",
-          "run": "asc migrate validate --fastlane-dir $FASTLANE_DIR"
+          "name": "preflight",
+          "run": "echo \"$NOTE\""
         }
       ]
     }

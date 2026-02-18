@@ -76,9 +76,9 @@ Example workflow file (.asc/workflow.json):
       "description": "Submit a version for App Store review",
       "steps": [
         {
-          "workflow": "sync-metadata",
+          "workflow": "preflight",
           "with": {
-            "FASTLANE_DIR": "./fastlane/metadata"
+            "NOTE": "running private sub-workflow"
           }
         },
         {
@@ -87,13 +87,13 @@ Example workflow file (.asc/workflow.json):
         }
       ]
     },
-    "sync-metadata": {
+    "preflight": {
       "private": true,
       "description": "Private helper workflow (callable only via workflow steps)",
       "steps": [
         {
-          "name": "migrate_validate",
-          "run": "asc migrate validate --fastlane-dir $FASTLANE_DIR"
+          "name": "preflight",
+          "run": "echo \"$NOTE\""
         }
       ]
     }

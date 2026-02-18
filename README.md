@@ -9,7 +9,7 @@
   <img src="https://img.shields.io/github/downloads/rudrankriyam/App-Store-Connect-CLI/total?style=for-the-badge&color=green" alt="Downloads">
 </p>
 
-A **fast**, **lightweight**, and **scriptable** CLI for the [App Store Connect API](https://developer.apple.com/app-store-connect/api/). Automate your iOS, macOS, tvOS, and visionOS app workflows from your terminal, IDE, or CI/CD pipeline. A modern **fastlane alternative** built as a single Go binary.
+A **fast**, **lightweight**, and **scriptable** CLI for the [App Store Connect API](https://developer.apple.com/app-store-connect/api/). Automate your iOS, macOS, tvOS, and visionOS app workflows from your terminal, IDE, or CI/CD pipeline. Built as a single Go binary.
 
 ### Features
 
@@ -24,7 +24,7 @@ A **fast**, **lightweight**, and **scriptable** CLI for the [App Store Connect A
 - **Game Center** -- achievements, leaderboards, leaderboard sets, and localizations
 - **Screenshots & Previews** -- upload, frame, and manage App Store media assets
 - **Webhooks** -- create and manage App Store Connect webhooks
-- **Workflow** -- Fastlane-style lanes in `.asc/workflow.json` (multi-step automation, JSON stdout)
+- **Workflow** -- multi-step automation in `.asc/workflow.json` (JSON stdout)
 - **Agent-friendly** -- JSON-first output, explicit flags, no interactive prompts, clean exit codes
 
 ## Why ASC?
@@ -67,7 +67,7 @@ A **fast**, **lightweight**, and **scriptable** CLI for the [App Store Connect A
   - [Performance](#performance)
   - [Webhooks](#webhooks)
   - [Publish (End-to-End Workflows)](#publish-end-to-end-workflows)
-  - [Workflow (Fastlane-Style Lanes)](#workflow-fastlane-style-lanes)
+  - [Workflow](#workflow)
   - [App Clips](#app-clips)
   - [Encryption](#encryption)
   - [Screenshots & Video Previews](#screenshots--video-previews)
@@ -1107,9 +1107,9 @@ Notes:
 - `--version` and `--build-number` are auto-extracted from the IPA if not provided
 - Default timeout is 30 minutes; override with `--timeout`
 
-### Workflow (Fastlane-Style Lanes)
+### Workflow
 
-Define named, multi-step automation sequences (Fastlane-style lanes) in `.asc/workflow.json`.
+Define named, multi-step automation sequences in `.asc/workflow.json`.
 Workflows compose existing `asc` commands and normal shell commands, and support:
 - Sub-workflows (workflow steps)
 - Definition-level hooks (`before_all`, `after_all`, `error`)

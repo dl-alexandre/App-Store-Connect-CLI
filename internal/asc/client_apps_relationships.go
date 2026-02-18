@@ -242,38 +242,15 @@ func (c *Client) GetAppWebhooksRelationships(ctx context.Context, appID string, 
 }
 
 func (c *Client) getAppLinkages(ctx context.Context, appID, relationship string, opts ...LinkagesOption) (*LinkagesResponse, error) {
-	query := &linkagesQuery{}
-	for _, opt := range opts {
-		opt(query)
-	}
-
-	appID = strings.TrimSpace(appID)
-	if query.nextURL == "" && appID == "" {
-		return nil, fmt.Errorf("appID is required")
-	}
-
-	path := fmt.Sprintf("/v1/apps/%s/relationships/%s", appID, relationship)
-	if query.nextURL != "" {
-		// Validate nextURL to prevent credential exfiltration.
-		if err := validateNextURL(query.nextURL); err != nil {
-			return nil, fmt.Errorf("appRelationships: %w", err)
-		}
-		path = query.nextURL
-	} else if queryString := buildLinkagesQuery(query); queryString != "" {
-		path += "?" + queryString
-	}
-
-	data, err := c.do(ctx, http.MethodGet, path, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	var response LinkagesResponse
-	if err := json.Unmarshal(data, &response); err != nil {
-		return nil, fmt.Errorf("failed to parse %s relationship response: %w", relationship, err)
-	}
-
-	return &response, nil
+	return c.getResourceLinkages(
+		ctx,
+		appID,
+		relationship,
+		"appID",
+		"/v1/apps/%s/relationships/%s",
+		"appRelationships",
+		opts...,
+	)
 }
 
 func (c *Client) getAppLinkage(ctx context.Context, appID, relationship string, out any) error {

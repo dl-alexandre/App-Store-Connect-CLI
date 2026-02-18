@@ -141,37 +141,15 @@ func (c *Client) UpdateGameCenterDetailGameCenterLeaderboardsV2Relationship(ctx 
 }
 
 func (c *Client) getGameCenterDetailLinkages(ctx context.Context, detailID, relationship string, opts ...LinkagesOption) (*LinkagesResponse, error) {
-	query := &linkagesQuery{}
-	for _, opt := range opts {
-		opt(query)
-	}
-
-	detailID = strings.TrimSpace(detailID)
-	if query.nextURL == "" && detailID == "" {
-		return nil, fmt.Errorf("detailID is required")
-	}
-
-	path := fmt.Sprintf("/v1/gameCenterDetails/%s/relationships/%s", detailID, relationship)
-	if query.nextURL != "" {
-		if err := validateNextURL(query.nextURL); err != nil {
-			return nil, fmt.Errorf("gameCenterDetailRelationships: %w", err)
-		}
-		path = query.nextURL
-	} else if queryString := buildLinkagesQuery(query); queryString != "" {
-		path += "?" + queryString
-	}
-
-	data, err := c.do(ctx, http.MethodGet, path, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	var response LinkagesResponse
-	if err := json.Unmarshal(data, &response); err != nil {
-		return nil, fmt.Errorf("failed to parse response: %w", err)
-	}
-
-	return &response, nil
+	return c.getResourceLinkages(
+		ctx,
+		detailID,
+		relationship,
+		"detailID",
+		"/v1/gameCenterDetails/%s/relationships/%s",
+		"gameCenterDetailRelationships",
+		opts...,
+	)
 }
 
 func (c *Client) updateGameCenterDetailToManyRelationship(ctx context.Context, detailID, relationship string, resourceType ResourceType, ids []string) error {

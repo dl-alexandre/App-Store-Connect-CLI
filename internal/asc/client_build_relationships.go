@@ -222,35 +222,13 @@ func (c *Client) GetBuildIconsRelationships(ctx context.Context, buildID string,
 }
 
 func (c *Client) getBuildLinkages(ctx context.Context, buildID, relationship string, opts ...LinkagesOption) (*LinkagesResponse, error) {
-	query := &linkagesQuery{}
-	for _, opt := range opts {
-		opt(query)
-	}
-
-	buildID = strings.TrimSpace(buildID)
-	if query.nextURL == "" && buildID == "" {
-		return nil, fmt.Errorf("buildID is required")
-	}
-
-	path := fmt.Sprintf("/v1/builds/%s/relationships/%s", buildID, relationship)
-	if query.nextURL != "" {
-		if err := validateNextURL(query.nextURL); err != nil {
-			return nil, fmt.Errorf("buildRelationships: %w", err)
-		}
-		path = query.nextURL
-	} else if queryString := buildLinkagesQuery(query); queryString != "" {
-		path += "?" + queryString
-	}
-
-	data, err := c.do(ctx, "GET", path, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	var response LinkagesResponse
-	if err := json.Unmarshal(data, &response); err != nil {
-		return nil, fmt.Errorf("failed to parse response: %w", err)
-	}
-
-	return &response, nil
+	return c.getResourceLinkages(
+		ctx,
+		buildID,
+		relationship,
+		"buildID",
+		"/v1/builds/%s/relationships/%s",
+		"buildRelationships",
+		opts...,
+	)
 }

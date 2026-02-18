@@ -62,37 +62,15 @@ func (c *Client) GetCiBuildActionTestResultsRelationships(ctx context.Context, b
 }
 
 func (c *Client) getCiBuildActionLinkages(ctx context.Context, buildActionID, relationship string, opts ...LinkagesOption) (*LinkagesResponse, error) {
-	query := &linkagesQuery{}
-	for _, opt := range opts {
-		opt(query)
-	}
-
-	buildActionID = strings.TrimSpace(buildActionID)
-	if query.nextURL == "" && buildActionID == "" {
-		return nil, fmt.Errorf("buildActionID is required")
-	}
-
-	path := fmt.Sprintf("/v1/ciBuildActions/%s/relationships/%s", buildActionID, relationship)
-	if query.nextURL != "" {
-		if err := validateNextURL(query.nextURL); err != nil {
-			return nil, fmt.Errorf("ciBuildActionRelationships: %w", err)
-		}
-		path = query.nextURL
-	} else if queryString := buildLinkagesQuery(query); queryString != "" {
-		path += "?" + queryString
-	}
-
-	data, err := c.do(ctx, "GET", path, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	var response LinkagesResponse
-	if err := json.Unmarshal(data, &response); err != nil {
-		return nil, fmt.Errorf("failed to parse response: %w", err)
-	}
-
-	return &response, nil
+	return c.getResourceLinkages(
+		ctx,
+		buildActionID,
+		relationship,
+		"buildActionID",
+		"/v1/ciBuildActions/%s/relationships/%s",
+		"ciBuildActionRelationships",
+		opts...,
+	)
 }
 
 // GetCiBuildRunActionsRelationships retrieves build action linkages for a CI build run.
@@ -106,37 +84,15 @@ func (c *Client) GetCiBuildRunBuildsRelationships(ctx context.Context, buildRunI
 }
 
 func (c *Client) getCiBuildRunLinkages(ctx context.Context, buildRunID, relationship string, opts ...LinkagesOption) (*LinkagesResponse, error) {
-	query := &linkagesQuery{}
-	for _, opt := range opts {
-		opt(query)
-	}
-
-	buildRunID = strings.TrimSpace(buildRunID)
-	if query.nextURL == "" && buildRunID == "" {
-		return nil, fmt.Errorf("buildRunID is required")
-	}
-
-	path := fmt.Sprintf("/v1/ciBuildRuns/%s/relationships/%s", buildRunID, relationship)
-	if query.nextURL != "" {
-		if err := validateNextURL(query.nextURL); err != nil {
-			return nil, fmt.Errorf("ciBuildRunRelationships: %w", err)
-		}
-		path = query.nextURL
-	} else if queryString := buildLinkagesQuery(query); queryString != "" {
-		path += "?" + queryString
-	}
-
-	data, err := c.do(ctx, "GET", path, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	var response LinkagesResponse
-	if err := json.Unmarshal(data, &response); err != nil {
-		return nil, fmt.Errorf("failed to parse response: %w", err)
-	}
-
-	return &response, nil
+	return c.getResourceLinkages(
+		ctx,
+		buildRunID,
+		relationship,
+		"buildRunID",
+		"/v1/ciBuildRuns/%s/relationships/%s",
+		"ciBuildRunRelationships",
+		opts...,
+	)
 }
 
 // GetCiMacOsVersionXcodeVersionsRelationships retrieves Xcode version linkages for a CI macOS version.
@@ -216,37 +172,15 @@ func (c *Client) GetCiProductWorkflowsRelationships(ctx context.Context, product
 }
 
 func (c *Client) getCiProductLinkages(ctx context.Context, productID, relationship string, opts ...LinkagesOption) (*LinkagesResponse, error) {
-	query := &linkagesQuery{}
-	for _, opt := range opts {
-		opt(query)
-	}
-
-	productID = strings.TrimSpace(productID)
-	if query.nextURL == "" && productID == "" {
-		return nil, fmt.Errorf("productID is required")
-	}
-
-	path := fmt.Sprintf("/v1/ciProducts/%s/relationships/%s", productID, relationship)
-	if query.nextURL != "" {
-		if err := validateNextURL(query.nextURL); err != nil {
-			return nil, fmt.Errorf("ciProductRelationships: %w", err)
-		}
-		path = query.nextURL
-	} else if queryString := buildLinkagesQuery(query); queryString != "" {
-		path += "?" + queryString
-	}
-
-	data, err := c.do(ctx, "GET", path, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	var response LinkagesResponse
-	if err := json.Unmarshal(data, &response); err != nil {
-		return nil, fmt.Errorf("failed to parse response: %w", err)
-	}
-
-	return &response, nil
+	return c.getResourceLinkages(
+		ctx,
+		productID,
+		relationship,
+		"productID",
+		"/v1/ciProducts/%s/relationships/%s",
+		"ciProductRelationships",
+		opts...,
+	)
 }
 
 // GetCiWorkflowBuildRunsRelationships retrieves build run linkages for a CI workflow.
@@ -276,37 +210,15 @@ func (c *Client) GetCiWorkflowRepositoryRelationship(ctx context.Context, workfl
 }
 
 func (c *Client) getCiWorkflowLinkages(ctx context.Context, workflowID, relationship string, opts ...LinkagesOption) (*LinkagesResponse, error) {
-	query := &linkagesQuery{}
-	for _, opt := range opts {
-		opt(query)
-	}
-
-	workflowID = strings.TrimSpace(workflowID)
-	if query.nextURL == "" && workflowID == "" {
-		return nil, fmt.Errorf("workflowID is required")
-	}
-
-	path := fmt.Sprintf("/v1/ciWorkflows/%s/relationships/%s", workflowID, relationship)
-	if query.nextURL != "" {
-		if err := validateNextURL(query.nextURL); err != nil {
-			return nil, fmt.Errorf("ciWorkflowRelationships: %w", err)
-		}
-		path = query.nextURL
-	} else if queryString := buildLinkagesQuery(query); queryString != "" {
-		path += "?" + queryString
-	}
-
-	data, err := c.do(ctx, "GET", path, nil)
-	if err != nil {
-		return nil, err
-	}
-
-	var response LinkagesResponse
-	if err := json.Unmarshal(data, &response); err != nil {
-		return nil, fmt.Errorf("failed to parse response: %w", err)
-	}
-
-	return &response, nil
+	return c.getResourceLinkages(
+		ctx,
+		workflowID,
+		relationship,
+		"workflowID",
+		"/v1/ciWorkflows/%s/relationships/%s",
+		"ciWorkflowRelationships",
+		opts...,
+	)
 }
 
 // GetCiXcodeVersionMacOsVersionsRelationships retrieves macOS version linkages for a CI Xcode version.

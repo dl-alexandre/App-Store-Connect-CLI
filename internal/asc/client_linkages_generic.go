@@ -46,7 +46,7 @@ func (c *Client) getResourceLinkages(
 
 	var response LinkagesResponse
 	if err := json.Unmarshal(data, &response); err != nil {
-		return nil, fmt.Errorf("failed to parse response: %w", err)
+		return nil, fmt.Errorf("failed to parse %s relationship response: %w", relationship, err)
 	}
 
 	return &response, nil

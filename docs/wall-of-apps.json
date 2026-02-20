@@ -125,13 +125,13 @@
     "creator": "framara",
     "platform": ["iOS", "macOS"]
   },
-    {
+  {
     "app": "Plinky",
     "link": "https://apps.apple.com/us/app/plinky-easily-save-links/id1597187737",
     "creator": "mergesort",
     "platform": ["iOS", "macOS"]
   },
-    {
+  {
     "app": "Inkput",
     "link": "https://apps.apple.com/app/id6758570182",
     "creator": "funclosure",
@@ -148,5 +148,11 @@
     "link": "https://apps.apple.com/app/id6758207392",
     "creator": "evanyi",
     "platform": ["iOS"]
+  },
+  {
+    "app": "Timefall",
+    "link": "https://apps.apple.com/app/id6757712804",
+    "creator": "vatrueshka",
+    "platform": ["iOS", "macOS"]
   }
 ]

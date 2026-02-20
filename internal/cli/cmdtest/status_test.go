@@ -506,9 +506,5 @@ func TestStatusTestFlightHandlesMissingBuildRelationship(t *testing.T) {
 }
 
 func statusJSONResponse(body string) *http.Response {
-	return &http.Response{
-		StatusCode: http.StatusOK,
-		Body:       io.NopCloser(strings.NewReader(body)),
-		Header:     http.Header{"Content-Type": []string{"application/json"}},
-	}
+	return insightsJSONResponse(body)
 }

@@ -7,6 +7,7 @@ import (
 	"flag"
 	"fmt"
 	"io"
+	"net/mail"
 	"os"
 	"path/filepath"
 	"sort"
@@ -72,6 +73,10 @@ func BetaTestersExportCommand() *ffcli.Command {
 		ShortUsage: "asc testflight beta-testers export --app \"APP_ID\" --output \"./testers.csv\" [flags]",
 		ShortHelp:  "Export TestFlight beta testers to a CSV file.",
 		LongHelp: `Export TestFlight beta testers to a CSV file.
+
+CSV format:
+  email,first_name,last_name,groups
+  - groups are semicolon-delimited when present (for fastlane compatibility)
 
 Examples:
   asc testflight beta-testers export --app "APP_ID" --output "./testflight-testers.csv"
@@ -197,7 +202,8 @@ Examples:
 			for _, item := range items {
 				row := []string{item.email, item.firstName, item.lastName}
 				if *includeGroups {
-					row = append(row, strings.Join(item.groups, ","))
+					// Semicolon keeps CSV structure stable and matches fastlane/pilot interoperability.
+					row = append(row, strings.Join(item.groups, ";"))
 				}
 				rows = append(rows, row)
 			}
@@ -254,6 +260,16 @@ func BetaTestersImportCommand() *ffcli.Command {
 		ShortUsage: "asc testflight beta-testers import --app \"APP_ID\" --input \"./testers.csv\" [flags]",
 		ShortHelp:  "Import TestFlight beta testers from a CSV file.",
 		LongHelp: `Import TestFlight beta testers from a CSV file.
+
+CSV formats accepted:
+  1) Canonical header:
+     email,first_name,last_name,groups
+  2) fastlane/pilot header aliases:
+     First,Last,Email,Groups
+  3) Legacy headerless fastlane rows:
+     First,Last,Email[,Groups]
+
+Groups may be comma- or semicolon-delimited in import files.
 
 Examples:
   asc testflight beta-testers import --app "APP_ID" --input "./testflight-testers.csv" --dry-run
@@ -342,6 +358,18 @@ Examples:
 					summary.Failures = append(summary.Failures, betaTestersImportFailure{
 						Row:   rowNumber,
 						Error: "email is required",
+					})
+					if !*continueOnError {
+						break
+					}
+					continue
+				}
+				if !isValidTesterEmail(emailValue) {
+					summary.Failed++
+					summary.Failures = append(summary.Failures, betaTestersImportFailure{
+						Row:   rowNumber,
+						Email: emailValue,
+						Error: "invalid email format",
 					})
 					if !*continueOnError {
 						break
@@ -754,12 +782,20 @@ func readBetaTestersCSV(path string) ([]betaTestersCSVRow, error) {
 		}
 		return nil, fmt.Errorf("read header: %w", err)
 	}
-	headerIdx, err := validateBetaTestersCSVHeader(header)
+
+	rows := make([]betaTestersCSVRow, 0)
+	headerIdx, hasHeader, err := parseBetaTestersCSVHeader(header)
 	if err != nil {
 		return nil, err
 	}
+	if !hasHeader {
+		row, rowErr := parseLegacyBetaTesterCSVRow(header)
+		if rowErr != nil {
+			return nil, rowErr
+		}
+		rows = append(rows, row)
+	}
 
-	rows := make([]betaTestersCSVRow, 0)
 	for {
 		record, err := reader.Read()
 		if errors.Is(err, io.EOF) {
@@ -772,25 +808,16 @@ func readBetaTestersCSV(path string) ([]betaTestersCSVRow, error) {
 			continue
 		}
 
-		get := func(col string) string {
-			i, ok := headerIdx[col]
-			if !ok || i < 0 || i >= len(record) {
-				return ""
+		if !hasHeader {
+			row, rowErr := parseLegacyBetaTesterCSVRow(record)
+			if rowErr != nil {
+				return nil, rowErr
 			}
-			return strings.TrimSpace(record[i])
+			rows = append(rows, row)
+			continue
 		}
 
-		var groups []string
-		if idx, ok := headerIdx["groups"]; ok && idx >= 0 && idx < len(record) {
-			groups = shared.SplitCSV(record[idx])
-		}
-
-		rows = append(rows, betaTestersCSVRow{
-			email:     get("email"),
-			firstName: get("first_name"),
-			lastName:  get("last_name"),
-			groups:    groups,
-		})
+		rows = append(rows, parseHeaderMappedBetaTesterCSVRow(record, headerIdx))
 	}
 
 	return rows, nil
@@ -823,6 +850,11 @@ func validateBetaTestersCSVHeader(header []string) (map[string]int, error) {
 		if col == "" {
 			return nil, shared.UsageError("CSV header contains an empty column name")
 		}
+		canonical, ok := canonicalBetaTestersCSVColumn(col)
+		if !ok {
+			return nil, shared.UsageErrorf("unknown CSV column %q (allowed: email, first_name, last_name, groups)", col)
+		}
+		col = canonical
 		if _, ok := allowed[col]; !ok {
 			return nil, shared.UsageErrorf("unknown CSV column %q (allowed: email, first_name, last_name, groups)", col)
 		}
@@ -835,6 +867,118 @@ func validateBetaTestersCSVHeader(header []string) (map[string]int, error) {
 		return nil, shared.UsageError("CSV header must include required column \"email\"")
 	}
 	return idx, nil
+}
+
+func parseBetaTestersCSVHeader(firstRow []string) (map[string]int, bool, error) {
+	if len(firstRow) == 0 {
+		return nil, false, shared.UsageError("CSV header row is required")
+	}
+	headerCandidate := false
+	unknown := false
+	for _, raw := range firstRow {
+		col := strings.ToLower(strings.TrimSpace(raw))
+		if col == "" {
+			continue
+		}
+		if _, ok := canonicalBetaTestersCSVColumn(col); ok {
+			headerCandidate = true
+			continue
+		}
+		unknown = true
+	}
+	if !headerCandidate {
+		return nil, false, nil
+	}
+	if unknown {
+		_, err := validateBetaTestersCSVHeader(firstRow)
+		return nil, false, err
+	}
+	headerIdx, err := validateBetaTestersCSVHeader(firstRow)
+	if err != nil {
+		return nil, false, err
+	}
+	return headerIdx, true, nil
+}
+
+func canonicalBetaTestersCSVColumn(col string) (string, bool) {
+	switch strings.ToLower(strings.TrimSpace(col)) {
+	case "email":
+		return "email", true
+	case "first_name", "first":
+		return "first_name", true
+	case "last_name", "last":
+		return "last_name", true
+	case "groups":
+		return "groups", true
+	default:
+		return "", false
+	}
+}
+
+func parseHeaderMappedBetaTesterCSVRow(record []string, headerIdx map[string]int) betaTestersCSVRow {
+	get := func(col string) string {
+		i, ok := headerIdx[col]
+		if !ok || i < 0 || i >= len(record) {
+			return ""
+		}
+		return strings.TrimSpace(record[i])
+	}
+	groups := make([]string, 0)
+	if idx, ok := headerIdx["groups"]; ok && idx >= 0 && idx < len(record) {
+		groups = splitBetaTesterCSVGroups(record[idx])
+	}
+	return betaTestersCSVRow{
+		email:     get("email"),
+		firstName: get("first_name"),
+		lastName:  get("last_name"),
+		groups:    groups,
+	}
+}
+
+func parseLegacyBetaTesterCSVRow(record []string) (betaTestersCSVRow, error) {
+	if len(record) < 3 || len(record) > 4 {
+		return betaTestersCSVRow{}, shared.UsageError("legacy CSV rows must have 3 or 4 columns: first_name,last_name,email[,groups]")
+	}
+	row := betaTestersCSVRow{
+		firstName: strings.TrimSpace(record[0]),
+		lastName:  strings.TrimSpace(record[1]),
+		email:     strings.TrimSpace(record[2]),
+	}
+	if len(record) >= 4 {
+		row.groups = splitBetaTesterCSVGroups(record[3])
+	}
+	return row, nil
+}
+
+func splitBetaTesterCSVGroups(value string) []string {
+	trimmed := strings.TrimSpace(value)
+	if trimmed == "" {
+		return nil
+	}
+	parts := strings.FieldsFunc(trimmed, func(r rune) bool {
+		return r == ',' || r == ';'
+	})
+	out := make([]string, 0, len(parts))
+	for _, part := range parts {
+		item := strings.TrimSpace(part)
+		if item == "" {
+			continue
+		}
+		out = append(out, item)
+	}
+	return out
+}
+
+func isValidTesterEmail(value string) bool {
+	trimmed := strings.TrimSpace(value)
+	if trimmed == "" || strings.ContainsAny(trimmed, " \t\r\n") {
+		return false
+	}
+	addr, err := mail.ParseAddress(trimmed)
+	if err != nil {
+		return false
+	}
+	return strings.EqualFold(addr.Address, trimmed)
 }
 
 func writeCSVFileAtomicNoSymlink(outputPath string, header []string, rows [][]string) error {

@@ -205,7 +205,7 @@ func TestTestFlightBetaTestersExport_IncludeGroupsAddsColumn(t *testing.T) {
 	records := readCSVRecords(t, outPath)
 	want := [][]string{
 		{"email", "first_name", "last_name", "groups"},
-		{"a@example.com", "A", "Aye", "Alpha,Beta"},
+		{"a@example.com", "A", "Aye", "Alpha;Beta"},
 		{"b@example.com", "B", "Bee", "Beta"},
 	}
 	if got := strings.TrimSpace(csvRecordsToString(records)); got != strings.TrimSpace(csvRecordsToString(want)) {
@@ -781,6 +781,221 @@ func TestTestFlightBetaTestersImport_RowFailureReturnsReportedErrorAndSummary(t 
 	}
 	if !strings.Contains(stdout, `"failed":1`) || !strings.Contains(stdout, `"created":1`) {
 		t.Fatalf("expected failed=1 and created=1 in summary, got %q", stdout)
+	}
+}
+
+func TestTestFlightBetaTestersImport_FastlaneHeaderAndSemicolonGroups(t *testing.T) {
+	setupAuth(t)
+
+	originalTransport := http.DefaultTransport
+	t.Cleanup(func() {
+		http.DefaultTransport = originalTransport
+	})
+
+	callCount := 0
+	http.DefaultTransport = roundTripFunc(func(req *http.Request) (*http.Response, error) {
+		callCount++
+		switch callCount {
+		case 1:
+			if req.Method != http.MethodGet || req.URL.Path != "/v1/apps/app-1/betaGroups" {
+				t.Fatalf("unexpected request 1: %s %s", req.Method, req.URL.Path)
+			}
+			body := `{"data":[` +
+				`{"type":"betaGroups","id":"group-1","attributes":{"name":"Beta"}},` +
+				`{"type":"betaGroups","id":"group-2","attributes":{"name":"Core Team"}}` +
+				`]}`
+			return &http.Response{
+				StatusCode: http.StatusOK,
+				Body:       io.NopCloser(strings.NewReader(body)),
+				Header:     http.Header{"Content-Type": []string{"application/json"}},
+			}, nil
+		case 2:
+			if req.Method != http.MethodGet || req.URL.Path != "/v1/betaTesters" {
+				t.Fatalf("unexpected request 2: %s %s", req.Method, req.URL.Path)
+			}
+			return &http.Response{
+				StatusCode: http.StatusOK,
+				Body:       io.NopCloser(strings.NewReader(`{"data":[]}`)),
+				Header:     http.Header{"Content-Type": []string{"application/json"}},
+			}, nil
+		case 3:
+			if req.Method != http.MethodPost || req.URL.Path != "/v1/betaTesters" {
+				t.Fatalf("unexpected request 3: %s %s", req.Method, req.URL.Path)
+			}
+			payload, err := io.ReadAll(req.Body)
+			if err != nil {
+				t.Fatalf("ReadAll() error: %v", err)
+			}
+			bodyText := string(payload)
+			if !strings.Contains(bodyText, `"email":"grace@example.com"`) {
+				t.Fatalf("expected email in payload, got %s", bodyText)
+			}
+			if !strings.Contains(bodyText, `"id":"group-1"`) || !strings.Contains(bodyText, `"id":"group-2"`) {
+				t.Fatalf("expected both groups in payload, got %s", bodyText)
+			}
+			return &http.Response{
+				StatusCode: http.StatusCreated,
+				Body:       io.NopCloser(strings.NewReader(`{"data":{"type":"betaTesters","id":"tester-new","attributes":{"email":"grace@example.com"}}}`)),
+				Header:     http.Header{"Content-Type": []string{"application/json"}},
+			}, nil
+		default:
+			t.Fatalf("unexpected request count %d", callCount)
+			return nil, nil
+		}
+	})
+
+	csvPath := filepath.Join(t.TempDir(), "fastlane.csv")
+	csvBody := "" +
+		"First,Last,Email,Groups\n" +
+		"Grace,Hopper,grace@example.com,Beta;Core Team\n"
+	if err := os.WriteFile(csvPath, []byte(csvBody), 0o600); err != nil {
+		t.Fatalf("WriteFile() error: %v", err)
+	}
+
+	root := RootCommand("1.2.3")
+	root.FlagSet.SetOutput(io.Discard)
+
+	stdout, stderr := captureOutput(t, func() {
+		if err := root.Parse([]string{"testflight", "beta-testers", "import", "--app", "app-1", "--input", csvPath}); err != nil {
+			t.Fatalf("parse error: %v", err)
+		}
+		if err := root.Run(context.Background()); err != nil {
+			t.Fatalf("run error: %v", err)
+		}
+	})
+
+	if stderr != "" {
+		t.Fatalf("expected empty stderr, got %q", stderr)
+	}
+	if !strings.Contains(stdout, `"created":1`) || strings.Contains(stdout, `"failed":1`) {
+		t.Fatalf("expected created=1 and failed=0, got %q", stdout)
+	}
+}
+
+func TestTestFlightBetaTestersImport_HeaderlessFastlaneFormat(t *testing.T) {
+	setupAuth(t)
+
+	originalTransport := http.DefaultTransport
+	t.Cleanup(func() {
+		http.DefaultTransport = originalTransport
+	})
+
+	callCount := 0
+	http.DefaultTransport = roundTripFunc(func(req *http.Request) (*http.Response, error) {
+		callCount++
+		switch callCount {
+		case 1:
+			if req.Method != http.MethodGet || req.URL.Path != "/v1/betaTesters" {
+				t.Fatalf("unexpected request 1: %s %s", req.Method, req.URL.Path)
+			}
+			return &http.Response{
+				StatusCode: http.StatusOK,
+				Body:       io.NopCloser(strings.NewReader(`{"data":[]}`)),
+				Header:     http.Header{"Content-Type": []string{"application/json"}},
+			}, nil
+		case 2:
+			if req.Method != http.MethodPost || req.URL.Path != "/v1/betaTesters" {
+				t.Fatalf("unexpected request 2: %s %s", req.Method, req.URL.Path)
+			}
+			payload, err := io.ReadAll(req.Body)
+			if err != nil {
+				t.Fatalf("ReadAll() error: %v", err)
+			}
+			bodyText := string(payload)
+			if !strings.Contains(bodyText, `"firstName":"Linus"`) || !strings.Contains(bodyText, `"lastName":"Torvalds"`) {
+				t.Fatalf("expected names in payload, got %s", bodyText)
+			}
+			return &http.Response{
+				StatusCode: http.StatusCreated,
+				Body:       io.NopCloser(strings.NewReader(`{"data":{"type":"betaTesters","id":"tester-linus","attributes":{"email":"linus@example.com"}}}`)),
+				Header:     http.Header{"Content-Type": []string{"application/json"}},
+			}, nil
+		default:
+			t.Fatalf("unexpected request count %d", callCount)
+			return nil, nil
+		}
+	})
+
+	csvPath := filepath.Join(t.TempDir(), "headerless.csv")
+	csvBody := "Linus,Torvalds,linus@example.com\n"
+	if err := os.WriteFile(csvPath, []byte(csvBody), 0o600); err != nil {
+		t.Fatalf("WriteFile() error: %v", err)
+	}
+
+	root := RootCommand("1.2.3")
+	root.FlagSet.SetOutput(io.Discard)
+
+	stdout, stderr := captureOutput(t, func() {
+		if err := root.Parse([]string{"testflight", "beta-testers", "import", "--app", "app-1", "--input", csvPath}); err != nil {
+			t.Fatalf("parse error: %v", err)
+		}
+		if err := root.Run(context.Background()); err != nil {
+			t.Fatalf("run error: %v", err)
+		}
+	})
+
+	if stderr != "" {
+		t.Fatalf("expected empty stderr, got %q", stderr)
+	}
+	if !strings.Contains(stdout, `"created":1`) || !strings.Contains(stdout, `"failed":0`) {
+		t.Fatalf("expected created=1 and failed=0, got %q", stdout)
+	}
+}
+
+func TestTestFlightBetaTestersImport_InvalidEmailFailsRow(t *testing.T) {
+	setupAuth(t)
+
+	originalTransport := http.DefaultTransport
+	t.Cleanup(func() {
+		http.DefaultTransport = originalTransport
+	})
+
+	callCount := 0
+	http.DefaultTransport = roundTripFunc(func(req *http.Request) (*http.Response, error) {
+		callCount++
+		if callCount > 1 {
+			t.Fatalf("unexpected request count %d: %s %s", callCount, req.Method, req.URL.Path)
+		}
+		if req.Method != http.MethodGet || req.URL.Path != "/v1/betaTesters" {
+			t.Fatalf("unexpected request 1: %s %s", req.Method, req.URL.Path)
+		}
+		return &http.Response{
+			StatusCode: http.StatusOK,
+			Body:       io.NopCloser(strings.NewReader(`{"data":[]}`)),
+			Header:     http.Header{"Content-Type": []string{"application/json"}},
+		}, nil
+	})
+
+	csvPath := filepath.Join(t.TempDir(), "invalid-email.csv")
+	csvBody := "" +
+		"email\n" +
+		"not-an-email\n"
+	if err := os.WriteFile(csvPath, []byte(csvBody), 0o600); err != nil {
+		t.Fatalf("WriteFile() error: %v", err)
+	}
+
+	root := RootCommand("1.2.3")
+	root.FlagSet.SetOutput(io.Discard)
+
+	var runErr error
+	stdout, stderr := captureOutput(t, func() {
+		if err := root.Parse([]string{"testflight", "beta-testers", "import", "--app", "app-1", "--input", csvPath}); err != nil {
+			t.Fatalf("parse error: %v", err)
+		}
+		runErr = root.Run(context.Background())
+	})
+
+	if runErr == nil {
+		t.Fatal("expected error for invalid email")
+	}
+	if _, ok := errors.AsType[ReportedError](runErr); !ok {
+		t.Fatalf("expected ReportedError, got %v", runErr)
+	}
+	if stderr != "" {
+		t.Fatalf("expected empty stderr, got %q", stderr)
+	}
+	if !strings.Contains(stdout, `"failed":1`) || !strings.Contains(strings.ToLower(stdout), "invalid email") {
+		t.Fatalf("expected failed row with invalid email error, got %q", stdout)
 	}
 }
 

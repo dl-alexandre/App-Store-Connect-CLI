@@ -32,16 +32,18 @@ func InsightsCommand() *ffcli.Command {
 	return &ffcli.Command{
 		Name:       "insights",
 		ShortUsage: "asc insights <subcommand> [flags]",
-		ShortHelp:  "Generate weekly insights from App Store data sources.",
-		LongHelp: `Generate weekly insights from App Store data sources.
+		ShortHelp:  "Generate weekly and daily insights from App Store data sources.",
+		LongHelp: `Generate weekly and daily insights from App Store data sources.
 
 Examples:
   asc insights weekly --app "123456789" --source analytics --week "2026-02-16"
-  asc insights weekly --app "123456789" --source sales --week "2026-02-16" --vendor "12345678"`,
+  asc insights weekly --app "123456789" --source sales --week "2026-02-16" --vendor "12345678"
+  asc insights daily --app "123456789" --vendor "12345678" --date "2026-02-20"`,
 		FlagSet:   fs,
 		UsageFunc: shared.DefaultUsageFunc,
 		Subcommands: []*ffcli.Command{
 			insightsWeeklyCommand(),
+			insightsDailyCommand(),
 		},
 		Exec: func(_ context.Context, _ []string) error {
 			return flag.ErrHelp
@@ -65,6 +67,9 @@ func insightsWeeklyCommand() *ffcli.Command {
 		LongHelp: `Summarize this week vs last week metrics.
 
 The output is deterministic JSON by default and can be rendered as table/markdown.
+
+For --source sales, totals are scoped to the selected app and include linked in-app purchases
+and subscriptions by matching Parent Identifier against the app SKU.
 
 Examples:
   asc insights weekly --app "123456789" --source analytics --week "2026-02-16"
@@ -127,6 +132,72 @@ Examples:
 	}
 }
 
+func insightsDailyCommand() *ffcli.Command {
+	fs := flag.NewFlagSet("insights daily", flag.ExitOnError)
+
+	appID := fs.String("app", "", "App Store Connect app ID (required, or ASC_APP_ID env)")
+	vendor := fs.String("vendor", "", "Vendor number for sales source (or ASC_VENDOR_NUMBER)")
+	date := fs.String("date", "", "Report date (YYYY-MM-DD)")
+	output := shared.BindOutputFlags(fs)
+
+	return &ffcli.Command{
+		Name:       "daily",
+		ShortUsage: "asc insights daily --app \"APP_ID\" --vendor \"VENDOR\" --date \"YYYY-MM-DD\" [flags]",
+		ShortHelp:  "Summarize daily subscription renewal signals from sales exports.",
+		LongHelp: `Summarize daily subscription renewal signals from sales exports.
+
+This command is sales-only and app-scoped. It compares the selected day to the previous day.
+Renewal metrics are derived from rows where Subscription equals "Renewal" for products linked to the app.
+
+Examples:
+  asc insights daily --app "123456789" --vendor "12345678" --date "2026-02-20"
+  asc insights daily --app "123456789" --vendor "12345678" --date "2026-02-20" --output table`,
+		FlagSet:   fs,
+		UsageFunc: shared.DefaultUsageFunc,
+		Exec: func(ctx context.Context, args []string) error {
+			if len(args) > 0 {
+				return shared.UsageErrorf("unexpected argument(s): %s", strings.Join(args, " "))
+			}
+
+			resolvedAppID := shared.ResolveAppID(*appID)
+			if resolvedAppID == "" {
+				return shared.UsageError("--app is required (or set ASC_APP_ID)")
+			}
+
+			resolvedVendor := shared.ResolveVendorNumber(*vendor)
+			if resolvedVendor == "" {
+				return shared.UsageError("--vendor is required (or set ASC_VENDOR_NUMBER)")
+			}
+
+			reportDate, err := normalizeInsightsDate(*date, "--date")
+			if err != nil {
+				return shared.UsageError(err.Error())
+			}
+
+			client, err := shared.GetASCClient()
+			if err != nil {
+				return fmt.Errorf("insights daily: %w", err)
+			}
+
+			requestCtx, cancel := shared.ContextWithTimeout(ctx)
+			defer cancel()
+
+			resp, err := collectDailyInsights(requestCtx, client, resolvedAppID, resolvedVendor, reportDate)
+			if err != nil {
+				return fmt.Errorf("insights daily: %w", err)
+			}
+
+			return shared.PrintOutputWithRenderers(
+				resp,
+				*output.Output,
+				*output.Pretty,
+				func() error { renderDailyInsights(resp, false); return nil },
+				func() error { renderDailyInsights(resp, true); return nil },
+			)
+		},
+	}
+}
+
 type weeklyInsightsResponse struct {
 	AppID        string               `json:"appId"`
 	Source       weeklyInsightsSource `json:"source"`
@@ -139,6 +210,7 @@ type weeklyInsightsResponse struct {
 type weeklyInsightsSource struct {
 	Name            string `json:"name"`
 	VendorNumber    string `json:"vendorNumber,omitempty"`
+	AppSKU          string `json:"appSku,omitempty"`
 	RequestsScanned int    `json:"requestsScanned,omitempty"`
 }
 
@@ -158,19 +230,65 @@ type weeklyMetric struct {
 	Reason       string   `json:"reason,omitempty"`
 }
 
+type dailyInsightsResponse struct {
+	AppID        string              `json:"appId"`
+	Source       dailyInsightsSource `json:"source"`
+	Date         string              `json:"date"`
+	PreviousDate string              `json:"previousDate"`
+	Metrics      []dailyMetric       `json:"metrics"`
+	GeneratedAt  string              `json:"generatedAt"`
+}
+
+type dailyInsightsSource struct {
+	Name          string `json:"name"`
+	VendorNumber  string `json:"vendorNumber,omitempty"`
+	AppSKU        string `json:"appSku,omitempty"`
+	ReportType    string `json:"reportType,omitempty"`
+	ReportSubType string `json:"reportSubType,omitempty"`
+	Frequency     string `json:"frequency,omitempty"`
+	Version       string `json:"version,omitempty"`
+}
+
+type dailyMetric struct {
+	Name         string   `json:"name"`
+	Unit         string   `json:"unit,omitempty"`
+	ThisDay      *float64 `json:"thisDay,omitempty"`
+	PreviousDay  *float64 `json:"previousDay,omitempty"`
+	Delta        *float64 `json:"delta,omitempty"`
+	DeltaPercent *float64 `json:"deltaPercent,omitempty"`
+	Status       string   `json:"status"`
+	Reason       string   `json:"reason,omitempty"`
+}
+
 type reportWeekWindow struct {
 	start time.Time
 	end   time.Time
 }
 
 type salesWeekMetrics struct {
-	rowCount               int
-	hasUnits               bool
-	unitsTotal             float64
-	hasDeveloperProceeds   bool
-	developerProceedsTotal float64
-	hasCustomerPrice       bool
-	customerPriceTotal     float64
+	rowCount                       int
+	unitsColumnPresent             bool
+	developerProceedsColumnPresent bool
+	customerPriceColumnPresent     bool
+	subscriptionColumnPresent      bool
+	unitsTotal                     float64
+	downloadUnitsTotal             float64
+	monetizedUnitsTotal            float64
+	developerProceedsTotal         float64
+	customerPriceTotal             float64
+	subscriptionRows               int
+	subscriptionUnitsTotal         float64
+	subscriptionDeveloperProceeds  float64
+	subscriptionCustomerPrice      float64
+	renewalRows                    int
+	renewalUnitsTotal              float64
+	renewalDeveloperProceeds       float64
+	renewalCustomerPrice           float64
+}
+
+type salesScope struct {
+	appID  string
+	appSKU string
 }
 
 func collectWeeklyInsights(ctx context.Context, client *asc.Client, appID, sourceName, vendor string, weekStart time.Time) (*weeklyInsightsResponse, error) {
@@ -196,7 +314,16 @@ func collectWeeklyInsights(ctx context.Context, client *asc.Client, appID, sourc
 	switch sourceName {
 	case sourceSales:
 		resp.Source.VendorNumber = vendor
-		metrics := collectSalesMetrics(ctx, client, vendor, thisWeek, previousWeek)
+		appResp, appErr := client.GetApp(ctx, appID)
+		if appErr != nil {
+			return nil, appErr
+		}
+		scope := salesScope{
+			appID:  appID,
+			appSKU: strings.TrimSpace(appResp.Data.Attributes.SKU),
+		}
+		resp.Source.AppSKU = scope.appSKU
+		metrics := collectSalesMetrics(ctx, client, vendor, scope, thisWeek, previousWeek)
 		resp.Metrics = metrics
 	case sourceAnalytics:
 		metrics, requestsScanned, err := collectAnalyticsMetrics(ctx, client, appID, thisWeek, previousWeek)
@@ -212,9 +339,131 @@ func collectWeeklyInsights(ctx context.Context, client *asc.Client, appID, sourc
 	return resp, nil
 }
 
-func collectSalesMetrics(ctx context.Context, client *asc.Client, vendor string, thisWeek, previousWeek reportWeekWindow) []weeklyMetric {
-	thisData, thisErr := fetchSalesWeekMetrics(ctx, client, vendor, thisWeek.end.Format("2006-01-02"))
-	prevData, prevErr := fetchSalesWeekMetrics(ctx, client, vendor, previousWeek.end.Format("2006-01-02"))
+func collectDailyInsights(ctx context.Context, client *asc.Client, appID, vendor string, reportDate time.Time) (*dailyInsightsResponse, error) {
+	appResp, err := client.GetApp(ctx, appID)
+	if err != nil {
+		return nil, err
+	}
+
+	scope := salesScope{
+		appID:  appID,
+		appSKU: strings.TrimSpace(appResp.Data.Attributes.SKU),
+	}
+	thisDay := reportDate.Format("2006-01-02")
+	previousDay := reportDate.AddDate(0, 0, -1).Format("2006-01-02")
+
+	thisData, thisErr := fetchSalesDayMetrics(ctx, client, vendor, thisDay, scope)
+	prevData, prevErr := fetchSalesDayMetrics(ctx, client, vendor, previousDay, scope)
+
+	availabilityReason := ""
+	if thisErr != nil || prevErr != nil {
+		reasons := make([]string, 0, 2)
+		if thisErr != nil {
+			reasons = append(reasons, fmt.Sprintf("selected day: %v", thisErr))
+		}
+		if prevErr != nil {
+			reasons = append(reasons, fmt.Sprintf("previous day: %v", prevErr))
+		}
+		availabilityReason = strings.Join(reasons, "; ")
+	}
+
+	resp := &dailyInsightsResponse{
+		AppID: appID,
+		Source: dailyInsightsSource{
+			Name:          sourceSales,
+			VendorNumber:  vendor,
+			AppSKU:        scope.appSKU,
+			ReportType:    string(asc.SalesReportTypeSales),
+			ReportSubType: string(asc.SalesReportSubTypeSummary),
+			Frequency:     string(asc.SalesReportFrequencyDaily),
+			Version:       string(asc.SalesReportVersion1_0),
+		},
+		Date:         thisDay,
+		PreviousDate: previousDay,
+		GeneratedAt:  time.Now().UTC().Format(time.RFC3339),
+	}
+
+	metrics := make([]dailyMetric, 0, 8)
+	metrics = append(metrics, dailyMetricFromOptionalTotals(
+		"renewal_rows",
+		"count",
+		thisData.subscriptionColumnPresent && prevData.subscriptionColumnPresent && availabilityReason == "",
+		float64(thisData.renewalRows),
+		float64(prevData.renewalRows),
+		resolveSalesReason("subscription column", availabilityReason, thisData.subscriptionColumnPresent, prevData.subscriptionColumnPresent),
+	))
+	metrics = append(metrics, dailyMetricFromOptionalTotals(
+		"renewal_units",
+		"count",
+		thisData.subscriptionColumnPresent && prevData.subscriptionColumnPresent &&
+			thisData.unitsColumnPresent && prevData.unitsColumnPresent &&
+			availabilityReason == "",
+		thisData.renewalUnitsTotal,
+		prevData.renewalUnitsTotal,
+		resolveSalesReason("renewal units", availabilityReason, thisData.unitsColumnPresent && thisData.subscriptionColumnPresent, prevData.unitsColumnPresent && prevData.subscriptionColumnPresent),
+	))
+	metrics = append(metrics, dailyMetricFromOptionalTotals(
+		"renewal_developer_proceeds",
+		"currency",
+		thisData.subscriptionColumnPresent && prevData.subscriptionColumnPresent &&
+			thisData.developerProceedsColumnPresent && prevData.developerProceedsColumnPresent &&
+			availabilityReason == "",
+		thisData.renewalDeveloperProceeds,
+		prevData.renewalDeveloperProceeds,
+		resolveSalesReason("renewal developer proceeds", availabilityReason, thisData.developerProceedsColumnPresent && thisData.subscriptionColumnPresent, prevData.developerProceedsColumnPresent && prevData.subscriptionColumnPresent),
+	))
+	metrics = append(metrics, dailyMetricFromOptionalTotals(
+		"subscription_rows",
+		"count",
+		thisData.subscriptionColumnPresent && prevData.subscriptionColumnPresent && availabilityReason == "",
+		float64(thisData.subscriptionRows),
+		float64(prevData.subscriptionRows),
+		resolveSalesReason("subscription column", availabilityReason, thisData.subscriptionColumnPresent, prevData.subscriptionColumnPresent),
+	))
+	metrics = append(metrics, dailyMetricFromOptionalTotals(
+		"subscription_units",
+		"count",
+		thisData.subscriptionColumnPresent && prevData.subscriptionColumnPresent &&
+			thisData.unitsColumnPresent && prevData.unitsColumnPresent &&
+			availabilityReason == "",
+		thisData.subscriptionUnitsTotal,
+		prevData.subscriptionUnitsTotal,
+		resolveSalesReason("subscription units", availabilityReason, thisData.unitsColumnPresent && thisData.subscriptionColumnPresent, prevData.unitsColumnPresent && prevData.subscriptionColumnPresent),
+	))
+	metrics = append(metrics, dailyMetricFromOptionalTotals(
+		"subscription_developer_proceeds",
+		"currency",
+		thisData.subscriptionColumnPresent && prevData.subscriptionColumnPresent &&
+			thisData.developerProceedsColumnPresent && prevData.developerProceedsColumnPresent &&
+			availabilityReason == "",
+		thisData.subscriptionDeveloperProceeds,
+		prevData.subscriptionDeveloperProceeds,
+		resolveSalesReason("subscription developer proceeds", availabilityReason, thisData.developerProceedsColumnPresent && thisData.subscriptionColumnPresent, prevData.developerProceedsColumnPresent && prevData.subscriptionColumnPresent),
+	))
+	metrics = append(metrics, dailyMetricFromOptionalTotals(
+		"monetized_units",
+		"count",
+		thisData.unitsColumnPresent && prevData.unitsColumnPresent && availabilityReason == "",
+		thisData.monetizedUnitsTotal,
+		prevData.monetizedUnitsTotal,
+		resolveSalesReason("monetized units", availabilityReason, thisData.unitsColumnPresent, prevData.unitsColumnPresent),
+	))
+	metrics = append(metrics, dailyMetricFromOptionalTotals(
+		"report_rows",
+		"count",
+		availabilityReason == "",
+		float64(thisData.rowCount),
+		float64(prevData.rowCount),
+		availabilityReason,
+	))
+
+	resp.Metrics = metrics
+	return resp, nil
+}
+
+func collectSalesMetrics(ctx context.Context, client *asc.Client, vendor string, scope salesScope, thisWeek, previousWeek reportWeekWindow) []weeklyMetric {
+	thisData, thisErr := fetchSalesWeekMetrics(ctx, client, vendor, thisWeek.end.Format("2006-01-02"), scope)
+	prevData, prevErr := fetchSalesWeekMetrics(ctx, client, vendor, previousWeek.end.Format("2006-01-02"), scope)
 
 	availabilityReason := ""
 	if thisErr != nil || prevErr != nil {
@@ -228,30 +477,46 @@ func collectSalesMetrics(ctx context.Context, client *asc.Client, vendor string,
 		availabilityReason = strings.Join(reasons, "; ")
 	}
 
-	metrics := make([]weeklyMetric, 0, 5)
+	metrics := make([]weeklyMetric, 0, 7)
+	metrics = append(metrics, metricFromOptionalTotals(
+		"download_units",
+		"count",
+		thisData.unitsColumnPresent && prevData.unitsColumnPresent && availabilityReason == "",
+		thisData.downloadUnitsTotal,
+		prevData.downloadUnitsTotal,
+		resolveSalesReason("download units", availabilityReason, thisData.unitsColumnPresent, prevData.unitsColumnPresent),
+	))
+	metrics = append(metrics, metricFromOptionalTotals(
+		"monetized_units",
+		"count",
+		thisData.unitsColumnPresent && prevData.unitsColumnPresent && availabilityReason == "",
+		thisData.monetizedUnitsTotal,
+		prevData.monetizedUnitsTotal,
+		resolveSalesReason("monetized units", availabilityReason, thisData.unitsColumnPresent, prevData.unitsColumnPresent),
+	))
 	metrics = append(metrics, metricFromOptionalTotals(
 		"units",
 		"count",
-		thisData.hasUnits && prevData.hasUnits && availabilityReason == "",
+		thisData.unitsColumnPresent && prevData.unitsColumnPresent && availabilityReason == "",
 		thisData.unitsTotal,
 		prevData.unitsTotal,
-		resolveSalesReason("units", availabilityReason, thisData.hasUnits, prevData.hasUnits),
+		resolveSalesReason("units", availabilityReason, thisData.unitsColumnPresent, prevData.unitsColumnPresent),
 	))
 	metrics = append(metrics, metricFromOptionalTotals(
 		"developer_proceeds",
 		"currency",
-		thisData.hasDeveloperProceeds && prevData.hasDeveloperProceeds && availabilityReason == "",
+		thisData.developerProceedsColumnPresent && prevData.developerProceedsColumnPresent && availabilityReason == "",
 		thisData.developerProceedsTotal,
 		prevData.developerProceedsTotal,
-		resolveSalesReason("developer proceeds", availabilityReason, thisData.hasDeveloperProceeds, prevData.hasDeveloperProceeds),
+		resolveSalesReason("developer proceeds", availabilityReason, thisData.developerProceedsColumnPresent, prevData.developerProceedsColumnPresent),
 	))
 	metrics = append(metrics, metricFromOptionalTotals(
 		"customer_price",
 		"currency",
-		thisData.hasCustomerPrice && prevData.hasCustomerPrice && availabilityReason == "",
+		thisData.customerPriceColumnPresent && prevData.customerPriceColumnPresent && availabilityReason == "",
 		thisData.customerPriceTotal,
 		prevData.customerPriceTotal,
-		resolveSalesReason("customer price", availabilityReason, thisData.hasCustomerPrice, prevData.hasCustomerPrice),
+		resolveSalesReason("customer price", availabilityReason, thisData.customerPriceColumnPresent, prevData.customerPriceColumnPresent),
 	))
 
 	metrics = append(metrics, metricFromOptionalTotals(
@@ -267,7 +532,7 @@ func collectSalesMetrics(ctx context.Context, client *asc.Client, vendor string,
 	return metrics
 }
 
-func fetchSalesWeekMetrics(ctx context.Context, client *asc.Client, vendor, reportDate string) (salesWeekMetrics, error) {
+func fetchSalesWeekMetrics(ctx context.Context, client *asc.Client, vendor, reportDate string, scope salesScope) (salesWeekMetrics, error) {
 	download, err := client.GetSalesReport(ctx, asc.SalesReportParams{
 		VendorNumber:  vendor,
 		ReportType:    asc.SalesReportTypeSales,
@@ -281,14 +546,35 @@ func fetchSalesWeekMetrics(ctx context.Context, client *asc.Client, vendor, repo
 	}
 	defer download.Body.Close()
 
-	metrics, err := parseSalesReportMetrics(download.Body)
+	metrics, err := parseSalesReportMetrics(download.Body, scope)
 	if err != nil {
 		return salesWeekMetrics{}, err
 	}
 	return metrics, nil
 }
 
-func parseSalesReportMetrics(reader io.Reader) (salesWeekMetrics, error) {
+func fetchSalesDayMetrics(ctx context.Context, client *asc.Client, vendor, reportDate string, scope salesScope) (salesWeekMetrics, error) {
+	download, err := client.GetSalesReport(ctx, asc.SalesReportParams{
+		VendorNumber:  vendor,
+		ReportType:    asc.SalesReportTypeSales,
+		ReportSubType: asc.SalesReportSubTypeSummary,
+		Frequency:     asc.SalesReportFrequencyDaily,
+		ReportDate:    reportDate,
+		Version:       asc.SalesReportVersion1_0,
+	})
+	if err != nil {
+		return salesWeekMetrics{}, err
+	}
+	defer download.Body.Close()
+
+	metrics, err := parseSalesReportMetrics(download.Body, scope)
+	if err != nil {
+		return salesWeekMetrics{}, err
+	}
+	return metrics, nil
+}
+
+func parseSalesReportMetrics(reader io.Reader, scope salesScope) (salesWeekMetrics, error) {
 	gzipReader, err := gzip.NewReader(reader)
 	if err != nil {
 		return salesWeekMetrics{}, fmt.Errorf("read gzip report: %w", err)
@@ -309,38 +595,138 @@ func parseSalesReportMetrics(reader io.Reader) (salesWeekMetrics, error) {
 	}
 
 	headers := rows[0]
+	appleIdentifierIdx := findColumnIndex(headers, "appleidentifier")
+	parentIdentifierIdx := findColumnIndex(headers, "parentidentifier")
+	skuIdx := findColumnIndex(headers, "sku")
+	subscriptionIdx := findColumnIndex(headers, "subscription")
 	unitsIdx := findColumnIndex(headers, "units")
 	developerProceedsIdx := findColumnIndex(headers, "developerproceeds")
 	customerPriceIdx := findColumnIndex(headers, "customerprice")
+	if appleIdentifierIdx < 0 && parentIdentifierIdx < 0 {
+		return salesWeekMetrics{}, fmt.Errorf("report is missing Apple Identifier and Parent Identifier columns")
+	}
 
-	metrics := salesWeekMetrics{}
+	scope = enrichSalesScopeFromRows(scope, rows[1:], appleIdentifierIdx, skuIdx)
+	metrics := salesWeekMetrics{
+		unitsColumnPresent:             unitsIdx >= 0,
+		developerProceedsColumnPresent: developerProceedsIdx >= 0,
+		customerPriceColumnPresent:     customerPriceIdx >= 0,
+		subscriptionColumnPresent:      subscriptionIdx >= 0,
+	}
 	for _, row := range rows[1:] {
 		if isEmptyRow(row) {
 			continue
 		}
+
+		appleIdentifier := strings.TrimSpace(valueAtIndex(row, appleIdentifierIdx))
+		parentIdentifier := strings.TrimSpace(valueAtIndex(row, parentIdentifierIdx))
+		isAppRow, isMonetizedRow, include := rowMatchesSalesScope(scope, appleIdentifier, parentIdentifier)
+		if !include {
+			continue
+		}
+		subscriptionValue := strings.TrimSpace(valueAtIndex(row, subscriptionIdx))
+		isSubscriptionRow := subscriptionValue != ""
+		isRenewalRow := isRenewalSubscriptionState(subscriptionValue)
+
 		metrics.rowCount++
+		if isSubscriptionRow {
+			metrics.subscriptionRows++
+		}
+		if isRenewalRow {
+			metrics.renewalRows++
+		}
 
 		if unitsIdx >= 0 {
 			if value, ok := parseNumericValue(valueAtIndex(row, unitsIdx)); ok {
-				metrics.hasUnits = true
 				metrics.unitsTotal += value
+				if isAppRow {
+					metrics.downloadUnitsTotal += value
+				}
+				if isMonetizedRow {
+					metrics.monetizedUnitsTotal += value
+				}
+				if isSubscriptionRow {
+					metrics.subscriptionUnitsTotal += value
+				}
+				if isRenewalRow {
+					metrics.renewalUnitsTotal += value
+				}
 			}
 		}
 		if developerProceedsIdx >= 0 {
 			if value, ok := parseNumericValue(valueAtIndex(row, developerProceedsIdx)); ok {
-				metrics.hasDeveloperProceeds = true
 				metrics.developerProceedsTotal += value
+				if isSubscriptionRow {
+					metrics.subscriptionDeveloperProceeds += value
+				}
+				if isRenewalRow {
+					metrics.renewalDeveloperProceeds += value
+				}
 			}
 		}
 		if customerPriceIdx >= 0 {
 			if value, ok := parseNumericValue(valueAtIndex(row, customerPriceIdx)); ok {
-				metrics.hasCustomerPrice = true
 				metrics.customerPriceTotal += value
+				if isSubscriptionRow {
+					metrics.subscriptionCustomerPrice += value
+				}
+				if isRenewalRow {
+					metrics.renewalCustomerPrice += value
+				}
 			}
 		}
 	}
 
 	return metrics, nil
+}
+
+func enrichSalesScopeFromRows(scope salesScope, rows [][]string, appleIdentifierIdx, skuIdx int) salesScope {
+	if strings.TrimSpace(scope.appSKU) != "" {
+		return scope
+	}
+	if appleIdentifierIdx < 0 || skuIdx < 0 {
+		return scope
+	}
+	for _, row := range rows {
+		if isEmptyRow(row) {
+			continue
+		}
+		appleIdentifier := strings.TrimSpace(valueAtIndex(row, appleIdentifierIdx))
+		if appleIdentifier != strings.TrimSpace(scope.appID) {
+			continue
+		}
+		sku := strings.TrimSpace(valueAtIndex(row, skuIdx))
+		if sku != "" {
+			scope.appSKU = sku
+			return scope
+		}
+	}
+	return scope
+}
+
+func rowMatchesSalesScope(scope salesScope, appleIdentifier, parentIdentifier string) (isAppRow bool, isMonetizedRow bool, include bool) {
+	appID := strings.TrimSpace(scope.appID)
+	appSKU := strings.TrimSpace(scope.appSKU)
+	appleIdentifier = strings.TrimSpace(appleIdentifier)
+	parentIdentifier = strings.TrimSpace(parentIdentifier)
+
+	isAppRow = appID != "" && appleIdentifier == appID
+	isMonetizedRow = false
+	if appSKU != "" && parentIdentifier == appSKU {
+		isMonetizedRow = true
+	}
+	if appID != "" && parentIdentifier == appID {
+		isMonetizedRow = true
+	}
+	return isAppRow, isMonetizedRow, isAppRow || isMonetizedRow
+}
+
+func isRenewalSubscriptionState(value string) bool {
+	normalized := strings.ToLower(strings.TrimSpace(value))
+	if normalized == "" {
+		return false
+	}
+	return strings.Contains(normalized, "renew")
 }
 
 func collectAnalyticsMetrics(ctx context.Context, client *asc.Client, appID string, thisWeek, previousWeek reportWeekWindow) ([]weeklyMetric, int, error) {
@@ -520,6 +906,13 @@ func metricFromOptionalTotals(name, unit string, available bool, thisValue, last
 	return comparableMetric(name, unit, thisValue, lastValue)
 }
 
+func dailyMetricFromOptionalTotals(name, unit string, available bool, thisValue, previousValue float64, reason string) dailyMetric {
+	if !available {
+		return unavailableDailyMetric(name, unit, reason)
+	}
+	return comparableDailyMetric(name, unit, thisValue, previousValue)
+}
+
 func comparableMetric(name, unit string, thisValue, lastValue float64) weeklyMetric {
 	metric := weeklyMetric{
 		Name:     name,
@@ -538,6 +931,31 @@ func comparableMetric(name, unit string, thisValue, lastValue float64) weeklyMet
 
 func unavailableMetric(name, unit, reason string) weeklyMetric {
 	return weeklyMetric{
+		Name:   name,
+		Unit:   unit,
+		Status: "unavailable",
+		Reason: reason,
+	}
+}
+
+func comparableDailyMetric(name, unit string, thisValue, previousValue float64) dailyMetric {
+	metric := dailyMetric{
+		Name:        name,
+		Unit:        unit,
+		ThisDay:     ptrFloat64(thisValue),
+		PreviousDay: ptrFloat64(previousValue),
+		Delta:       ptrFloat64(thisValue - previousValue),
+		Status:      "ok",
+	}
+	if previousValue != 0 {
+		deltaPercent := ((thisValue - previousValue) / previousValue) * 100
+		metric.DeltaPercent = ptrFloat64(deltaPercent)
+	}
+	return metric
+}
+
+func unavailableDailyMetric(name, unit, reason string) dailyMetric {
+	return dailyMetric{
 		Name:   name,
 		Unit:   unit,
 		Status: "unavailable",
@@ -650,13 +1068,17 @@ func parseDateValue(value string) (time.Time, bool) {
 }
 
 func normalizeWeekStart(value string) (time.Time, error) {
-	normalized, err := shared.NormalizeDate(value, "--week")
+	return normalizeInsightsDate(value, "--week")
+}
+
+func normalizeInsightsDate(value, flagName string) (time.Time, error) {
+	normalized, err := shared.NormalizeDate(value, flagName)
 	if err != nil {
 		return time.Time{}, err
 	}
 	parsed, parseErr := time.Parse("2006-01-02", normalized)
 	if parseErr != nil {
-		return time.Time{}, fmt.Errorf("--week must be in YYYY-MM-DD format")
+		return time.Time{}, fmt.Errorf("%s must be in YYYY-MM-DD format", flagName)
 	}
 	return parsed.UTC(), nil
 }
@@ -695,6 +1117,50 @@ func renderWeeklyInsights(resp *weeklyInsightsResponse, markdown bool) {
 		})
 	}
 	shared.RenderSection("Metrics", []string{"metric", "unit", "thisWeek", "lastWeek", "delta", "deltaPercent", "status", "reason"}, metricRows, markdown)
+}
+
+func renderDailyInsights(resp *dailyInsightsResponse, markdown bool) {
+	contextRows := [][]string{
+		{"appId", resp.AppID},
+		{"source", resp.Source.Name},
+		{"date", resp.Date},
+		{"previousDate", resp.PreviousDate},
+		{"generatedAt", resp.GeneratedAt},
+	}
+	if strings.TrimSpace(resp.Source.VendorNumber) != "" {
+		contextRows = append(contextRows, []string{"vendorNumber", resp.Source.VendorNumber})
+	}
+	if strings.TrimSpace(resp.Source.AppSKU) != "" {
+		contextRows = append(contextRows, []string{"appSku", resp.Source.AppSKU})
+	}
+	if strings.TrimSpace(resp.Source.ReportType) != "" {
+		contextRows = append(contextRows, []string{"reportType", resp.Source.ReportType})
+	}
+	if strings.TrimSpace(resp.Source.ReportSubType) != "" {
+		contextRows = append(contextRows, []string{"reportSubType", resp.Source.ReportSubType})
+	}
+	if strings.TrimSpace(resp.Source.Frequency) != "" {
+		contextRows = append(contextRows, []string{"frequency", resp.Source.Frequency})
+	}
+	if strings.TrimSpace(resp.Source.Version) != "" {
+		contextRows = append(contextRows, []string{"version", resp.Source.Version})
+	}
+	shared.RenderSection("Context", []string{"field", "value"}, contextRows, markdown)
+
+	metricRows := make([][]string, 0, len(resp.Metrics))
+	for _, metric := range resp.Metrics {
+		metricRows = append(metricRows, []string{
+			metric.Name,
+			shared.OrNA(metric.Unit),
+			formatOptionalNumber(metric.ThisDay),
+			formatOptionalNumber(metric.PreviousDay),
+			formatOptionalNumber(metric.Delta),
+			formatOptionalNumber(metric.DeltaPercent),
+			metric.Status,
+			shared.OrNA(metric.Reason),
+		})
+	}
+	shared.RenderSection("Metrics", []string{"metric", "unit", "thisDay", "previousDay", "delta", "deltaPercent", "status", "reason"}, metricRows, markdown)
 }
 
 func formatOptionalNumber(value *float64) string {

@@ -71,6 +71,58 @@ func TestInsightsWeeklyValidationErrors(t *testing.T) {
 	}
 }
 
+func TestInsightsDailyValidationErrors(t *testing.T) {
+	t.Setenv("ASC_APP_ID", "")
+	t.Setenv("ASC_VENDOR_NUMBER", "")
+	t.Setenv("ASC_ANALYTICS_VENDOR_NUMBER", "")
+
+	tests := []struct {
+		name    string
+		args    []string
+		wantErr string
+	}{
+		{
+			name:    "missing app",
+			args:    []string{"insights", "daily", "--vendor", "12345678", "--date", "2026-02-20"},
+			wantErr: "--app is required",
+		},
+		{
+			name:    "missing vendor",
+			args:    []string{"insights", "daily", "--app", "app-1", "--date", "2026-02-20"},
+			wantErr: "--vendor is required",
+		},
+		{
+			name:    "missing date",
+			args:    []string{"insights", "daily", "--app", "app-1", "--vendor", "12345678"},
+			wantErr: "--date is required",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			root := RootCommand("1.2.3")
+			root.FlagSet.SetOutput(io.Discard)
+
+			stdout, stderr := captureOutput(t, func() {
+				if err := root.Parse(test.args); err != nil {
+					t.Fatalf("parse error: %v", err)
+				}
+				err := root.Run(context.Background())
+				if !errors.Is(err, flag.ErrHelp) {
+					t.Fatalf("expected ErrHelp, got %v", err)
+				}
+			})
+
+			if stdout != "" {
+				t.Fatalf("expected empty stdout, got %q", stdout)
+			}
+			if !strings.Contains(stderr, test.wantErr) {
+				t.Fatalf("expected error %q, got %q", test.wantErr, stderr)
+			}
+		})
+	}
+}
+
 func TestInsightsWeeklySalesJSON(t *testing.T) {
 	setupAuth(t)
 	t.Setenv("ASC_CONFIG_PATH", filepath.Join(t.TempDir(), "nonexistent.json"))
@@ -82,35 +134,52 @@ func TestInsightsWeeklySalesJSON(t *testing.T) {
 	})
 
 	http.DefaultTransport = roundTripFunc(func(req *http.Request) (*http.Response, error) {
-		if req.URL.Path != "/v1/salesReports" {
-			t.Fatalf("unexpected request: %s %s", req.Method, req.URL.String())
-		}
-		query := req.URL.Query()
-		if query.Get("filter[vendorNumber]") != "12345678" {
-			t.Fatalf("expected filter[vendorNumber]=12345678, got %q", query.Get("filter[vendorNumber]"))
-		}
-		if query.Get("filter[reportType]") != "SALES" {
-			t.Fatalf("expected filter[reportType]=SALES, got %q", query.Get("filter[reportType]"))
-		}
-		if query.Get("filter[frequency]") != "WEEKLY" {
-			t.Fatalf("expected filter[frequency]=WEEKLY, got %q", query.Get("filter[frequency]"))
-		}
-		switch query.Get("filter[reportDate]") {
-		case "2026-02-22":
-			return insightsGzipResponse(strings.Join([]string{
-				"Provider\tUnits\tDeveloper Proceeds\tCustomer Price",
-				"foo\t10\t2.50\t4.00",
-				"foo\t5\t1.50\t3.00",
-				"",
-			}, "\n")), nil
-		case "2026-02-15":
-			return insightsGzipResponse(strings.Join([]string{
-				"Provider\tUnits\tDeveloper Proceeds\tCustomer Price",
-				"foo\t8\t1.25\t2.00",
-				"",
-			}, "\n")), nil
+		switch req.URL.Path {
+		case "/v1/apps/app-1":
+			return insightsJSONResponse(`{
+				"data":{
+					"type":"apps",
+					"id":"app-1",
+					"attributes":{
+						"name":"Example App",
+						"bundleId":"com.example.app",
+						"sku":"example-sku-1"
+					}
+				}
+			}`), nil
+		case "/v1/salesReports":
+			query := req.URL.Query()
+			if query.Get("filter[vendorNumber]") != "12345678" {
+				t.Fatalf("expected filter[vendorNumber]=12345678, got %q", query.Get("filter[vendorNumber]"))
+			}
+			if query.Get("filter[reportType]") != "SALES" {
+				t.Fatalf("expected filter[reportType]=SALES, got %q", query.Get("filter[reportType]"))
+			}
+			if query.Get("filter[frequency]") != "WEEKLY" {
+				t.Fatalf("expected filter[frequency]=WEEKLY, got %q", query.Get("filter[frequency]"))
+			}
+			switch query.Get("filter[reportDate]") {
+			case "2026-02-22":
+				return insightsGzipResponse(strings.Join([]string{
+					"Provider\tSKU\tApple Identifier\tParent Identifier\tUnits\tDeveloper Proceeds\tCustomer Price",
+					"foo\texample-sku-1\tapp-1\t\t10\t0.00\t0.00",
+					"foo\tcom.example.app.plus\tiap-1\texample-sku-1\t2\t2.50\t4.00",
+					"foo\tother-sku\tapp-999\tother-sku\t99\t9.99\t9.99",
+					"",
+				}, "\n")), nil
+			case "2026-02-15":
+				return insightsGzipResponse(strings.Join([]string{
+					"Provider\tSKU\tApple Identifier\tParent Identifier\tUnits\tDeveloper Proceeds\tCustomer Price",
+					"foo\texample-sku-1\tapp-1\t\t8\t0.00\t0.00",
+					"foo\tcom.example.app.plus\tiap-1\texample-sku-1\t1\t1.25\t2.00",
+					"",
+				}, "\n")), nil
+			default:
+				t.Fatalf("unexpected report date filter %q", query.Get("filter[reportDate]"))
+				return nil, nil
+			}
 		default:
-			t.Fatalf("unexpected report date filter %q", query.Get("filter[reportDate]"))
+			t.Fatalf("unexpected request: %s %s", req.Method, req.URL.String())
 			return nil, nil
 		}
 	})
@@ -146,6 +215,9 @@ func TestInsightsWeeklySalesJSON(t *testing.T) {
 	if source["vendorNumber"] != "12345678" {
 		t.Fatalf("expected source.vendorNumber=12345678, got %v", source["vendorNumber"])
 	}
+	if source["appSku"] != "example-sku-1" {
+		t.Fatalf("expected source.appSku=example-sku-1, got %v", source["appSku"])
+	}
 
 	week, ok := payload["week"].(map[string]any)
 	if !ok {
@@ -163,8 +235,16 @@ func TestInsightsWeeklySalesJSON(t *testing.T) {
 	if unitsMetric["status"] != "ok" {
 		t.Fatalf("expected units metric status ok, got %v", unitsMetric["status"])
 	}
-	if unitsMetric["thisWeek"] != 15.0 || unitsMetric["lastWeek"] != 8.0 {
+	if unitsMetric["thisWeek"] != 12.0 || unitsMetric["lastWeek"] != 9.0 {
 		t.Fatalf("unexpected units totals: %v", unitsMetric)
+	}
+	monetizedMetric := findMetric(t, metrics, "monetized_units")
+	if monetizedMetric["thisWeek"] != 2.0 || monetizedMetric["lastWeek"] != 1.0 {
+		t.Fatalf("unexpected monetized units totals: %v", monetizedMetric)
+	}
+	proceedsMetric := findMetric(t, metrics, "developer_proceeds")
+	if proceedsMetric["thisWeek"] != 2.5 || proceedsMetric["lastWeek"] != 1.25 {
+		t.Fatalf("unexpected proceeds totals: %v", proceedsMetric)
 	}
 	unavailableMetric := findMetric(t, metrics, "active_devices")
 	if unavailableMetric["status"] != "unavailable" {
@@ -183,27 +263,41 @@ func TestInsightsWeeklySalesReportRowsUnavailableOnFetchError(t *testing.T) {
 	})
 
 	http.DefaultTransport = roundTripFunc(func(req *http.Request) (*http.Response, error) {
-		if req.URL.Path != "/v1/salesReports" {
-			t.Fatalf("unexpected request: %s %s", req.Method, req.URL.String())
-		}
-
-		switch req.URL.Query().Get("filter[reportDate]") {
-		case "2026-02-22":
-			return &http.Response{
-				StatusCode: http.StatusInternalServerError,
-				Body: io.NopCloser(strings.NewReader(`{
-					"errors":[{"status":"500","code":"INTERNAL_ERROR","title":"Internal Server Error","detail":"temporary failure"}]
-				}`)),
-				Header: http.Header{"Content-Type": []string{"application/json"}},
-			}, nil
-		case "2026-02-15":
-			return insightsGzipResponse(strings.Join([]string{
-				"Provider\tUnits\tDeveloper Proceeds\tCustomer Price",
-				"foo\t8\t1.25\t2.00",
-				"",
-			}, "\n")), nil
+		switch req.URL.Path {
+		case "/v1/apps/app-1":
+			return insightsJSONResponse(`{
+				"data":{
+					"type":"apps",
+					"id":"app-1",
+					"attributes":{
+						"name":"Example App",
+						"bundleId":"com.example.app",
+						"sku":"example-sku-1"
+					}
+				}
+			}`), nil
+		case "/v1/salesReports":
+			switch req.URL.Query().Get("filter[reportDate]") {
+			case "2026-02-22":
+				return &http.Response{
+					StatusCode: http.StatusInternalServerError,
+					Body: io.NopCloser(strings.NewReader(`{
+						"errors":[{"status":"500","code":"INTERNAL_ERROR","title":"Internal Server Error","detail":"temporary failure"}]
+					}`)),
+					Header: http.Header{"Content-Type": []string{"application/json"}},
+				}, nil
+			case "2026-02-15":
+				return insightsGzipResponse(strings.Join([]string{
+					"Provider\tSKU\tApple Identifier\tParent Identifier\tUnits\tDeveloper Proceeds\tCustomer Price",
+					"foo\texample-sku-1\tapp-1\t\t8\t1.25\t2.00",
+					"",
+				}, "\n")), nil
+			default:
+				t.Fatalf("unexpected report date filter %q", req.URL.Query().Get("filter[reportDate]"))
+				return nil, nil
+			}
 		default:
-			t.Fatalf("unexpected report date filter %q", req.URL.Query().Get("filter[reportDate]"))
+			t.Fatalf("unexpected request: %s %s", req.Method, req.URL.String())
 			return nil, nil
 		}
 	})
@@ -237,6 +331,118 @@ func TestInsightsWeeklySalesReportRowsUnavailableOnFetchError(t *testing.T) {
 	reportRowsMetric := findMetric(t, metrics, "report_rows")
 	if reportRowsMetric["status"] != "unavailable" {
 		t.Fatalf("expected report_rows metric unavailable, got %v", reportRowsMetric["status"])
+	}
+}
+
+func TestInsightsDailySalesJSON(t *testing.T) {
+	setupAuth(t)
+	t.Setenv("ASC_CONFIG_PATH", filepath.Join(t.TempDir(), "nonexistent.json"))
+	t.Setenv("ASC_APP_ID", "")
+
+	originalTransport := http.DefaultTransport
+	t.Cleanup(func() {
+		http.DefaultTransport = originalTransport
+	})
+
+	http.DefaultTransport = roundTripFunc(func(req *http.Request) (*http.Response, error) {
+		switch req.URL.Path {
+		case "/v1/apps/app-1":
+			return insightsJSONResponse(`{
+				"data":{
+					"type":"apps",
+					"id":"app-1",
+					"attributes":{
+						"name":"Example App",
+						"bundleId":"com.example.app",
+						"sku":"example-sku-1"
+					}
+				}
+			}`), nil
+		case "/v1/salesReports":
+			query := req.URL.Query()
+			if query.Get("filter[vendorNumber]") != "12345678" {
+				t.Fatalf("expected filter[vendorNumber]=12345678, got %q", query.Get("filter[vendorNumber]"))
+			}
+			if query.Get("filter[reportType]") != "SALES" {
+				t.Fatalf("expected filter[reportType]=SALES, got %q", query.Get("filter[reportType]"))
+			}
+			if query.Get("filter[frequency]") != "DAILY" {
+				t.Fatalf("expected filter[frequency]=DAILY, got %q", query.Get("filter[frequency]"))
+			}
+			switch query.Get("filter[reportDate]") {
+			case "2026-02-18":
+				return insightsGzipResponse(strings.Join([]string{
+					"Provider\tSKU\tApple Identifier\tParent Identifier\tSubscription\tUnits\tDeveloper Proceeds\tCustomer Price",
+					"foo\texample-sku-1\tapp-1\t\t \t1\t0.00\t0.00",
+					"foo\tcom.example.app.plus\tiap-1\texample-sku-1\tRenewal\t1\t2.46\t3.99",
+					"foo\tcom.example.app.plus\tiap-1\texample-sku-1\tNew\t1\t1.23\t1.99",
+					"foo\tother-sku\tapp-999\tother-sku\tRenewal\t99\t9.99\t9.99",
+					"",
+				}, "\n")), nil
+			case "2026-02-17":
+				return insightsGzipResponse(strings.Join([]string{
+					"Provider\tSKU\tApple Identifier\tParent Identifier\tSubscription\tUnits\tDeveloper Proceeds\tCustomer Price",
+					"foo\texample-sku-1\tapp-1\t\t \t2\t0.00\t0.00",
+					"foo\tcom.example.app.plus\tiap-1\texample-sku-1\tRenewal\t1\t1.11\t1.49",
+					"",
+				}, "\n")), nil
+			default:
+				t.Fatalf("unexpected report date filter %q", query.Get("filter[reportDate]"))
+				return nil, nil
+			}
+		default:
+			t.Fatalf("unexpected request: %s %s", req.Method, req.URL.String())
+			return nil, nil
+		}
+	})
+
+	root := RootCommand("1.2.3")
+	root.FlagSet.SetOutput(io.Discard)
+
+	stdout, stderr := captureOutput(t, func() {
+		if err := root.Parse([]string{"insights", "daily", "--app", "app-1", "--vendor", "12345678", "--date", "2026-02-18"}); err != nil {
+			t.Fatalf("parse error: %v", err)
+		}
+		if err := root.Run(context.Background()); err != nil {
+			t.Fatalf("run error: %v", err)
+		}
+	})
+
+	if stderr != "" {
+		t.Fatalf("expected empty stderr, got %q", stderr)
+	}
+
+	var payload map[string]any
+	if err := json.Unmarshal([]byte(stdout), &payload); err != nil {
+		t.Fatalf("unmarshal output: %v\nstdout=%s", err, stdout)
+	}
+
+	source, ok := payload["source"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected source object, got %T", payload["source"])
+	}
+	if source["name"] != "sales" {
+		t.Fatalf("expected source.name=sales, got %v", source["name"])
+	}
+	if source["appSku"] != "example-sku-1" {
+		t.Fatalf("expected source.appSku=example-sku-1, got %v", source["appSku"])
+	}
+
+	metrics, ok := payload["metrics"].([]any)
+	if !ok {
+		t.Fatalf("expected metrics array, got %T", payload["metrics"])
+	}
+	renewalUnits := findMetric(t, metrics, "renewal_units")
+	if renewalUnits["thisDay"] != 1.0 || renewalUnits["previousDay"] != 1.0 {
+		t.Fatalf("unexpected renewal units totals: %v", renewalUnits)
+	}
+	renewalProceeds := findMetric(t, metrics, "renewal_developer_proceeds")
+	if renewalProceeds["thisDay"] != 2.46 || renewalProceeds["previousDay"] != 1.11 {
+		t.Fatalf("unexpected renewal proceeds totals: %v", renewalProceeds)
+	}
+	subscriptionUnits := findMetric(t, metrics, "subscription_units")
+	if subscriptionUnits["thisDay"] != 2.0 || subscriptionUnits["previousDay"] != 1.0 {
+		t.Fatalf("unexpected subscription units totals: %v", subscriptionUnits)
 	}
 }
 
@@ -344,13 +550,29 @@ func TestInsightsWeeklyTableOutput(t *testing.T) {
 	})
 
 	http.DefaultTransport = roundTripFunc(func(req *http.Request) (*http.Response, error) {
-		if req.URL.Path != "/v1/salesReports" {
+		switch req.URL.Path {
+		case "/v1/apps/app-1":
+			return insightsJSONResponse(`{
+				"data":{
+					"type":"apps",
+					"id":"app-1",
+					"attributes":{
+						"name":"Example App",
+						"bundleId":"com.example.app",
+						"sku":"example-sku-1"
+					}
+				}
+			}`), nil
+		case "/v1/salesReports":
+			return insightsGzipResponse(strings.Join([]string{
+				"Provider\tSKU\tApple Identifier\tParent Identifier\tUnits\tDeveloper Proceeds\tCustomer Price",
+				"foo\texample-sku-1\tapp-1\t\t1\t0.00\t0.00",
+				"foo\tcom.example.app.plus\tiap-1\texample-sku-1\t1\t0.10\t0.20",
+			}, "\n")), nil
+		default:
 			t.Fatalf("unexpected request: %s %s", req.Method, req.URL.String())
+			return nil, nil
 		}
-		return insightsGzipResponse(strings.Join([]string{
-			"Provider\tUnits\tDeveloper Proceeds\tCustomer Price",
-			"foo\t1\t0.10\t0.20",
-		}, "\n")), nil
 	})
 
 	root := RootCommand("1.2.3")

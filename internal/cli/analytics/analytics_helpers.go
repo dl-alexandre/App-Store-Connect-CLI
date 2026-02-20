@@ -70,8 +70,10 @@ func normalizeSalesReportVersion(value string) (asc.SalesReportVersion, error) {
 		return asc.SalesReportVersion1_0, nil
 	case string(asc.SalesReportVersion1_1):
 		return asc.SalesReportVersion1_1, nil
+	case string(asc.SalesReportVersion1_3):
+		return asc.SalesReportVersion1_3, nil
 	default:
-		return "", fmt.Errorf("--version must be 1_0 or 1_1")
+		return "", fmt.Errorf("--version must be 1_0, 1_1, or 1_3")
 	}
 }
 
@@ -129,6 +131,19 @@ func normalizeReportDate(value string, frequency asc.SalesReportFrequency) (stri
 			return "", fmt.Errorf("--date must be in YYYY format for yearly reports")
 		}
 		return parsed.Format("2006"), nil
+	case asc.SalesReportFrequencyWeekly:
+		parsed, err := time.Parse("2006-01-02", trimmed)
+		if err != nil {
+			return "", fmt.Errorf("--date must be in YYYY-MM-DD format for weekly reports")
+		}
+		switch parsed.Weekday() {
+		case time.Monday:
+			return parsed.AddDate(0, 0, 6).Format("2006-01-02"), nil
+		case time.Sunday:
+			return parsed.Format("2006-01-02"), nil
+		default:
+			return "", fmt.Errorf("--date for weekly reports must be a Monday (week start) or Sunday (week end)")
+		}
 	default:
 		parsed, err := time.Parse("2006-01-02", trimmed)
 		if err != nil {

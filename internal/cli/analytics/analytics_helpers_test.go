@@ -64,6 +64,50 @@ func TestNormalizeReportDate_YearlyFormat(t *testing.T) {
 	}
 }
 
+func TestNormalizeReportDate_WeeklyMondayConvertsToSunday(t *testing.T) {
+	date, err := normalizeReportDate("2026-02-09", asc.SalesReportFrequencyWeekly)
+	if err != nil {
+		t.Fatalf("expected weekly monday date to parse, got %v", err)
+	}
+	if date != "2026-02-15" {
+		t.Fatalf("expected weekly monday date to normalize to sunday 2026-02-15, got %q", date)
+	}
+}
+
+func TestNormalizeReportDate_WeeklySundayRemainsSunday(t *testing.T) {
+	date, err := normalizeReportDate("2026-02-15", asc.SalesReportFrequencyWeekly)
+	if err != nil {
+		t.Fatalf("expected weekly sunday date to parse, got %v", err)
+	}
+	if date != "2026-02-15" {
+		t.Fatalf("expected weekly sunday date to remain unchanged, got %q", date)
+	}
+}
+
+func TestNormalizeReportDate_WeeklyRejectsNonBoundaryDate(t *testing.T) {
+	_, err := normalizeReportDate("2026-02-11", asc.SalesReportFrequencyWeekly)
+	if err == nil {
+		t.Fatal("expected error for weekly non-monday/sunday date")
+	}
+}
+
+func TestNormalizeSalesReportVersionSupports1_3(t *testing.T) {
+	version, err := normalizeSalesReportVersion("1_3")
+	if err != nil {
+		t.Fatalf("expected version 1_3 to parse, got %v", err)
+	}
+	if version != asc.SalesReportVersion1_3 {
+		t.Fatalf("expected version 1_3, got %q", version)
+	}
+}
+
+func TestNormalizeSalesReportVersionRejectsInvalidValue(t *testing.T) {
+	_, err := normalizeSalesReportVersion("2_0")
+	if err == nil {
+		t.Fatal("expected invalid version error")
+	}
+}
+
 func TestDecompressGzipFile(t *testing.T) {
 	tempDir := t.TempDir()
 	source := filepath.Join(tempDir, "source.tsv.gz")

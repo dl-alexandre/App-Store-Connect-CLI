@@ -39,6 +39,11 @@ var (
 	}
 )
 
+// VersionLocalizationKeys returns the supported app store version localization keys.
+func VersionLocalizationKeys() []string {
+	return append([]string(nil), versionLocalizationKeys...)
+}
+
 type versionLocalizationClient interface {
 	GetAppStoreVersionLocalizations(context.Context, string, ...asc.AppStoreVersionLocalizationsOption) (*asc.AppStoreVersionLocalizationsResponse, error)
 	CreateAppStoreVersionLocalization(context.Context, string, asc.AppStoreVersionLocalizationAttributes) (*asc.AppStoreVersionLocalizationResponse, error)
@@ -173,6 +178,11 @@ func mapVersionLocalizationStrings(attrs asc.AppStoreVersionLocalizationAttribut
 	setIfNotEmpty(values, "supportUrl", attrs.SupportURL)
 	setIfNotEmpty(values, "whatsNew", attrs.WhatsNew)
 	return values
+}
+
+// MapVersionLocalizationStrings converts version localization attributes into .strings keys.
+func MapVersionLocalizationStrings(attrs asc.AppStoreVersionLocalizationAttributes) map[string]string {
+	return mapVersionLocalizationStrings(attrs)
 }
 
 func mapAppInfoLocalizationStrings(attrs asc.AppInfoLocalizationAttributes) map[string]string {

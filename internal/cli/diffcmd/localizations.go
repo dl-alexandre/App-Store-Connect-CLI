@@ -13,15 +13,6 @@ import (
 	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/shared"
 )
 
-var versionLocalizationFields = []string{
-	"description",
-	"keywords",
-	"marketingUrl",
-	"promotionalText",
-	"supportUrl",
-	"whatsNew",
-}
-
 type localizationDiffEndpoint struct {
 	Kind      string `json:"kind"`
 	Path      string `json:"path,omitempty"`
@@ -136,9 +127,6 @@ Modes:
 					targetValues,
 				)
 			} else {
-				if sourceVersion == "" {
-					return shared.UsageError("--from-version is required for remote source mode")
-				}
 				if targetToVersion == "" {
 					return shared.UsageError("--to-version is required when using --from-version")
 				}
@@ -206,8 +194,9 @@ func readAndValidateLocalLocalizations(inputPath string) (map[string]map[string]
 }
 
 func validateVersionLocalizationFields(locale string, values map[string]string) error {
-	allowed := make(map[string]struct{}, len(versionLocalizationFields))
-	for _, field := range versionLocalizationFields {
+	fields := shared.VersionLocalizationKeys()
+	allowed := make(map[string]struct{}, len(fields))
+	for _, field := range fields {
 		allowed[field] = struct{}{}
 	}
 
@@ -272,22 +261,10 @@ func fetchVersionLocalizations(ctx context.Context, client *asc.Client, versionI
 		if _, exists := valuesByLocale[locale]; exists {
 			return nil, fmt.Errorf("duplicate locale %q in remote version %q", locale, versionID)
 		}
-		valuesByLocale[locale] = mapVersionLocalizationAttributes(item.Attributes)
+		valuesByLocale[locale] = normalizeLocalizationValues(shared.MapVersionLocalizationStrings(item.Attributes))
 	}
 
 	return valuesByLocale, nil
-}
-
-func mapVersionLocalizationAttributes(attrs asc.AppStoreVersionLocalizationAttributes) map[string]string {
-	values := map[string]string{
-		"description":     attrs.Description,
-		"keywords":        attrs.Keywords,
-		"marketingUrl":    attrs.MarketingURL,
-		"promotionalText": attrs.PromotionalText,
-		"supportUrl":      attrs.SupportURL,
-		"whatsNew":        attrs.WhatsNew,
-	}
-	return normalizeLocalizationValues(values)
 }
 
 func normalizeLocalizationValues(values map[string]string) map[string]string {
@@ -332,12 +309,13 @@ func buildLocalizationDiffPlan(
 		locales = append(locales, locale)
 	}
 	sort.Strings(locales)
+	fields := shared.VersionLocalizationKeys()
 
 	for _, locale := range locales {
 		sourceFields := sourceValues[locale]
 		targetFields := targetValues[locale]
 
-		for _, field := range versionLocalizationFields {
+		for _, field := range fields {
 			sourceValue, sourceOK := sourceFields[field]
 			targetValue, targetOK := targetFields[field]
 			key := fmt.Sprintf("%s:%s", locale, field)

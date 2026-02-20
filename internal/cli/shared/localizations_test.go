@@ -209,3 +209,53 @@ func TestMapVersionLocalizationStrings(t *testing.T) {
 		}
 	}
 }
+
+func TestValidateVersionLocalizationKeys(t *testing.T) {
+	t.Run("accepts known keys", func(t *testing.T) {
+		err := ValidateVersionLocalizationKeys("en-US", map[string]string{
+			"description": "Hello",
+			"keywords":    "one,two",
+		})
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+	})
+
+	t.Run("rejects unknown keys", func(t *testing.T) {
+		err := ValidateVersionLocalizationKeys("en-US", map[string]string{
+			"description": "Hello",
+			"unknownKey":  "bad",
+		})
+		if err == nil {
+			t.Fatal("expected unknown-key validation error")
+		}
+		if err.Error() != "unsupported keys for locale \"en-US\": unknownKey" {
+			t.Fatalf("unexpected error: %v", err)
+		}
+	})
+}
+
+func TestValidateAppInfoLocalizationKeys(t *testing.T) {
+	t.Run("accepts known keys", func(t *testing.T) {
+		err := ValidateAppInfoLocalizationKeys("en-US", map[string]string{
+			"name":     "My App",
+			"subtitle": "Great app",
+		})
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+	})
+
+	t.Run("rejects unknown keys", func(t *testing.T) {
+		err := ValidateAppInfoLocalizationKeys("en-US", map[string]string{
+			"name":       "My App",
+			"unknownKey": "bad",
+		})
+		if err == nil {
+			t.Fatal("expected unknown-key validation error")
+		}
+		if err.Error() != "unsupported keys for locale \"en-US\": unknownKey" {
+			t.Fatalf("unexpected error: %v", err)
+		}
+	})
+}

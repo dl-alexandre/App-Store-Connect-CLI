@@ -37,6 +37,8 @@ var (
 		"privacyChoicesUrl",
 		"privacyPolicyText",
 	}
+	versionLocalizationAllowedKeys = buildAllowedKeys(versionLocalizationKeys)
+	appInfoLocalizationAllowedKeys = buildAllowedKeys(appInfoLocalizationKeys)
 )
 
 // VersionLocalizationKeys returns the supported app store version localization keys.
@@ -44,9 +46,14 @@ func VersionLocalizationKeys() []string {
 	return append([]string(nil), versionLocalizationKeys...)
 }
 
-// ValidateVersionLocalizationKeys validates that version localization values only contain supported keys.
+// ValidateVersionLocalizationKeys validates .strings keys for a version localization locale.
 func ValidateVersionLocalizationKeys(locale string, values map[string]string) error {
-	return validateLocalizationKeys(locale, values, buildAllowedKeys(versionLocalizationKeys))
+	return validateLocalizationKeys(locale, values, versionLocalizationAllowedKeys)
+}
+
+// ValidateAppInfoLocalizationKeys validates .strings keys for an app-info localization locale.
+func ValidateAppInfoLocalizationKeys(locale string, values map[string]string) error {
+	return validateLocalizationKeys(locale, values, appInfoLocalizationAllowedKeys)
 }
 
 type versionLocalizationClient interface {
@@ -277,9 +284,8 @@ func ReadLocalizationStrings(inputPath string, locales []string) (map[string]map
 }
 
 func UploadVersionLocalizations(ctx context.Context, client versionLocalizationClient, versionID string, valuesByLocale map[string]map[string]string, dryRun bool) ([]asc.LocalizationUploadLocaleResult, error) {
-	validateKeys := buildAllowedKeys(versionLocalizationKeys)
 	for locale, values := range valuesByLocale {
-		if err := validateLocalizationKeys(locale, values, validateKeys); err != nil {
+		if err := ValidateVersionLocalizationKeys(locale, values); err != nil {
 			return nil, err
 		}
 	}
@@ -327,9 +333,8 @@ func UploadVersionLocalizations(ctx context.Context, client versionLocalizationC
 }
 
 func UploadAppInfoLocalizations(ctx context.Context, client appInfoLocalizationClient, appInfoID string, valuesByLocale map[string]map[string]string, dryRun bool) ([]asc.LocalizationUploadLocaleResult, error) {
-	validateKeys := buildAllowedKeys(appInfoLocalizationKeys)
 	for locale, values := range valuesByLocale {
-		if err := validateLocalizationKeys(locale, values, validateKeys); err != nil {
+		if err := ValidateAppInfoLocalizationKeys(locale, values); err != nil {
 			return nil, err
 		}
 	}

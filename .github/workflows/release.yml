@@ -19,6 +19,11 @@ jobs:
         with:
           go-version: '1.26.x'
 
+      - name: Set up Swift
+        uses: swift-actions/setup-swift@v1
+        with:
+          swift-version: '5.9'
+
       - name: Create release directory
         run: mkdir -p release
 
@@ -27,6 +32,14 @@ jobs:
         with:
           p12-file-base64: ${{ secrets.APPLE_DEVELOPER_ID_CERT }}
           p12-password: ${{ secrets.APPLE_DEVELOPER_ID_PASSWORD }}
+
+      - name: Build Swift helpers
+        working-directory: swift-helpers
+        run: |
+          swift build -c release
+          # Create directory for Swift helpers
+          mkdir -p ../release/swift-helpers
+          cp .build/release/asc-* ../release/swift-helpers/
 
       - name: Build for macOS
         run: |
@@ -40,6 +53,10 @@ jobs:
         if: env.APPLE_DEVELOPER_ID != ''
         run: |
           for binary in release/asc_*_macOS_*; do
+            codesign --force --sign "${{ secrets.APPLE_DEVELOPER_ID }}" --timestamp --options=runtime "$binary"
+          done
+          # Sign Swift helpers
+          for binary in release/swift-helpers/asc-*; do
             codesign --force --sign "${{ secrets.APPLE_DEVELOPER_ID }}" --timestamp --options=runtime "$binary"
           done
         env:
@@ -64,10 +81,19 @@ jobs:
         run: |
           VERSION="${GITHUB_REF_NAME}"
           cd release
-          shasum -a 256 * > asc_${VERSION}_checksums.txt
+          shasum -a 256 asc_* swift-helpers/asc-* > asc_${VERSION}_checksums.txt
 
       - name: Display files
         run: ls -la release/
+
+      - name: Package Swift helpers
+        run: |
+          VERSION="${GITHUB_REF_NAME}"
+          cd release/swift-helpers
+          tar -czf "swift-helpers-${VERSION}-macOS.tar.gz" asc-*
+          mv "swift-helpers-${VERSION}-macOS.tar.gz" ../
+          cd ..
+          rm -rf swift-helpers
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2

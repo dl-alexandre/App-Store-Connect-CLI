@@ -7,12 +7,16 @@ on:
       - 'swift-helpers/**'
       - '.github/workflows/swift-helpers.yml'
       - 'internal/swifthelpers/**'
+      - 'internal/cli/builds/**'
+      - 'internal/validation/screenshots.go'
   pull_request:
     branches: [main]
     paths:
       - 'swift-helpers/**'
       - '.github/workflows/swift-helpers.yml'
       - 'internal/swifthelpers/**'
+      - 'internal/cli/builds/**'
+      - 'internal/validation/screenshots.go'
   release:
     types: [published]
 

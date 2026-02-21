@@ -2,25 +2,16 @@ package productpages
 
 import (
 	"context"
-	"errors"
 	"flag"
 	"fmt"
-	"mime"
 	"os"
-	"path/filepath"
-	"sort"
 	"strings"
-	"time"
 
 	"github.com/peterbourgon/ff/v3/ffcli"
 
 	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/asc"
+	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/assets"
 	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/shared"
-)
-
-const (
-	customPageMediaUploadDefaultTimeout = 10 * time.Minute
-	customPageMediaPollInterval         = 2 * time.Second
 )
 
 // CustomPageLocalizationsScreenshotSetsUploadCommand returns the screenshot sets upload subcommand.
@@ -283,51 +274,11 @@ func executeCustomPagePreviewUpload(ctx context.Context, localizationID, path, d
 }
 
 func contextWithCustomPageMediaUploadTimeout(ctx context.Context) (context.Context, context.CancelFunc) {
-	if ctx == nil {
-		ctx = context.Background()
-	}
-	return context.WithTimeout(ctx, asc.ResolveTimeoutWithDefault(customPageMediaUploadDefaultTimeout))
+	return assets.ContextWithAssetUploadTimeout(ctx)
 }
 
 func collectCustomPageMediaFiles(path string) ([]string, error) {
-	info, err := os.Lstat(path)
-	if err != nil {
-		return nil, err
-	}
-	if info.Mode()&os.ModeSymlink != 0 {
-		return nil, fmt.Errorf("refusing to read symlink %q", path)
-	}
-
-	if info.IsDir() {
-		entries, err := os.ReadDir(path)
-		if err != nil {
-			return nil, err
-		}
-		files := make([]string, 0, len(entries))
-		for _, entry := range entries {
-			if entry.IsDir() {
-				continue
-			}
-			fullPath := filepath.Join(path, entry.Name())
-			if err := asc.ValidateImageFile(fullPath); err != nil {
-				return nil, err
-			}
-			files = append(files, fullPath)
-		}
-		if len(files) == 0 {
-			return nil, fmt.Errorf("no files found in %q", path)
-		}
-		sort.Strings(files)
-		return files, nil
-	}
-
-	if !info.Mode().IsRegular() {
-		return nil, fmt.Errorf("expected regular file: %q", path)
-	}
-	if err := asc.ValidateImageFile(path); err != nil {
-		return nil, err
-	}
-	return []string{path}, nil
+	return assets.CollectAssetFiles(path)
 }
 
 func normalizeCustomPageScreenshotDisplayType(input string) (string, error) {
@@ -426,123 +377,11 @@ func deleteAllPreviewsInSet(ctx context.Context, client *asc.Client, setID strin
 }
 
 func uploadCustomPageScreenshotAsset(ctx context.Context, client *asc.Client, setID, filePath string) (asc.AssetUploadResultItem, error) {
-	if err := asc.ValidateImageFile(filePath); err != nil {
-		return asc.AssetUploadResultItem{}, err
-	}
-
-	file, err := shared.OpenExistingNoFollow(filePath)
-	if err != nil {
-		return asc.AssetUploadResultItem{}, err
-	}
-	defer file.Close()
-
-	info, err := file.Stat()
-	if err != nil {
-		return asc.AssetUploadResultItem{}, err
-	}
-
-	checksum, err := asc.ComputeChecksumFromReader(file, asc.ChecksumAlgorithmMD5)
-	if err != nil {
-		return asc.AssetUploadResultItem{}, err
-	}
-
-	created, err := client.CreateAppScreenshot(ctx, setID, info.Name(), info.Size())
-	if err != nil {
-		return asc.AssetUploadResultItem{}, err
-	}
-	if len(created.Data.Attributes.UploadOperations) == 0 {
-		return asc.AssetUploadResultItem{}, fmt.Errorf("no upload operations returned for %q", info.Name())
-	}
-
-	if err := asc.UploadAssetFromFile(ctx, file, info.Size(), created.Data.Attributes.UploadOperations); err != nil {
-		return asc.AssetUploadResultItem{}, err
-	}
-
-	if _, err := client.UpdateAppScreenshot(ctx, created.Data.ID, true, checksum.Hash); err != nil {
-		return asc.AssetUploadResultItem{}, err
-	}
-
-	state, err := waitForCustomPageScreenshotDelivery(ctx, client, created.Data.ID)
-	if err != nil {
-		return asc.AssetUploadResultItem{}, err
-	}
-
-	return asc.AssetUploadResultItem{
-		FileName: info.Name(),
-		FilePath: filePath,
-		AssetID:  created.Data.ID,
-		State:    state,
-	}, nil
+	return assets.UploadScreenshotAsset(ctx, client, setID, filePath)
 }
 
 func uploadCustomPagePreviewAsset(ctx context.Context, client *asc.Client, setID, filePath string) (asc.AssetUploadResultItem, error) {
-	if err := asc.ValidateImageFile(filePath); err != nil {
-		return asc.AssetUploadResultItem{}, err
-	}
-
-	mimeType, err := detectCustomPagePreviewMimeType(filePath)
-	if err != nil {
-		return asc.AssetUploadResultItem{}, err
-	}
-
-	file, err := shared.OpenExistingNoFollow(filePath)
-	if err != nil {
-		return asc.AssetUploadResultItem{}, err
-	}
-	defer file.Close()
-
-	info, err := file.Stat()
-	if err != nil {
-		return asc.AssetUploadResultItem{}, err
-	}
-
-	checksum, err := asc.ComputeChecksumFromReader(file, asc.ChecksumAlgorithmMD5)
-	if err != nil {
-		return asc.AssetUploadResultItem{}, err
-	}
-
-	created, err := client.CreateAppPreview(ctx, setID, info.Name(), info.Size(), mimeType)
-	if err != nil {
-		return asc.AssetUploadResultItem{}, err
-	}
-	if len(created.Data.Attributes.UploadOperations) == 0 {
-		return asc.AssetUploadResultItem{}, fmt.Errorf("no upload operations returned for %q", info.Name())
-	}
-
-	if err := asc.UploadAssetFromFile(ctx, file, info.Size(), created.Data.Attributes.UploadOperations); err != nil {
-		return asc.AssetUploadResultItem{}, err
-	}
-
-	if _, err := client.UpdateAppPreview(ctx, created.Data.ID, true, checksum.Hash); err != nil {
-		return asc.AssetUploadResultItem{}, err
-	}
-
-	state, err := waitForCustomPagePreviewDelivery(ctx, client, created.Data.ID)
-	if err != nil {
-		return asc.AssetUploadResultItem{}, err
-	}
-
-	return asc.AssetUploadResultItem{
-		FileName: info.Name(),
-		FilePath: filePath,
-		AssetID:  created.Data.ID,
-		State:    state,
-	}, nil
-}
-
-func detectCustomPagePreviewMimeType(path string) (string, error) {
-	ext := strings.ToLower(filepath.Ext(path))
-	if ext == "" {
-		return "", fmt.Errorf("preview file %q is missing an extension", path)
-	}
-	mimeType := mime.TypeByExtension(ext)
-	if mimeType == "" {
-		return "", fmt.Errorf("unsupported preview file extension %q", ext)
-	}
-	if idx := strings.Index(mimeType, ";"); idx > 0 {
-		mimeType = mimeType[:idx]
-	}
-	return mimeType, nil
+	return assets.UploadPreviewAsset(ctx, client, setID, filePath)
 }
 
 func waitForCustomPageScreenshotDelivery(ctx context.Context, client *asc.Client, screenshotID string) (string, error) {
@@ -566,53 +405,9 @@ func waitForCustomPagePreviewDelivery(ctx context.Context, client *asc.Client, p
 }
 
 func waitForCustomPageAssetDeliveryState(ctx context.Context, assetID string, fetch func(context.Context) (*asc.AssetDeliveryState, error)) (string, error) {
-	var lastState string
-	_, err := asc.PollUntil(ctx, customPageMediaPollInterval, func(ctx context.Context) (struct{}, bool, error) {
-		state, err := fetch(ctx)
-		if err != nil {
-			return struct{}{}, false, err
-		}
-		if state != nil {
-			lastState = state.State
-			switch strings.ToUpper(state.State) {
-			case "COMPLETE":
-				return struct{}{}, true, nil
-			case "FAILED":
-				return struct{}{}, false, fmt.Errorf("asset %s delivery failed: %s", assetID, formatCustomPageAssetErrors(state.Errors))
-			}
-		}
-		return struct{}{}, false, nil
-	})
-	if err != nil {
-		if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
-			return lastState, fmt.Errorf("timed out waiting for asset %s delivery: %w", assetID, err)
-		}
-		return lastState, err
-	}
-
-	return lastState, nil
+	return assets.WaitForAssetDeliveryState(ctx, assetID, fetch)
 }
 
 func formatCustomPageAssetErrors(errors []asc.ErrorDetail) string {
-	if len(errors) == 0 {
-		return "unknown error"
-	}
-	parts := make([]string, 0, len(errors))
-	for _, item := range errors {
-		if item.Code != "" && item.Message != "" {
-			parts = append(parts, fmt.Sprintf("%s: %s", item.Code, item.Message))
-			continue
-		}
-		if item.Message != "" {
-			parts = append(parts, item.Message)
-			continue
-		}
-		if item.Code != "" {
-			parts = append(parts, item.Code)
-		}
-	}
-	if len(parts) == 0 {
-		return "unknown error"
-	}
-	return strings.Join(parts, "; ")
+	return assets.FormatAssetErrors(errors)
 }

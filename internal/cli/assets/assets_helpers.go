@@ -30,6 +30,11 @@ func ContextWithAssetUploadTimeout(ctx context.Context) (context.Context, contex
 	return contextWithAssetUploadTimeout(ctx)
 }
 
+// CollectAssetFiles validates and collects files from a path.
+func CollectAssetFiles(path string) ([]string, error) {
+	return collectAssetFiles(path)
+}
+
 func collectAssetFiles(path string) ([]string, error) {
 	info, err := os.Lstat(path)
 	if err != nil {
@@ -69,6 +74,11 @@ func collectAssetFiles(path string) ([]string, error) {
 	return []string{path}, nil
 }
 
+// WaitForAssetDeliveryState polls until an asset delivery reaches a terminal state.
+func WaitForAssetDeliveryState(ctx context.Context, assetID string, fetch func(context.Context) (*asc.AssetDeliveryState, error)) (string, error) {
+	return waitForAssetDeliveryState(ctx, assetID, fetch)
+}
+
 func waitForAssetDeliveryState(ctx context.Context, assetID string, fetch func(context.Context) (*asc.AssetDeliveryState, error)) (string, error) {
 	var lastState string
 	_, err := asc.PollUntil(ctx, assetPollInterval, func(ctx context.Context) (struct{}, bool, error) {
@@ -95,6 +105,11 @@ func waitForAssetDeliveryState(ctx context.Context, assetID string, fetch func(c
 	}
 
 	return lastState, nil
+}
+
+// FormatAssetErrors formats asset delivery errors for user-facing messages.
+func FormatAssetErrors(errors []asc.ErrorDetail) string {
+	return formatAssetErrors(errors)
 }
 
 func formatAssetErrors(errors []asc.ErrorDetail) string {

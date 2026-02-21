@@ -652,6 +652,11 @@ func uploadPreviewAsset(ctx context.Context, client *asc.Client, setID, filePath
 	}, nil
 }
 
+// UploadPreviewAsset uploads a preview file to a set.
+func UploadPreviewAsset(ctx context.Context, client *asc.Client, setID, filePath string) (asc.AssetUploadResultItem, error) {
+	return uploadPreviewAsset(ctx, client, setID, filePath)
+}
+
 func detectPreviewMimeType(path string) (string, error) {
 	ext := strings.ToLower(filepath.Ext(path))
 	if ext == "" {

@@ -145,3 +145,19 @@ func TestValidateVersionLocalizationRequiresAtLeastOneField(t *testing.T) {
 		t.Fatalf("expected metadata issue, got %q", issues[0].Field)
 	}
 }
+
+func TestValidateLocaleCanonicalizesKnownLocale(t *testing.T) {
+	got, err := validateLocale("EN-us")
+	if err != nil {
+		t.Fatalf("validateLocale() error: %v", err)
+	}
+	if got != "en-US" {
+		t.Fatalf("expected en-US, got %q", got)
+	}
+}
+
+func TestValidateLocaleRejectsUnsupportedLocale(t *testing.T) {
+	if _, err := validateLocale("en-ZZ"); err == nil {
+		t.Fatal("expected unsupported locale error")
+	}
+}

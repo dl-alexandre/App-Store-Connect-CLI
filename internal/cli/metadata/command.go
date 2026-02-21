@@ -19,6 +19,13 @@ func MetadataCommand() *ffcli.Command {
 		ShortHelp:  "Manage app metadata with deterministic file workflows.",
 		LongHelp: `Manage app metadata with deterministic file workflows.
 
+Phase 1 scope:
+  - app-info localizations: name, subtitle, privacyPolicyUrl, privacyChoicesUrl, privacyPolicyText
+  - version localizations: description, keywords, marketingUrl, promotionalText, supportUrl, whatsNew
+
+Not yet included in this group:
+  - categories, copyright, review information, age ratings, screenshots
+
 Examples:
   asc metadata pull --app "APP_ID" --version "1.2.3" --dir "./metadata"
   asc metadata pull --app "APP_ID" --version "1.2.3" --platform IOS --dir "./metadata"`,

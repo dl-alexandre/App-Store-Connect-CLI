@@ -5,6 +5,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"os"
 	"sort"
 	"strings"
 
@@ -37,6 +38,7 @@ func MetadataPullCommand() *ffcli.Command {
 	version := fs.String("version", "", "App version string (for example 1.2.3)")
 	platform := fs.String("platform", "", "Optional platform: IOS, MAC_OS, TV_OS, or VISION_OS")
 	dir := fs.String("dir", "", "Output root directory (required)")
+	force := fs.Bool("force", false, "Overwrite existing metadata files in --dir")
 	include := fs.String("include", includeLocalizations, "Included metadata scopes (comma-separated)")
 	output := shared.BindOutputFlags(fs)
 
@@ -50,7 +52,8 @@ Phase 1 supports localization metadata for app-info and app-store versions.
 
 Examples:
   asc metadata pull --app "APP_ID" --version "1.2.3" --dir "./metadata"
-  asc metadata pull --app "APP_ID" --version "1.2.3" --platform IOS --dir "./metadata"`,
+  asc metadata pull --app "APP_ID" --version "1.2.3" --platform IOS --dir "./metadata"
+  asc metadata pull --app "APP_ID" --version "1.2.3" --dir "./metadata" --force`,
 		FlagSet:   fs,
 		UsageFunc: shared.DefaultUsageFunc,
 		Exec: func(ctx context.Context, args []string) error {
@@ -161,6 +164,11 @@ Examples:
 			if err != nil {
 				return fmt.Errorf("metadata pull: %w", err)
 			}
+			if !*force {
+				if err := ensureNoExistingPullTargets(plans); err != nil {
+					return err
+				}
+			}
 			if err := ApplyWritePlans(plans); err != nil {
 				return fmt.Errorf("metadata pull: %w", err)
 			}
@@ -197,6 +205,17 @@ Examples:
 			)
 		},
 	}
+}
+
+func ensureNoExistingPullTargets(plans []WritePlan) error {
+	for _, plan := range plans {
+		if _, err := os.Lstat(plan.Path); err == nil {
+			return shared.UsageErrorf("refusing to overwrite existing file %s (use --force)", plan.Path)
+		} else if !errors.Is(err, os.ErrNotExist) {
+			return fmt.Errorf("metadata pull: failed to inspect %s: %w", plan.Path, err)
+		}
+	}
+	return nil
 }
 
 func parseIncludes(value string) ([]string, error) {

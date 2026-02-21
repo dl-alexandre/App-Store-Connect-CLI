@@ -35,11 +35,11 @@ func TestLoadLocalMetadataTreatsDefaultLocaleCaseInsensitively(t *testing.T) {
 	if bundle.defaultVersion == nil {
 		t.Fatal("expected default version localization")
 	}
-	if bundle.defaultAppInfo.Name != "Default App Name" {
-		t.Fatalf("expected default app-info name, got %q", bundle.defaultAppInfo.Name)
+	if bundle.defaultAppInfo.localization.Name != "Default App Name" {
+		t.Fatalf("expected default app-info name, got %q", bundle.defaultAppInfo.localization.Name)
 	}
-	if bundle.defaultVersion.Description != "Default description" {
-		t.Fatalf("expected default version description, got %q", bundle.defaultVersion.Description)
+	if bundle.defaultVersion.localization.Description != "Default description" {
+		t.Fatalf("expected default version description, got %q", bundle.defaultVersion.localization.Description)
 	}
 	if len(bundle.appInfo) != 0 {
 		t.Fatalf("expected no explicit app-info locales, got %+v", bundle.appInfo)
@@ -59,9 +59,14 @@ func TestLoadLocalMetadataRejectsVersionPathTraversal(t *testing.T) {
 }
 
 func TestBuildScopePlanCountsDeleteAndCreateForRecreate(t *testing.T) {
-	local := map[string]map[string]string{
+	local := map[string]localPlanFields{
 		"en-US": {
-			"name": "Local Name",
+			setFields: map[string]string{
+				"name": "Local Name",
+			},
+			clearFields: map[string]struct{}{
+				"subtitle": {},
+			},
 		},
 	}
 	remote := map[string]map[string]string{
@@ -94,9 +99,14 @@ func TestBuildScopePlanCountsDeleteAndCreateForRecreate(t *testing.T) {
 }
 
 func TestApplyDefaultFallbackSkipsRemoteLocalesWhenDeletesAllowed(t *testing.T) {
-	defaultAppInfo := AppInfoLocalization{Name: "Default Name"}
+	defaultAppInfo := appInfoLocalPatch{
+		localization: AppInfoLocalization{Name: "Default Name"},
+		setFields: map[string]string{
+			"name": "Default Name",
+		},
+	}
 	appInfo := applyDefaultAppInfoFallback(
-		map[string]AppInfoLocalization{},
+		map[string]appInfoLocalPatch{},
 		&defaultAppInfo,
 		map[string]AppInfoLocalization{
 			"fr": {Name: "Remote Name"},
@@ -107,9 +117,14 @@ func TestApplyDefaultFallbackSkipsRemoteLocalesWhenDeletesAllowed(t *testing.T) 
 		t.Fatalf("expected no app-info fallback locales when deletes are allowed, got %+v", appInfo)
 	}
 
-	defaultVersion := VersionLocalization{Description: "Default Description"}
+	defaultVersion := versionLocalPatch{
+		localization: VersionLocalization{Description: "Default Description"},
+		setFields: map[string]string{
+			"description": "Default Description",
+		},
+	}
 	version := applyDefaultVersionFallback(
-		map[string]VersionLocalization{},
+		map[string]versionLocalPatch{},
 		&defaultVersion,
 		map[string]VersionLocalization{
 			"fr": {Description: "Remote Description"},
@@ -118,5 +133,24 @@ func TestApplyDefaultFallbackSkipsRemoteLocalesWhenDeletesAllowed(t *testing.T) 
 	)
 	if len(version) != 0 {
 		t.Fatalf("expected no version fallback locales when deletes are allowed, got %+v", version)
+	}
+}
+
+func TestReadAppInfoLocalizationPatchTracksClearsAndNoOps(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "en-US.json")
+	if err := os.WriteFile(path, []byte(`{"name":"New Name","subtitle":"__ASC_DELETE__"}`), 0o644); err != nil {
+		t.Fatalf("write file: %v", err)
+	}
+
+	patch, err := readAppInfoLocalizationPatchFromFile(path)
+	if err != nil {
+		t.Fatalf("readAppInfoLocalizationPatchFromFile() error: %v", err)
+	}
+	if patch.localization.Name != "New Name" {
+		t.Fatalf("expected name set, got %+v", patch.localization)
+	}
+	if _, ok := patch.clearFields["subtitle"]; !ok {
+		t.Fatalf("expected subtitle clear marker, got %+v", patch.clearFields)
 	}
 }

@@ -213,6 +213,87 @@ func TestMetadataPullWritesCanonicalLayout(t *testing.T) {
 	}
 }
 
+func TestMetadataPullRequiresForceToOverwriteExistingFiles(t *testing.T) {
+	setupAuth(t)
+	t.Setenv("ASC_CONFIG_PATH", filepath.Join(t.TempDir(), "nonexistent.json"))
+	t.Setenv("ASC_APP_ID", "")
+
+	outputDir := filepath.Join(t.TempDir(), "metadata")
+	if err := os.MkdirAll(filepath.Join(outputDir, "app-info"), 0o755); err != nil {
+		t.Fatalf("mkdir app-info: %v", err)
+	}
+	existingPath := filepath.Join(outputDir, "app-info", "en-US.json")
+	if err := os.WriteFile(existingPath, []byte(`{"name":"existing"}`), 0o644); err != nil {
+		t.Fatalf("write existing file: %v", err)
+	}
+
+	originalTransport := http.DefaultTransport
+	t.Cleanup(func() {
+		http.DefaultTransport = originalTransport
+	})
+	http.DefaultTransport = roundTripFunc(func(req *http.Request) (*http.Response, error) {
+		switch req.URL.Path {
+		case "/v1/apps/app-1/appInfos":
+			body := `{"data":[{"type":"appInfos","id":"appinfo-1","attributes":{"state":"PREPARE_FOR_SUBMISSION"}}]}`
+			return &http.Response{
+				StatusCode: http.StatusOK,
+				Body:       io.NopCloser(strings.NewReader(body)),
+				Header:     http.Header{"Content-Type": []string{"application/json"}},
+			}, nil
+		case "/v1/apps/app-1/appStoreVersions":
+			body := `{"data":[{"type":"appStoreVersions","id":"version-1","attributes":{"versionString":"1.2.3","platform":"IOS"}}],"links":{"next":""}}`
+			return &http.Response{
+				StatusCode: http.StatusOK,
+				Body:       io.NopCloser(strings.NewReader(body)),
+				Header:     http.Header{"Content-Type": []string{"application/json"}},
+			}, nil
+		case "/v1/appInfos/appinfo-1/appInfoLocalizations":
+			body := `{"data":[{"type":"appInfoLocalizations","id":"appinfo-loc-1","attributes":{"locale":"en-US","name":"App Name"}}],"links":{"next":""}}`
+			return &http.Response{
+				StatusCode: http.StatusOK,
+				Body:       io.NopCloser(strings.NewReader(body)),
+				Header:     http.Header{"Content-Type": []string{"application/json"}},
+			}, nil
+		case "/v1/appStoreVersions/version-1/appStoreVersionLocalizations":
+			body := `{"data":[],"links":{"next":""}}`
+			return &http.Response{
+				StatusCode: http.StatusOK,
+				Body:       io.NopCloser(strings.NewReader(body)),
+				Header:     http.Header{"Content-Type": []string{"application/json"}},
+			}, nil
+		default:
+			t.Fatalf("unexpected path: %s", req.URL.Path)
+			return nil, nil
+		}
+	})
+
+	root := RootCommand("1.2.3")
+	root.FlagSet.SetOutput(io.Discard)
+
+	var runErr error
+	stdout, stderr := captureOutput(t, func() {
+		if err := root.Parse([]string{
+			"metadata", "pull",
+			"--app", "app-1",
+			"--version", "1.2.3",
+			"--dir", outputDir,
+		}); err != nil {
+			t.Fatalf("parse error: %v", err)
+		}
+		runErr = root.Run(context.Background())
+	})
+
+	if !errors.Is(runErr, flag.ErrHelp) {
+		t.Fatalf("expected ErrHelp, got %v", runErr)
+	}
+	if stdout != "" {
+		t.Fatalf("expected empty stdout, got %q", stdout)
+	}
+	if !strings.Contains(stderr, "use --force") {
+		t.Fatalf("expected force overwrite guidance, got %q", stderr)
+	}
+}
+
 func TestMetadataPullRejectsAmbiguousVersionWithoutPlatform(t *testing.T) {
 	setupAuth(t)
 	t.Setenv("ASC_CONFIG_PATH", filepath.Join(t.TempDir(), "nonexistent.json"))
@@ -276,6 +357,69 @@ func TestMetadataPullRejectsAmbiguousVersionWithoutPlatform(t *testing.T) {
 	}
 	if !strings.Contains(stderr, `Error: --platform is required when multiple app store versions match --version "1.2.3"`) {
 		t.Fatalf("expected ambiguous-version error, got %q", stderr)
+	}
+}
+
+func TestMetadataPullVersionNotFound(t *testing.T) {
+	setupAuth(t)
+	t.Setenv("ASC_CONFIG_PATH", filepath.Join(t.TempDir(), "nonexistent.json"))
+	t.Setenv("ASC_APP_ID", "")
+
+	outputDir := filepath.Join(t.TempDir(), "metadata")
+
+	originalTransport := http.DefaultTransport
+	t.Cleanup(func() {
+		http.DefaultTransport = originalTransport
+	})
+	http.DefaultTransport = roundTripFunc(func(req *http.Request) (*http.Response, error) {
+		switch req.URL.Path {
+		case "/v1/apps/app-1/appInfos":
+			body := `{"data":[{"type":"appInfos","id":"appinfo-1","attributes":{"state":"PREPARE_FOR_SUBMISSION"}}]}`
+			return &http.Response{
+				StatusCode: http.StatusOK,
+				Body:       io.NopCloser(strings.NewReader(body)),
+				Header:     http.Header{"Content-Type": []string{"application/json"}},
+			}, nil
+		case "/v1/apps/app-1/appStoreVersions":
+			body := `{"data":[],"links":{"next":""}}`
+			return &http.Response{
+				StatusCode: http.StatusOK,
+				Body:       io.NopCloser(strings.NewReader(body)),
+				Header:     http.Header{"Content-Type": []string{"application/json"}},
+			}, nil
+		default:
+			t.Fatalf("unexpected path: %s", req.URL.Path)
+			return nil, nil
+		}
+	})
+
+	root := RootCommand("1.2.3")
+	root.FlagSet.SetOutput(io.Discard)
+
+	var runErr error
+	stdout, stderr := captureOutput(t, func() {
+		if err := root.Parse([]string{
+			"metadata", "pull",
+			"--app", "app-1",
+			"--version", "1.2.3",
+			"--dir", outputDir,
+		}); err != nil {
+			t.Fatalf("parse error: %v", err)
+		}
+		runErr = root.Run(context.Background())
+	})
+
+	if runErr == nil {
+		t.Fatal("expected version-not-found error")
+	}
+	if !strings.Contains(runErr.Error(), `metadata pull: app store version not found for version "1.2.3"`) {
+		t.Fatalf("expected wrapped version-not-found error, got %v", runErr)
+	}
+	if stdout != "" {
+		t.Fatalf("expected empty stdout, got %q", stdout)
+	}
+	if stderr != "" {
+		t.Fatalf("expected empty stderr, got %q", stderr)
 	}
 }
 

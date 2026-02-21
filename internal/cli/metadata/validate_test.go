@@ -49,6 +49,22 @@ func TestAppInfoLengthIssuesBoundaries(t *testing.T) {
 	}
 }
 
+func TestLengthValidationCountsMultibyteRunes(t *testing.T) {
+	noIssues := versionLengthIssues("file", "1.2.3", "ja", VersionLocalization{
+		Description: strings.Repeat("あ", validation.LimitDescription),
+	})
+	if len(noIssues) != 0 {
+		t.Fatalf("expected no issue at multibyte rune limit, got %+v", noIssues)
+	}
+
+	withIssue := versionLengthIssues("file", "1.2.3", "ja", VersionLocalization{
+		Description: strings.Repeat("あ", validation.LimitDescription+1),
+	})
+	if len(withIssue) != 1 {
+		t.Fatalf("expected one issue above multibyte rune limit, got %+v", withIssue)
+	}
+}
+
 func TestValidateDirTreatsDefaultLocaleCaseInsensitively(t *testing.T) {
 	dir := t.TempDir()
 	version := "1.2.3"

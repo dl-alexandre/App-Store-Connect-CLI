@@ -18,9 +18,61 @@ const (
 	versionDirName = "version"
 	// DefaultLocale is the fastlane-compatible fallback locale token.
 	DefaultLocale = "default"
+	// ClearFieldToken explicitly marks a field for deletion in push payloads.
+	ClearFieldToken = "__ASC_DELETE__"
 )
 
 var localePattern = regexp.MustCompile(`^[a-zA-Z]{2,3}(-[a-zA-Z0-9]+)*$`)
+
+var supportedMetadataLocales = []string{
+	"ar-SA",
+	"ca",
+	"cs",
+	"da",
+	"de-DE",
+	"el",
+	"en-AU",
+	"en-CA",
+	"en-GB",
+	"en-US",
+	"es-ES",
+	"es-MX",
+	"fi",
+	"fr-CA",
+	"fr-FR",
+	"he",
+	"hi",
+	"hr",
+	"hu",
+	"id",
+	"it",
+	"ja",
+	"ko",
+	"ms",
+	"nl-NL",
+	"no",
+	"pl",
+	"pt-BR",
+	"pt-PT",
+	"ro",
+	"ru",
+	"sk",
+	"sv",
+	"th",
+	"tr",
+	"uk",
+	"vi",
+	"zh-Hans",
+	"zh-Hant",
+}
+
+var supportedMetadataLocaleByFold = func() map[string]string {
+	result := make(map[string]string, len(supportedMetadataLocales))
+	for _, locale := range supportedMetadataLocales {
+		result[strings.ToLower(locale)] = locale
+	}
+	return result
+}()
 
 // AppInfoLocalization is the canonical app-info localization schema.
 type AppInfoLocalization struct {
@@ -320,7 +372,11 @@ func validateLocale(locale string) (string, error) {
 	if len(resolved) > 20 || !localePattern.MatchString(resolved) {
 		return "", fmt.Errorf("invalid locale %q", resolved)
 	}
-	return resolved, nil
+	canonical, ok := supportedMetadataLocaleByFold[strings.ToLower(resolved)]
+	if !ok {
+		return "", fmt.Errorf("unsupported locale %q", resolved)
+	}
+	return canonical, nil
 }
 
 func validatePathSegment(label, value string) (string, error) {

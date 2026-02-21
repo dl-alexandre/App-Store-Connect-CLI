@@ -102,7 +102,7 @@ func MetadataPushCommand() *ffcli.Command {
 	dir := fs.String("dir", "", "Metadata root directory (required)")
 	include := fs.String("include", includeLocalizations, "Included metadata scopes (comma-separated)")
 	dryRun := fs.Bool("dry-run", false, "Preview changes without mutating App Store Connect")
-	allowDeletes := fs.Bool("allow-deletes", false, "Allow destructive delete operations when applying changes")
+	allowDeletes := fs.Bool("allow-deletes", false, "Allow destructive delete operations when applying changes (disables default locale fallback for missing locales)")
 	confirm := fs.Bool("confirm", false, "Confirm destructive operations (required with --allow-deletes)")
 	output := shared.BindOutputFlags(fs)
 
@@ -116,7 +116,11 @@ Examples:
   asc metadata push --app "APP_ID" --version "1.2.3" --dir "./metadata" --dry-run
   asc metadata push --app "APP_ID" --version "1.2.3" --platform IOS --dir "./metadata" --dry-run
   asc metadata push --app "APP_ID" --version "1.2.3" --dir "./metadata"
-  asc metadata push --app "APP_ID" --version "1.2.3" --dir "./metadata" --allow-deletes --confirm`,
+  asc metadata push --app "APP_ID" --version "1.2.3" --dir "./metadata" --allow-deletes --confirm
+
+Notes:
+  - default.json fallback is applied only when --allow-deletes is not set.
+  - with --allow-deletes, remote locales missing locally are planned as deletes.`,
 		FlagSet:   fs,
 		UsageFunc: shared.DefaultUsageFunc,
 		Exec: func(ctx context.Context, args []string) error {

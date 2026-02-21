@@ -94,6 +94,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.26.x'
+
       - name: Cache Swift packages
         uses: actions/cache@v4
         with:
@@ -155,6 +160,9 @@ jobs:
         with:
           name: swift-helpers-release
           path: swift-helpers/.build/release
+
+      - name: Make binaries executable
+        run: chmod +x swift-helpers/.build/release/asc-*
 
       - name: Build Go CLI with Swift helpers
         run: |

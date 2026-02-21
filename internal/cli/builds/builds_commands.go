@@ -405,6 +405,8 @@ Examples:
 			BuildsExpireCommand(),
 			BuildsExpireAllCommand(),
 			BuildsUploadCommand(),
+			BuildsPackageCommand(),
+			BuildsValidateCommand(),
 			BuildsUploadsCommand(),
 			BuildsTestNotesCommand(),
 			BuildsAppEncryptionDeclarationCommand(),

@@ -166,8 +166,8 @@ jobs:
 
       - name: Test JWT signing integration
         run: |
-          # Create a test key
-          openssl ecparam -genkey -name prime256v1 -noout -out test-key.p8
+          # Create a test key in PKCS#8 format (required by Swift JWT helper)
+          openssl ecparam -genkey -name prime256v1 -noout | openssl pkcs8 -topk8 -nocrypt -out test-key.p8
           
           # Test Swift helper directly (fresh build)
           ./swift-helpers/.build/release/asc-jwt-sign --issuer-id "test-issuer" --key-id "test-key" --private-key-path test-key.p8 --output json

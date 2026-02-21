@@ -152,14 +152,9 @@ jobs:
         with:
           go-version: '1.26.x'
 
-      - name: Download release artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: swift-helpers-release
-          path: swift-helpers/.build/release
-
-      - name: Make binaries executable
-        run: chmod +x swift-helpers/.build/release/asc-*
+      - name: Build Swift helpers fresh
+        working-directory: swift-helpers
+        run: swift build -c release
 
       - name: Build Go CLI with Swift helpers
         run: |
@@ -174,7 +169,7 @@ jobs:
           # Create a test key
           openssl ecparam -genkey -name prime256v1 -noout -out test-key.p8
           
-          # Test Swift helper directly (artifacts downloaded to swift-helpers/.build/release)
+          # Test Swift helper directly (fresh build)
           ./swift-helpers/.build/release/asc-jwt-sign --issuer-id "test-issuer" --key-id "test-key" --private-key-path test-key.p8 --output json
 
       - name: Test archive extraction
@@ -183,7 +178,7 @@ jobs:
           echo "test content" > test-file.txt
           zip test.zip test-file.txt
           
-          # Test extraction (artifacts downloaded to swift-helpers/.build/release)
+          # Test extraction (fresh build)
           ./swift-helpers/.build/release/asc-archive-unzip extract --archive test.zip --output extracted
 
       - name: Run benchmark tests

@@ -1287,11 +1287,25 @@ asc notify slack --webhook "https://hooks.slack.com/services/..." --message "Bui
 
 # Send to a specific channel
 asc notify slack --webhook "https://hooks.slack.com/services/..." --message "v1.0.0 live" --channel "#releases"
+
+# Reply in an existing Slack thread
+asc notify slack --message "Release is live" --thread-ts "1733977745.12345"
+
+# Include richer release payload fields (fastlane-style attachment fields)
+asc notify slack --message "Release submitted" --payload-json '{"app":"MyApp","version":"1.2.3","build":"42","platform":"iOS"}'
+
+# Load release payload fields from file and mark as failure (red attachment)
+asc notify slack --message "Release failed" --payload-file ./release-event.json --success=false
 ```
 
 Notes:
 - Set `ASC_SLACK_WEBHOOK` env var to avoid passing `--webhook` each time
-- Webhook URL must target `hooks.slack.com` over HTTPS
+- Webhook URL must target `hooks.slack.com` (or `hooks.slack-gov.com` for GovSlack) over HTTPS
+- `--payload-json` / `--payload-file` accept a JSON object; entries become Slack attachment fields
+- `--thread-ts` posts the message as a reply in an existing Slack thread and requires a parent message `ts` from Slack APIs/events
+- `--channel` is sent in payload for compatibility, but incoming webhooks may ignore channel overrides based on app config
+- `--blocks-json` / `--blocks-file` are preferred for new layouts; `--payload-*` uses attachment fields for fastlane parity
+- `--pretext` and `--success` are attachment options and require `--payload-json` or `--payload-file`
 
 ### Apps & Builds
 

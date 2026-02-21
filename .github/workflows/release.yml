@@ -19,15 +19,22 @@ jobs:
         with:
           go-version: '1.26.x'
 
-      - name: Set up Swift
-        uses: swift-actions/setup-swift@v1
-        with:
-          swift-version: '5.9'
-
       - name: Create release directory
         run: mkdir -p release
 
+      - name: Check Apple Developer secrets
+        id: check-secrets
+        run: |
+          if [ -z "${{ secrets.APPLE_DEVELOPER_ID_CERT }}" ] || [ -z "${{ secrets.APPLE_DEVELOPER_ID_PASSWORD }}" ]; then
+            echo "⚠️ Apple Developer secrets not configured. Binaries will not be code signed."
+            echo "has_secrets=false" >> $GITHUB_OUTPUT
+          else
+            echo "✓ Apple Developer secrets configured"
+            echo "has_secrets=true" >> $GITHUB_OUTPUT
+          fi
+
       - name: Import Apple certificate
+        if: steps.check-secrets.outputs.has_secrets == 'true'
         uses: apple-actions/import-codesign-certs@v2
         with:
           p12-file-base64: ${{ secrets.APPLE_DEVELOPER_ID_CERT }}
@@ -50,17 +57,28 @@ jobs:
           GOOS=darwin GOARCH=arm64 go build -ldflags "-s -w -X main.version=${VERSION} -X main.commit=${COMMIT} -X main.date=${DATE}" -o release/asc_${VERSION}_macOS_arm64 .
 
       - name: Code sign macOS binaries
-        if: env.APPLE_DEVELOPER_ID != ''
+        if: steps.check-secrets.outputs.has_secrets == 'true'
         run: |
+          if [ -z "${{ secrets.APPLE_DEVELOPER_ID }}" ]; then
+            echo "⚠️ APPLE_DEVELOPER_ID not set, skipping code signing"
+            exit 0
+          fi
+          
+          # Sign main binaries
           for binary in release/asc_*_macOS_*; do
-            codesign --force --sign "${{ secrets.APPLE_DEVELOPER_ID }}" --timestamp --options=runtime "$binary"
+            if [ -f "$binary" ]; then
+              codesign --force --sign "${{ secrets.APPLE_DEVELOPER_ID }}" --timestamp --options=runtime "$binary"
+              echo "✓ Signed $(basename $binary)"
+            fi
           done
+          
           # Sign Swift helpers
           for binary in release/swift-helpers/asc-*; do
-            codesign --force --sign "${{ secrets.APPLE_DEVELOPER_ID }}" --timestamp --options=runtime "$binary"
+            if [ -f "$binary" ]; then
+              codesign --force --sign "${{ secrets.APPLE_DEVELOPER_ID }}" --timestamp --options=runtime "$binary"
+              echo "✓ Signed Swift helper $(basename $binary)"
+            fi
           done
-        env:
-          APPLE_DEVELOPER_ID: ${{ secrets.APPLE_DEVELOPER_ID }}
 
       - name: Build for Linux
         run: |

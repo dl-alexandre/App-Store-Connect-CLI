@@ -16,11 +16,6 @@ jobs:
         with:
           go-version: '1.26.x'
 
-      - name: Set up Swift
-        uses: swift-actions/setup-swift@v1
-        with:
-          swift-version: '5.9'
-
       - name: Build Swift helpers
         run: |
           cd swift-helpers

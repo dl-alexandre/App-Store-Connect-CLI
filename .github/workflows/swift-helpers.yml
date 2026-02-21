@@ -33,11 +33,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Swift
-        uses: swift-actions/setup-swift@v1
-        with:
-          swift-version: ${{ env.SWIFT_VERSION }}
-
       - name: Verify Swift version
         run: swift --version
 
@@ -99,11 +94,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Swift
-        uses: swift-actions/setup-swift@v1
-        with:
-          swift-version: ${{ env.SWIFT_VERSION }}
-
       - name: Cache Swift packages
         uses: actions/cache@v4
         with:
@@ -127,11 +117,22 @@ jobs:
           path: /usr/local/bin
 
       - name: Make helpers executable
-        run: chmod +x /usr/local/bin/asc-*
+        run: |
+          if [ -f /usr/local/bin/asc-* ]; then
+            chmod +x /usr/local/bin/asc-*
+          else
+            echo "Warning: No Swift helpers found in /usr/local/bin"
+            ls -la /usr/local/bin/ || true
+          fi
+
+      - name: Build Go CLI
+        run: go build -o asc .
 
       - name: Run Go e2e tests
         run: |
           export PATH="/usr/local/bin:$PATH"
+          # Copy Swift helpers next to Go binary for discovery
+          cp /usr/local/bin/asc-* . 2>/dev/null || true
           ASC_BYPASS_KEYCHAIN=1 go test -v ./internal/swifthelpers/... -run "TestSwiftEndToEnd"
 
   # Integration tests - Swift helpers called from Go
@@ -143,11 +144,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Setup Swift
-        uses: swift-actions/setup-swift@v1
-        with:
-          swift-version: ${{ env.SWIFT_VERSION }}
 
       - name: Setup Go
         uses: actions/setup-go@v5
@@ -163,16 +159,18 @@ jobs:
       - name: Build Go CLI with Swift helpers
         run: |
           go build -o asc .
-          # Copy Swift helpers alongside the Go binary
-          cp swift-helpers/.build/release/asc-* .
+          # Copy Swift helpers alongside the Go binary for discovery
+          cp swift-helpers/.build/release/asc-* . 2>/dev/null || true
+          echo "Swift helpers copied. Directory contents:"
+          ls -la asc-* 2>/dev/null || echo "No asc-* files found in current directory"
 
       - name: Test JWT signing integration
         run: |
           # Create a test key
           openssl ecparam -genkey -name prime256v1 -noout -out test-key.p8
           
-          # Test Swift helper directly
-          ./asc-jwt-sign --issuer-id "test-issuer" --key-id "test-key" --private-key-path test-key.p8 --output json
+          # Test Swift helper directly (artifacts downloaded to swift-helpers/.build/release)
+          ./swift-helpers/.build/release/asc-jwt-sign --issuer-id "test-issuer" --key-id "test-key" --private-key-path test-key.p8 --output json
 
       - name: Test archive extraction
         run: |
@@ -180,8 +178,8 @@ jobs:
           echo "test content" > test-file.txt
           zip test.zip test-file.txt
           
-          # Test extraction
-          ./asc-archive-unzip extract --archive test.zip --output extracted
+          # Test extraction (artifacts downloaded to swift-helpers/.build/release)
+          ./swift-helpers/.build/release/asc-archive-unzip extract --archive test.zip --output extracted
 
       - name: Run benchmark tests
         run: |
@@ -204,18 +202,36 @@ jobs:
           name: swift-helpers-release
           path: swift-helpers-release
 
+      - name: Check Apple Developer secrets
+        id: check-secrets
+        run: |
+          if [ -z "${{ secrets.APPLE_DEVELOPER_ID_CERT }}" ] || [ -z "${{ secrets.APPLE_DEVELOPER_ID_PASSWORD }}" ]; then
+            echo "⚠️ Apple Developer secrets not configured. Skipping code signing."
+            echo "has_secrets=false" >> $GITHUB_OUTPUT
+          else
+            echo "✓ Apple Developer secrets configured"
+            echo "has_secrets=true" >> $GITHUB_OUTPUT
+          fi
+
       - name: Import Apple Developer Certificate
+        if: steps.check-secrets.outputs.has_secrets == 'true'
         uses: apple-actions/import-codesign-certs@v2
         with:
           p12-file-base64: ${{ secrets.APPLE_DEVELOPER_ID_CERT }}
           p12-password: ${{ secrets.APPLE_DEVELOPER_ID_PASSWORD }}
 
       - name: Sign binaries
+        if: steps.check-secrets.outputs.has_secrets == 'true'
         env:
           APPLE_DEVELOPER_ID: ${{ secrets.APPLE_DEVELOPER_ID }}
         run: |
+          if [ -z "$APPLE_DEVELOPER_ID" ]; then
+            echo "⚠️ APPLE_DEVELOPER_ID not set, skipping code signing"
+            exit 0
+          fi
+          
           for binary in swift-helpers-release/asc-*; do
-            if [ -n "$APPLE_DEVELOPER_ID" ]; then
+            if [ -f "$binary" ]; then
               codesign --force --sign "$APPLE_DEVELOPER_ID" --timestamp --options=runtime "$binary"
               codesign -dv --verbose=4 "$binary"
               echo "✓ Signed $(basename $binary)"
@@ -227,8 +243,13 @@ jobs:
           VERSION="${GITHUB_REF_NAME#v}"
           mkdir -p swift-helpers-dist
           
-          # Copy all signed binaries
-          cp swift-helpers-release/asc-* swift-helpers-dist/
+          # Copy all binaries (signed or unsigned)
+          if [ -d "swift-helpers-release" ] && [ -n "$(ls -A swift-helpers-release/asc-* 2>/dev/null)" ]; then
+            cp swift-helpers-release/asc-* swift-helpers-dist/
+          else
+            echo "⚠️ No Swift helpers found in swift-helpers-release"
+            exit 1
+          fi
           
           # Create tar.gz
           cd swift-helpers-dist
@@ -251,11 +272,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
-      - name: Setup Swift
-        uses: swift-actions/setup-swift@v1
-        with:
-          swift-version: ${{ env.SWIFT_VERSION }}
 
       - name: Build release
         working-directory: swift-helpers

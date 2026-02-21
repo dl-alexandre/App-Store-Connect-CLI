@@ -76,17 +76,121 @@ func loadPrivateKey(from path: String) throws -> P256.Signing.PrivateKey {
         throw JWTSignError.invalidPrivateKey("Failed to decode base64 content")
     }
     
+    // Try to parse as SEC1 format (raw EC private key) first
+    // This is what OpenSSL ecparam generates
     do {
-        // Try PKCS8 first (common for .p8 files)
-        return try P256.Signing.PrivateKey(x963Representation: keyData)
-    } catch {
-        // Fall back to SEC1 format
-        do {
+        // SEC1 format for P-256 is 32 bytes
+        if keyData.count == 32 {
             return try P256.Signing.PrivateKey(rawRepresentation: keyData)
-        } catch {
-            throw JWTSignError.invalidPrivateKey("Key is not valid P-256 format: \(error)")
+        }
+    } catch {
+        // Fall through to PKCS#8 parsing
+    }
+    
+    // Try PKCS#8 format (what OpenSSL pkcs8 -topk8 generates)
+    // PKCS#8 structure: version(1) + algorithmIdentifier + octetString containing SEC1 key
+    do {
+        let privateKeyBytes = try extractSEC1FromPKCS8(keyData)
+        return try P256.Signing.PrivateKey(rawRepresentation: privateKeyBytes)
+    } catch {
+        throw JWTSignError.invalidPrivateKey("Key is not valid P-256 format: \(error)")
+    }
+}
+
+/// Extract SEC1 private key bytes from PKCS#8 container
+func extractSEC1FromPKCS8(_ data: Data) throws -> Data {
+    // PKCS#8 format: SEQUENCE { version, algorithmIdentifier, privateKey[OCTET STRING] }
+    // The privateKey OCTET STRING contains ECPrivateKey structure (RFC 5915)
+    
+    var index = 0
+    
+    // Helper to read ASN.1 length
+    func readLength(from data: Data, at index: inout Int) throws -> Int {
+        guard index < data.count else {
+            throw JWTSignError.invalidPrivateKey("Unexpected end of data")
+        }
+        let byte = data[index]
+        if byte & 0x80 == 0 {
+            // Short form
+            index += 1
+            return Int(byte)
+        } else {
+            // Long form
+            let numBytes = Int(byte & 0x7F)
+            index += 1
+            var length = 0
+            for _ in 0..<numBytes {
+                guard index < data.count else {
+                    throw JWTSignError.invalidPrivateKey("Unexpected end of data reading length")
+                }
+                length = (length << 8) + Int(data[index])
+                index += 1
+            }
+            return length
         }
     }
+    
+    // Helper to skip an ASN.1 element
+    func skipElement(from data: Data, at index: inout Int) throws {
+        guard index < data.count else { return }
+        let tag = data[index]
+        index += 1
+        let length = try readLength(from: data, at: &index)
+        index += length
+    }
+    
+    // Skip outer SEQUENCE
+    guard index < data.count && data[index] == 0x30 else {
+        throw JWTSignError.invalidPrivateKey("Expected SEQUENCE")
+    }
+    index += 1
+    _ = try readLength(from: data, at: &index)
+    
+    // Skip version INTEGER
+    try skipElement(from: data, at: &index)
+    
+    // Skip algorithmIdentifier SEQUENCE
+    try skipElement(from: data, at: &index)
+    
+    // Read privateKey OCTET STRING
+    guard index < data.count && data[index] == 0x04 else {
+        throw JWTSignError.invalidPrivateKey("Expected OCTET STRING for privateKey")
+    }
+    index += 1
+    let privateKeyLength = try readLength(from: data, at: &index)
+    
+    guard index + privateKeyLength <= data.count else {
+        throw JWTSignError.invalidPrivateKey("Private key length exceeds data")
+    }
+    
+    let ecPrivateKeyData = data.subdata(in: index..<(index + privateKeyLength))
+    
+    // ECPrivateKey structure: SEQUENCE { version, privateKey[OCTET STRING], parameters, publicKey }
+    // We need to extract the privateKey field (32 bytes for P-256)
+    var ecIndex = 0
+    
+    // Skip outer SEQUENCE
+    guard ecIndex < ecPrivateKeyData.count && ecPrivateKeyData[ecIndex] == 0x30 else {
+        throw JWTSignError.invalidPrivateKey("Expected SEQUENCE for ECPrivateKey")
+    }
+    ecIndex += 1
+    _ = try readLength(from: ecPrivateKeyData, at: &ecIndex)
+    
+    // Skip version INTEGER
+    try skipElement(from: ecPrivateKeyData, at: &ecIndex)
+    
+    // Read privateKey OCTET STRING (this contains the 32 bytes we need)
+    guard ecIndex < ecPrivateKeyData.count && ecPrivateKeyData[ecIndex] == 0x04 else {
+        throw JWTSignError.invalidPrivateKey("Expected OCTET STRING for EC privateKey")
+    }
+    ecIndex += 1
+    let sec1KeyLength = try readLength(from: ecPrivateKeyData, at: &ecIndex)
+    
+    guard ecIndex + sec1KeyLength <= ecPrivateKeyData.count else {
+        throw JWTSignError.invalidPrivateKey("SEC1 key length exceeds data")
+    }
+    
+    return ecPrivateKeyData.subdata(in: ecIndex..<(ecIndex + sec1KeyLength))
 }
 
 func generateJWT(issuerID: String, keyID: String, privateKey: P256.Signing.PrivateKey) throws -> String {

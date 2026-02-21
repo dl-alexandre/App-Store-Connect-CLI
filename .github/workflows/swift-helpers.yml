@@ -176,7 +176,6 @@ jobs:
           
           # Test Swift helper directly (artifacts downloaded to swift-helpers/.build/release)
           ./swift-helpers/.build/release/asc-jwt-sign --issuer-id "test-issuer" --key-id "test-key" --private-key-path test-key.p8 --output json
-        continue-on-error: true
 
       - name: Test archive extraction
         run: |

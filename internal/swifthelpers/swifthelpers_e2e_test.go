@@ -48,9 +48,7 @@ func TestSwiftEndToEnd_JWT(t *testing.T) {
 
 	resp, err := SignJWT(ctx, req)
 	if err != nil {
-		// Some Swift helper versions may have key parsing issues
-		// Document this but don't fail the entire test suite
-		t.Skipf("SignJWT failed (may be Swift helper key parsing issue): %v", err)
+		t.Fatalf("SignJWT failed: %v", err)
 	}
 
 	if resp == nil {

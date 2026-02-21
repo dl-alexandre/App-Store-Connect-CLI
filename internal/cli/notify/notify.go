@@ -315,9 +315,8 @@ func buildSlackAttachment(message string, pretext string, payload map[string]any
 
 	attachment := map[string]any{
 		"fallback":  message,
-		"text":      message,
 		"color":     color,
-		"mrkdwn_in": []string{"pretext", "text", "fields"},
+		"mrkdwn_in": []string{"pretext", "fields"},
 		"fields":    fields,
 	}
 	if pretext != "" {

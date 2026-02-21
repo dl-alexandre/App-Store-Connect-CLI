@@ -247,6 +247,15 @@ func TestNotifySlackWithPayloadJSON(t *testing.T) {
 	if attachment["color"] != "good" {
 		t.Fatalf("expected attachment color 'good', got %v", attachment["color"])
 	}
+	if receivedPayload["text"] != "Release submitted" {
+		t.Fatalf("expected top-level text 'Release submitted', got %v", receivedPayload["text"])
+	}
+	if attachment["fallback"] != "Release submitted" {
+		t.Fatalf("expected attachment fallback 'Release submitted', got %v", attachment["fallback"])
+	}
+	if _, exists := attachment["text"]; exists {
+		t.Fatalf("expected attachment text to be omitted when top-level text is set, got %v", attachment["text"])
+	}
 
 	fields, ok := attachment["fields"].([]any)
 	if !ok {

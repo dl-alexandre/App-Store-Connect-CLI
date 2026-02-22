@@ -42,3 +42,4 @@ issues:
     - linters:
         - staticcheck
       text: "QF1002"
+

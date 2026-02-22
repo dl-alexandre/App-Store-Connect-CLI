@@ -2,9 +2,6 @@ package migrate
 
 import (
 	"fmt"
-	"image"
-	_ "image/jpeg"
-	_ "image/png"
 	"os"
 	"path/filepath"
 	"sort"
@@ -57,10 +54,11 @@ func discoverScreenshotPlan(screenshotsDir string) ([]ScreenshotPlan, []SkippedI
 			return nil, nil, err
 		}
 		for _, filePath := range files {
-			if err := asc.ValidateImageFile(filePath); err != nil {
+			dimensions, err := asc.ReadImageDimensions(filePath)
+			if err != nil {
 				return nil, nil, fmt.Errorf("invalid screenshot file %q: %w", filePath, err)
 			}
-			displayType, err := inferScreenshotDisplayType(filePath)
+			displayType, err := inferScreenshotDisplayTypeFromDimensions(filePath, dimensions.Width, dimensions.Height)
 			if err != nil {
 				return nil, nil, err
 			}
@@ -126,7 +124,10 @@ func inferScreenshotDisplayType(path string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("unable to read screenshot dimensions for %q: %w", path, err)
 	}
+	return inferScreenshotDisplayTypeFromDimensions(path, width, height)
+}
 
+func inferScreenshotDisplayTypeFromDimensions(path string, width, height int) (string, error) {
 	hint := inferDisplayTypeFromFilename(path)
 	if hint != "" {
 		if !asc.IsValidScreenshotDisplayType(hint) {
@@ -146,17 +147,11 @@ func inferScreenshotDisplayType(path string) (string, error) {
 }
 
 func readImageDimensions(path string) (int, int, error) {
-	file, err := os.Open(path)
+	dimensions, err := asc.ReadImageDimensions(path)
 	if err != nil {
 		return 0, 0, err
 	}
-	defer file.Close()
-
-	cfg, _, err := image.DecodeConfig(file)
-	if err != nil {
-		return 0, 0, err
-	}
-	return cfg.Width, cfg.Height, nil
+	return dimensions.Width, dimensions.Height, nil
 }
 
 func inferDisplayTypeFromFilename(path string) string {

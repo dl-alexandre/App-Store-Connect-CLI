@@ -28,11 +28,16 @@ const (
 	// tokenLifetime is the JWT token lifetime for App Store Connect API authentication.
 	// 10 minutes is a good balance between security (shorter-lived tokens) and usability.
 	tokenLifetime = 10 * time.Minute
+	// jwtRefreshSkew refreshes a token a bit early to avoid edge-of-expiry races.
+	jwtRefreshSkew = 30 * time.Second
 
 	// Retry defaults
 	DefaultMaxRetries = 3
 	DefaultBaseDelay  = 1 * time.Second
 	DefaultMaxDelay   = 30 * time.Second
+
+	defaultMaxIdleConns        = 128
+	defaultMaxIdleConnsPerHost = 32
 )
 
 var retryLogger = slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
@@ -466,22 +471,45 @@ type Client struct {
 	issuerID      string
 	privateKey    *ecdsa.PrivateKey
 	notaryBaseURL string // override for testing; empty uses NotaryBaseURL constant
+
+	jwtMu              sync.Mutex
+	cachedJWT          string
+	cachedJWTExpiresAt time.Time
 }
 
 // NewClient creates a new ASC client.
 func NewClient(keyID, issuerID, privateKeyPath string) (*Client, error) {
-	return newClientWithHTTPClient(keyID, issuerID, privateKeyPath, &http.Client{
-		Timeout: ResolveTimeout(),
-	})
+	return newClientWithHTTPClient(keyID, issuerID, privateKeyPath, newDefaultHTTPClient(ResolveTimeout()))
 }
 
 // NewClientWithHTTPClient creates a new ASC client using the provided HTTP client.
 // If httpClient is nil, a default client with ASC timeouts is used.
 func NewClientWithHTTPClient(keyID, issuerID, privateKeyPath string, httpClient *http.Client) (*Client, error) {
 	if httpClient == nil {
-		httpClient = &http.Client{Timeout: ResolveTimeout()}
+		httpClient = newDefaultHTTPClient(ResolveTimeout())
 	}
 	return newClientWithHTTPClient(keyID, issuerID, privateKeyPath, httpClient)
+}
+
+func newDefaultHTTPClient(timeout time.Duration) *http.Client {
+	transport, ok := http.DefaultTransport.(*http.Transport)
+	if !ok {
+		// Some tests replace http.DefaultTransport with a custom RoundTripper.
+		// Keep that behavior and skip transport tuning in that case.
+		return &http.Client{
+			Timeout:   timeout,
+			Transport: http.DefaultTransport,
+		}
+	}
+
+	clonedTransport := transport.Clone()
+	clonedTransport.MaxIdleConns = defaultMaxIdleConns
+	clonedTransport.MaxIdleConnsPerHost = defaultMaxIdleConnsPerHost
+
+	return &http.Client{
+		Timeout:   timeout,
+		Transport: clonedTransport,
+	}
 }
 
 func newClientWithHTTPClient(keyID, issuerID, privateKeyPath string, httpClient *http.Client) (*Client, error) {

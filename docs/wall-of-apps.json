@@ -7,6 +7,13 @@
     "platform": ["iOS", "macOS", "tvOS", "visionOS"]
   },
   {
+    "app": "Bloom",
+    "link": "https://apps.apple.com/app/id6739955926",
+    "creator": "mpdifran",
+    "icon": "https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/f0/29/db/f029dba4-b00f-69fb-c696-e1241281b12d/Blueberry-0-1x_U007ephone-0-1-0-sRGB-85-220-0.png/512x512bb.jpg",
+    "platform": ["iOS", "watchOS"]
+  },
+  {
     "app": "Bobbin",
     "link": "https://apps.apple.com/us/app/threads-growth-bobbin/id6756035789",
     "creator": "ljyjeffrey",

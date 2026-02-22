@@ -229,24 +229,15 @@ Examples:
 				sourcesConsidered = append(sourcesConsidered, "processed_builds")
 			}
 
-			buildUploads, err := fetchBuildUploads(requestCtx, client, resolvedAppID, normalizedVersion, normalizedPlatform)
+			latestUploadValue, latestUploadNumber, hasUpload, err := findLatestBuildUploadNumber(
+				requestCtx,
+				client,
+				resolvedAppID,
+				normalizedVersion,
+				normalizedPlatform,
+			)
 			if err != nil {
 				return fmt.Errorf("builds latest: %w", err)
-			}
-
-			var latestUploadValue buildNumber
-			hasUpload := false
-			for _, upload := range buildUploads.Data {
-				parsed, err := parseBuildNumber(upload.Attributes.CFBundleVersion, fmt.Sprintf("build upload %s", upload.ID))
-				if err != nil {
-					return fmt.Errorf("builds latest: %w", err)
-				}
-				if !hasUpload || parsed.Compare(latestUploadValue) > 0 {
-					latestUploadValue = parsed
-					value := parsed.String()
-					latestUploadNumber = &value
-					hasUpload = true
-				}
 			}
 			if hasUpload {
 				sourcesConsidered = append(sourcesConsidered, "build_uploads")
@@ -320,25 +311,36 @@ func findPreReleaseVersionIDs(ctx context.Context, client *asc.Client, appID, ve
 		return []string{firstPage.Data[0].ID}, nil
 	}
 
-	// For platform-only filtering, paginate to get ALL preReleaseVersions
-	allVersions, err := asc.PaginateAll(ctx, firstPage, func(ctx context.Context, nextURL string) (asc.PaginatedResponse, error) {
+	// For platform-only filtering, stream pages and keep only IDs.
+	ids := make([]string, 0, len(firstPage.Data))
+	appendIDs := func(page *asc.PreReleaseVersionsResponse) {
+		for _, preReleaseVersion := range page.Data {
+			ids = append(ids, preReleaseVersion.ID)
+		}
+	}
+
+	err = asc.PaginateEach(ctx, firstPage, func(ctx context.Context, nextURL string) (asc.PaginatedResponse, error) {
 		return client.GetPreReleaseVersions(ctx, appID, asc.WithPreReleaseVersionsNextURL(nextURL))
+	}, func(page asc.PaginatedResponse) error {
+		resp, ok := page.(*asc.PreReleaseVersionsResponse)
+		if !ok {
+			return fmt.Errorf("unexpected pre-release versions page type %T", page)
+		}
+		appendIDs(resp)
+		return nil
 	})
 	if err != nil {
 		return nil, fmt.Errorf("failed to paginate pre-release versions: %w", err)
 	}
 
-	// Extract IDs from paginated results
-	versionsResp := allVersions.(*asc.PreReleaseVersionsResponse)
-	ids := make([]string, len(versionsResp.Data))
-	for i, v := range versionsResp.Data {
-		ids[i] = v.ID
-	}
-
 	return ids, nil
 }
 
-func fetchBuildUploads(ctx context.Context, client *asc.Client, appID, version, platform string) (*asc.BuildUploadsResponse, error) {
+func findLatestBuildUploadNumber(
+	ctx context.Context,
+	client *asc.Client,
+	appID, version, platform string,
+) (buildNumber, *string, bool, error) {
 	opts := []asc.BuildUploadsOption{
 		asc.WithBuildUploadsStates([]string{"AWAITING_UPLOAD", "PROCESSING", "COMPLETE"}),
 		asc.WithBuildUploadsLimit(200),
@@ -352,21 +354,43 @@ func fetchBuildUploads(ctx context.Context, client *asc.Client, appID, version, 
 
 	uploads, err := client.GetBuildUploads(ctx, appID, opts...)
 	if err != nil {
-		return nil, fmt.Errorf("failed to fetch build uploads: %w", err)
+		return buildNumber{}, nil, false, fmt.Errorf("failed to fetch build uploads: %w", err)
 	}
 
-	if uploads.Links.Next == "" {
-		return uploads, nil
+	var latestUploadValue buildNumber
+	var latestUploadNumber *string
+	hasUpload := false
+
+	processPage := func(page *asc.BuildUploadsResponse) error {
+		for _, upload := range page.Data {
+			parsed, err := parseBuildNumber(upload.Attributes.CFBundleVersion, fmt.Sprintf("build upload %s", upload.ID))
+			if err != nil {
+				return err
+			}
+			if !hasUpload || parsed.Compare(latestUploadValue) > 0 {
+				latestUploadValue = parsed
+				value := parsed.String()
+				latestUploadNumber = &value
+				hasUpload = true
+			}
+		}
+		return nil
 	}
 
-	allUploads, err := asc.PaginateAll(ctx, uploads, func(ctx context.Context, nextURL string) (asc.PaginatedResponse, error) {
+	err = asc.PaginateEach(ctx, uploads, func(ctx context.Context, nextURL string) (asc.PaginatedResponse, error) {
 		return client.GetBuildUploads(ctx, appID, asc.WithBuildUploadsNextURL(nextURL))
+	}, func(page asc.PaginatedResponse) error {
+		resp, ok := page.(*asc.BuildUploadsResponse)
+		if !ok {
+			return fmt.Errorf("unexpected build uploads page type %T", page)
+		}
+		return processPage(resp)
 	})
 	if err != nil {
-		return nil, fmt.Errorf("failed to paginate build uploads: %w", err)
+		return buildNumber{}, nil, false, fmt.Errorf("failed to paginate build uploads: %w", err)
 	}
 
-	return allUploads.(*asc.BuildUploadsResponse), nil
+	return latestUploadValue, latestUploadNumber, hasUpload, nil
 }
 
 type buildNumber struct {

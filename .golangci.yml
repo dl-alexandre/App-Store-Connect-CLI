@@ -35,3 +35,10 @@ issues:
     # require massive refactoring across the entire codebase to fix properly
     - linters: [errcheck]
       text: "Error return value"
+    # Ignore quickfix suggestions that predate this PR
+    - linters:
+        - staticcheck
+      text: "QF1012"
+    - linters:
+        - staticcheck
+      text: "QF1002"

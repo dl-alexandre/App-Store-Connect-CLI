@@ -170,7 +170,14 @@ jobs:
 
       - name: Run benchmark tests
         run: |
-          ASC_BYPASS_KEYCHAIN=1 go test -bench=. -benchtime=1s ./internal/swifthelpers/... 2>&1 | head -100
+          echo "=== Benchmarks (non-keychain) ==="
+          ASC_BYPASS_KEYCHAIN=1 go test -bench=. -benchtime=3s -count=1 -run='^$' ./internal/swifthelpers/... -v 2>&1 | tee bench-results.txt
+          echo ""
+          echo "=== Keychain benchmarks ==="
+          go test -bench=BenchmarkKeychainOperations -benchtime=3s -count=1 -run='^$' ./internal/swifthelpers/... -v 2>&1 | tee -a bench-results.txt
+          echo ""
+          echo "=== Summary ==="
+          grep -E '^Benchmark|SKIP|PASS|FAIL|ok' bench-results.txt || true
 
   # Sign and notarize Swift helpers for release
   sign-and-notarize:

@@ -7,16 +7,12 @@ on:
       - 'swift-helpers/**'
       - '.github/workflows/swift-helpers.yml'
       - 'internal/swifthelpers/**'
-      - 'internal/cli/builds/**'
-      - 'internal/validation/screenshots.go'
   pull_request:
     branches: [main]
     paths:
       - 'swift-helpers/**'
       - '.github/workflows/swift-helpers.yml'
       - 'internal/swifthelpers/**'
-      - 'internal/cli/builds/**'
-      - 'internal/validation/screenshots.go'
   release:
     types: [published]
 
@@ -28,7 +24,7 @@ jobs:
   build:
     name: Build Swift Helpers
     runs-on: macos-latest
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -61,7 +57,7 @@ jobs:
       - name: Test binary execution
         working-directory: swift-helpers
         run: |
-          for helper in asc-jwt-sign asc-keychain asc-screenshot-frame asc-image-optimize asc-bundle-validate asc-ipa-pack asc-simulator asc-video-encode asc-codesign asc-archive-unzip; do
+          for helper in asc-jwt-sign asc-keychain asc-screenshot-frame asc-image-optimize asc-video-encode; do
             if [ -f ".build/release/$helper" ]; then
               echo "✓ $helper built successfully"
             else
@@ -89,7 +85,7 @@ jobs:
     name: Test Swift Helpers
     runs-on: macos-latest
     needs: build
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -142,7 +138,7 @@ jobs:
     name: Integration Tests
     runs-on: macos-latest
     needs: build
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -168,18 +164,9 @@ jobs:
         run: |
           # Create a test key in PKCS#8 format (required by Swift JWT helper)
           openssl ecparam -genkey -name prime256v1 -noout | openssl pkcs8 -topk8 -nocrypt -out test-key.p8
-          
+
           # Test Swift helper directly (fresh build)
           ./swift-helpers/.build/release/asc-jwt-sign --issuer-id "test-issuer" --key-id "test-key" --private-key-path test-key.p8 --output json
-
-      - name: Test archive extraction
-        run: |
-          # Create test zip
-          echo "test content" > test-file.txt
-          zip test.zip test-file.txt
-          
-          # Test extraction (fresh build)
-          ./swift-helpers/.build/release/asc-archive-unzip extract --archive test.zip --output extracted
 
       - name: Run benchmark tests
         run: |
@@ -191,7 +178,7 @@ jobs:
     runs-on: macos-latest
     needs: [build, test]
     if: github.event_name == 'release'
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -229,7 +216,7 @@ jobs:
             echo "⚠️ APPLE_DEVELOPER_ID not set, skipping code signing"
             exit 0
           fi
-          
+
           for binary in swift-helpers-release/asc-*; do
             if [ -f "$binary" ]; then
               codesign --force --sign "$APPLE_DEVELOPER_ID" --timestamp --options=runtime "$binary"
@@ -242,7 +229,7 @@ jobs:
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
           mkdir -p swift-helpers-dist
-          
+
           # Copy all binaries (signed or unsigned)
           if [ -d "swift-helpers-release" ] && [ -n "$(ls -A swift-helpers-release/asc-* 2>/dev/null)" ]; then
             cp swift-helpers-release/asc-* swift-helpers-dist/
@@ -250,7 +237,7 @@ jobs:
             echo "⚠️ No Swift helpers found in swift-helpers-release"
             exit 1
           fi
-          
+
           # Create tar.gz
           cd swift-helpers-dist
           tar -czf "swift-helpers-${VERSION}-macOS.tar.gz" asc-*
@@ -268,7 +255,7 @@ jobs:
     name: Build for Main Release
     runs-on: macos-latest
     if: github.event_name == 'release'
-    
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4

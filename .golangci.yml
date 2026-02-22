@@ -10,13 +10,12 @@ linters:
     # Baseline "industry standard" Go checks.
     - govet
     - staticcheck
+    - errcheck
     - ineffassign
     - unused
     - misspell
     - unparam
     - errorlint
-    # Note: errcheck disabled due to widespread unchecked Close() patterns
-    # that predate this PR and would require massive refactoring to fix properly
 
   settings:
     misspell:
@@ -31,3 +30,8 @@ issues:
     # massive rename churn; keep other style rules like ST1005.
     - linters: [staticcheck]
       text: "ST1003:"
+    # Note: errcheck disabled due to widespread unchecked error patterns
+    # (Close, Setenv, RemoveAll, etc.) that predate this PR and would 
+    # require massive refactoring across the entire codebase to fix properly
+    - linters: [errcheck]
+      text: "Error return value"

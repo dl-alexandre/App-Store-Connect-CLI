@@ -18,12 +18,6 @@ jobs:
         with:
           go-version: '1.26.x'
 
-      - name: Build Swift helpers
-        run: |
-          cd swift-helpers
-          swift build
-          echo "$(pwd)/.build/debug" >> $GITHUB_PATH
-
       - name: Install tooling
         run: make tools
 
@@ -43,10 +37,10 @@ jobs:
           export PATH="$(go env GOPATH)/bin:$PATH"
           make lint
 
-      - name: Run tests with Swift helpers
+      - name: Run tests
         env:
           ASC_BYPASS_KEYCHAIN: '1'
-        run: go test ./internal/swifthelpers/... ./internal/cli/builds/... ./internal/validation/...
+        run: go test ./...
 
       - name: Build for macOS
         run: |

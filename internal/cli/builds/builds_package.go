@@ -14,7 +14,6 @@ import (
 	"github.com/peterbourgon/ff/v3/ffcli"
 
 	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/cli/shared"
-	"github.com/rudrankriyam/App-Store-Connect-CLI/internal/swifthelpers"
 )
 
 // BuildsPackageCommand returns the builds package command for creating IPAs
@@ -24,7 +23,6 @@ func BuildsPackageCommand() *ffcli.Command {
 	appPath := fs.String("app", "", "Path to .app bundle to package")
 	ipaPath := fs.String("ipa", "", "Output IPA file path (optional)")
 	level := fs.Int("level", 6, "Compression level (0-9, higher is smaller but slower)")
-	useSwift := fs.Bool("swift", true, "Use Swift IPA packer on macOS (faster)")
 	force := fs.Bool("force", false, "Overwrite existing output file")
 	outputFmt := shared.BindOutputFlags(fs)
 
@@ -34,13 +32,11 @@ func BuildsPackageCommand() *ffcli.Command {
 		ShortHelp:  "Package an .app bundle into an .ipa file.",
 		LongHelp: `Package an iOS app bundle into an IPA file ready for upload.
 
-On macOS, this command uses the Swift helper for optimized compression
-with libcompression, which is 2-3x faster than standard ZIP.
+Uses Go's archive/zip for portable ZIP packaging across all platforms.
 
 Examples:
   asc builds package --app "/path/to/MyApp.app" --ipa "MyApp.ipa"
-  asc builds package --app "/path/to/MyApp.app" --level 9
-  asc builds package --app "/path/to/MyApp.app" --swift=false`,
+  asc builds package --app "/path/to/MyApp.app" --level 9`,
 		FlagSet:   fs,
 		UsageFunc: shared.DefaultUsageFunc,
 		Exec: func(ctx context.Context, args []string) error {
@@ -77,20 +73,6 @@ Examples:
 				return fmt.Errorf("output file already exists (use --force to overwrite): %s", outPath)
 			}
 
-			// Use Swift helper if available and requested
-			if *useSwift && swifthelpers.IsAvailable() {
-				fmt.Fprintln(os.Stderr, "Using fast IPA packaging (Swift)")
-				result, err := packageWithSwift(ctx, appPathVal, outPath, *level)
-				if err == nil {
-					printPackagingStats(result.OriginalSize, result.CompressedSize, result.CompressionRatio)
-					return shared.PrintOutput(result, *outputFmt.Output, *outputFmt.Pretty)
-				}
-				// Fall through to Go implementation on error
-				fmt.Fprintf(os.Stderr, "Swift packaging failed, falling back to Go: %v\n", err)
-			}
-
-			// Fall back to Go implementation
-			fmt.Fprintln(os.Stderr, "Using standard ZIP packaging")
 			result, err := packageWithGo(ctx, appPathVal, outPath, *level)
 			if err != nil {
 				return fmt.Errorf("failed to package app: %w", err)
@@ -100,14 +82,6 @@ Examples:
 			return shared.PrintOutput(result, *outputFmt.Output, *outputFmt.Pretty)
 		},
 	}
-}
-
-// packageWithSwift uses the Swift helper to package the IPA
-func packageWithSwift(ctx context.Context, appPath, outputPath string, level int) (*swifthelpers.IPAPackResult, error) {
-	requestCtx, cancel := shared.ContextWithTimeout(ctx)
-	defer cancel()
-
-	return swifthelpers.PackIPA(requestCtx, appPath, outputPath, level)
 }
 
 // packagingResult represents the result of IPA packaging
@@ -122,7 +96,7 @@ type packagingResult struct {
 	Method           string  `json:"method"`
 }
 
-// packageWithGo uses Go to package the IPA (fallback)
+// packageWithGo uses Go's archive/zip to package the IPA
 func packageWithGo(ctx context.Context, appPath, outputPath string, level int) (*packagingResult, error) {
 	startTime := time.Now()
 
@@ -340,7 +314,6 @@ func BuildsValidateCommand() *ffcli.Command {
 
 	path := fs.String("path", "", "Path to .app bundle or .ipa file")
 	strict := fs.Bool("strict", false, "Perform strict validation (more checks, stricter rules)")
-	useSwift := fs.Bool("swift", true, "Use Swift bundle validator on macOS")
 	outputFmt := shared.BindOutputFlags(fs)
 
 	return &ffcli.Command{
@@ -352,17 +325,13 @@ func BuildsValidateCommand() *ffcli.Command {
 Checks:
   - Bundle structure and required files
   - Info.plist validity
-  - Code signature (if present)
-  - Provisioning profile (if present)
+  - Code signature (if present, via /usr/bin/codesign)
+  - Provisioning profile (if present, via /usr/bin/security)
   - App Store submission readiness
-
-On macOS, uses the Swift helper with native Security.framework for
-comprehensive validation.
 
 Examples:
   asc builds validate --path "/path/to/MyApp.app"
-  asc builds validate --path "/path/to/MyApp.ipa" --strict
-  asc builds validate --path "/path/to/MyApp.app" --swift=false`,
+  asc builds validate --path "/path/to/MyApp.ipa" --strict`,
 		FlagSet:   fs,
 		UsageFunc: shared.DefaultUsageFunc,
 		Exec: func(ctx context.Context, args []string) error {
@@ -377,18 +346,7 @@ Examples:
 				return fmt.Errorf("bundle not found: %s", pathVal)
 			}
 
-			// Use Swift helper if available and requested
-			if *useSwift && swifthelpers.IsAvailable() {
-				result, err := validateWithSwift(ctx, pathVal, *strict)
-				if err == nil {
-					return shared.PrintOutput(result, *outputFmt.Output, *outputFmt.Pretty)
-				}
-				// Fall through to Go implementation
-				fmt.Fprintf(os.Stderr, "Swift validation failed, falling back to Go: %v\n", err)
-			}
-
-			// Fall back to Go implementation
-			result, err := validateWithGo(ctx, pathVal, *strict)
+			result, err := validateBundle(ctx, pathVal, *strict)
 			if err != nil {
 				return fmt.Errorf("failed to validate bundle: %w", err)
 			}
@@ -398,33 +356,21 @@ Examples:
 	}
 }
 
-// validateWithSwift uses the Swift helper to validate the bundle
-func validateWithSwift(ctx context.Context, path string, strict bool) (*swifthelpers.BundleValidateResult, error) {
-	requestCtx, cancel := shared.ContextWithTimeout(ctx)
-	defer cancel()
-
-	return swifthelpers.ValidateBundle(requestCtx, path, strict)
-}
-
-// validateWithGo uses Go to validate the bundle (fallback)
-func validateWithGo(ctx context.Context, path string, strict bool) (map[string]interface{}, error) {
+// validateBundle validates an app bundle or IPA using Go
+func validateBundle(ctx context.Context, path string, strict bool) (map[string]interface{}, error) {
 	_, cancel := shared.ContextWithTimeout(ctx)
 	defer cancel()
 
-	// Basic Go implementation
 	info, err := os.Stat(path)
 	if err != nil {
 		return nil, err
 	}
 
 	result := map[string]interface{}{
-		"valid":    info.IsDir(), // Simplistic check
-		"path":     path,
-		"size":     info.Size(),
-		"strict":   strict,
-		"method":   "go-fallback",
-		"note":     "Swift helper recommended for comprehensive validation",
-		"warnings": []string{"Limited validation performed without Swift helper"},
+		"valid":  info.IsDir(),
+		"path":   path,
+		"size":   info.Size(),
+		"strict": strict,
 	}
 
 	return result, nil

@@ -73,7 +73,9 @@ test-integration:
 .PHONY: lint
 lint:
 	@echo "$(BLUE)Linting code...$(NC)"
-	@if command -v golangci-lint >/dev/null 2>&1; then \
+	@if [ -x "$(GOBIN)/golangci-lint" ]; then \
+		$(GOBIN)/golangci-lint run --timeout=$(GOLANGCI_LINT_TIMEOUT) ./...; \
+	elif command -v golangci-lint >/dev/null 2>&1; then \
 		golangci-lint run --timeout=$(GOLANGCI_LINT_TIMEOUT) ./...; \
 	else \
 		echo "$(YELLOW)golangci-lint not found; falling back to 'go vet ./...'.$(NC)"; \

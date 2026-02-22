@@ -38,6 +38,9 @@ jobs:
           make update-wall-of-apps
           git diff --exit-code -- README.md
 
+      - name: Check command docs sync
+        run: make check-command-docs
+
       - name: Run lint
         run: |
           export PATH="$(go env GOPATH)/bin:$PATH"

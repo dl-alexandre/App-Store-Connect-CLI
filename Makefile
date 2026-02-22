@@ -170,6 +170,19 @@ update-wall-of-apps:
 	@echo "$(BLUE)Updating Wall of Apps snippets...$(NC)"
 	$(GO) run ./tools/update-wall-of-apps
 
+# Generate docs/COMMANDS.md from live CLI help
+.PHONY: generate-command-docs
+generate-command-docs:
+	@echo "$(BLUE)Generating command docs...$(NC)"
+	python3 ./scripts/generate-command-docs.py
+
+# Validate docs command lists against live CLI output
+.PHONY: check-command-docs
+check-command-docs:
+	@echo "$(BLUE)Checking command docs sync...$(NC)"
+	python3 ./scripts/generate-command-docs.py --check
+	python3 ./scripts/check-commands-docs.py
+
 # Run focused performance benchmark snapshot
 .PHONY: bench-perf
 bench-perf:
@@ -248,6 +261,8 @@ help:
 	@echo "  generate app   Generate/update Wall app entry in JSON + README"
 	@echo "                 Usage: make generate app APP=\"Name\" LINK=\"https://...\" CREATOR=\"you\" PLATFORM=\"iOS,macOS\""
 	@echo "  update-wall-of-apps Update Wall of Apps snippets"
+	@echo "  generate-command-docs Generate docs/COMMANDS.md from live CLI help"
+	@echo "  check-command-docs Validate docs command lists against live CLI help"
 	@echo "  bench-perf     Run focused perf benchmark snapshot"
 	@echo "  bench-perf-compare Compare two perf snapshots (BASE=... NEW=...)"
 	@echo "  clean          Clean build artifacts"

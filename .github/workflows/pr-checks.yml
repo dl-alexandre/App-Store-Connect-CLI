@@ -43,10 +43,10 @@ jobs:
           export PATH="$(go env GOPATH)/bin:$PATH"
           make lint
 
-      - name: Run tests with Swift helpers
+      - name: Run tests
         env:
           ASC_BYPASS_KEYCHAIN: '1'
-        run: go test ./internal/swifthelpers/... ./internal/cli/builds/... ./internal/validation/...
+        run: go test -short ./...
 
       - name: Build for macOS
         run: |

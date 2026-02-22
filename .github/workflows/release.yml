@@ -44,7 +44,6 @@ jobs:
         working-directory: swift-helpers
         run: |
           swift build -c release
-          # Create directory for Swift helpers
           mkdir -p ../release/swift-helpers
           cp .build/release/asc-* ../release/swift-helpers/
 
@@ -63,7 +62,7 @@ jobs:
             echo "⚠️ APPLE_DEVELOPER_ID not set, skipping code signing"
             exit 0
           fi
-          
+
           # Sign main binaries
           for binary in release/asc_*_macOS_*; do
             if [ -f "$binary" ]; then
@@ -71,7 +70,7 @@ jobs:
               echo "✓ Signed $(basename $binary)"
             fi
           done
-          
+
           # Sign Swift helpers
           for binary in release/swift-helpers/asc-*; do
             if [ -f "$binary" ]; then

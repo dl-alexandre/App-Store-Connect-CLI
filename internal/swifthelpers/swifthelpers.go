@@ -1,10 +1,11 @@
 // Package swifthelpers provides integration with Swift helper tools for
 // performance-critical operations on macOS.
 //
-// The Swift helpers provide:
-//   - Native CryptoKit JWT signing (2-3x faster than golang-jwt)
+// The Swift helpers leverage native macOS frameworks for genuine speedups:
+//   - Native CryptoKit JWT signing (hardware-accelerated P-256)
 //   - Native Security.framework keychain access (no CGO overhead)
-//   - Core Image/Metal screenshot framing (replaces Python/Koubou)
+//   - Core Image/Metal screenshot framing and image optimization
+//   - AVFoundation video encoding
 //
 // When Swift helpers are not available (Linux, Windows, or not installed),
 // the package falls back to pure Go implementations.
@@ -28,12 +29,7 @@ const (
 	KeychainBinary        = "asc-keychain"
 	ScreenshotFrameBinary = "asc-screenshot-frame"
 	ImageOptimizeBinary   = "asc-image-optimize"
-	BundleValidateBinary  = "asc-bundle-validate"
-	IPAPackBinary         = "asc-ipa-pack"
-	SimulatorBinary       = "asc-simulator"
 	VideoEncodeBinary     = "asc-video-encode"
-	CodeSignBinary        = "asc-codesign"
-	ArchiveUnzipBinary    = "asc-archive-unzip"
 )
 
 // IsAvailable reports whether Swift helpers are available on this platform.
@@ -69,14 +65,14 @@ func findHelper(name string) (string, error) {
 	return "", fmt.Errorf("swift helper %s not found", name)
 }
 
-// JWTSign generates a JWT token using the Swift helper with CryptoKit.
-// Falls back to Go implementation if helper is not available.
+// JWTSignRequest holds the parameters for JWT signing.
 type JWTSignRequest struct {
 	IssuerID       string
 	KeyID          string
 	PrivateKeyPath string
 }
 
+// JWTSignResponse is returned after JWT signing.
 type JWTSignResponse struct {
 	Token     string `json:"token"`
 	ExpiresIn int    `json:"expires_in"`
@@ -308,19 +304,14 @@ func BatchFrameScreenshots(ctx context.Context, inputDir, outputDir, deviceType 
 
 // HelperStatus contains information about the Swift helpers
 type HelperStatus struct {
-	Available      bool      `json:"available"`
-	Platform       string    `json:"platform"`
-	JWTSigner      string    `json:"jwt_signer_path,omitempty"`
-	Keychain       string    `json:"keychain_path,omitempty"`
-	Screenshot     string    `json:"screenshot_path,omitempty"`
-	ImageOptimize  string    `json:"image_optimize_path,omitempty"`
-	BundleValidate string    `json:"bundle_validate_path,omitempty"`
-	IPAPack        string    `json:"ipa_pack_path,omitempty"`
-	Simulator      string    `json:"simulator_path,omitempty"`
-	VideoEncode    string    `json:"video_encode_path,omitempty"`
-	CodeSign       string    `json:"codesign_path,omitempty"`
-	ArchiveUnzip   string    `json:"archive_unzip_path,omitempty"`
-	CheckedAt      time.Time `json:"checked_at"`
+	Available     bool      `json:"available"`
+	Platform      string    `json:"platform"`
+	JWTSigner     string    `json:"jwt_signer_path,omitempty"`
+	Keychain      string    `json:"keychain_path,omitempty"`
+	Screenshot    string    `json:"screenshot_path,omitempty"`
+	ImageOptimize string    `json:"image_optimize_path,omitempty"`
+	VideoEncode   string    `json:"video_encode_path,omitempty"`
+	CheckedAt     time.Time `json:"checked_at"`
 }
 
 // GetStatus returns the current status of Swift helpers.
@@ -347,23 +338,8 @@ func GetStatus() HelperStatus {
 	if path, err := findHelper(ImageOptimizeBinary); err == nil {
 		status.ImageOptimize = path
 	}
-	if path, err := findHelper(BundleValidateBinary); err == nil {
-		status.BundleValidate = path
-	}
-	if path, err := findHelper(IPAPackBinary); err == nil {
-		status.IPAPack = path
-	}
-	if path, err := findHelper(SimulatorBinary); err == nil {
-		status.Simulator = path
-	}
 	if path, err := findHelper(VideoEncodeBinary); err == nil {
 		status.VideoEncode = path
-	}
-	if path, err := findHelper(CodeSignBinary); err == nil {
-		status.CodeSign = path
-	}
-	if path, err := findHelper(ArchiveUnzipBinary); err == nil {
-		status.ArchiveUnzip = path
 	}
 
 	return status
@@ -454,226 +430,6 @@ func BatchOptimizeImages(ctx context.Context, inputDir, outputDir, preset, forma
 	return nil
 }
 
-// BundleValidateResult is returned after bundle validation
-type BundleValidateResult struct {
-	Valid               bool              `json:"valid"`
-	BundlePath          string            `json:"bundlePath"`
-	BundleIdentifier    string            `json:"bundleIdentifier,omitempty"`
-	BundleVersion       string            `json:"bundleVersion,omitempty"`
-	Issues              []ValidationIssue `json:"issues"`
-	Signature           *SignatureInfo    `json:"signature,omitempty"`
-	ProvisioningProfile *ProfileInfo      `json:"provisioningProfile,omitempty"`
-}
-
-type ValidationIssue struct {
-	Severity string `json:"severity"`
-	Code     string `json:"code"`
-	Message  string `json:"message"`
-	Path     string `json:"path,omitempty"`
-}
-
-type SignatureInfo struct {
-	Valid      bool   `json:"valid"`
-	Authority  string `json:"authority,omitempty"`
-	Identifier string `json:"identifier,omitempty"`
-}
-
-type ProfileInfo struct {
-	Valid      bool   `json:"valid"`
-	Name       string `json:"name,omitempty"`
-	AppID      string `json:"appID,omitempty"`
-	Expiration string `json:"expirationDate,omitempty"`
-	IsExpired  bool   `json:"isExpired"`
-}
-
-// ValidateBundle validates an app bundle or IPA for App Store submission.
-func ValidateBundle(ctx context.Context, path string, strict bool) (*BundleValidateResult, error) {
-	if !IsAvailable() {
-		return nil, fmt.Errorf("swift bundle validator not available on %s", runtime.GOOS)
-	}
-
-	helper, err := findHelper(BundleValidateBinary)
-	if err != nil {
-		return nil, err
-	}
-
-	args := []string{"validate", path}
-	if strict {
-		args = append(args, "--strict")
-	}
-
-	cmd := exec.CommandContext(ctx, helper, args...)
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		// Validation may return non-zero exit code but still produce valid output
-		var result BundleValidateResult
-		if jsonErr := json.Unmarshal(output, &result); jsonErr == nil {
-			return &result, nil
-		}
-		return nil, fmt.Errorf("bundle validation failed: %w (output: %s)", err, string(output))
-	}
-
-	var result BundleValidateResult
-	if err := json.Unmarshal(output, &result); err != nil {
-		return nil, fmt.Errorf("failed to parse validation result: %w", err)
-	}
-
-	return &result, nil
-}
-
-// IPAPackResult is returned after IPA packaging
-type IPAPackResult struct {
-	Success          bool    `json:"success"`
-	AppPath          string  `json:"appPath"`
-	IPAPath          string  `json:"ipaPath"`
-	OriginalSize     int64   `json:"originalSize"`
-	CompressedSize   int64   `json:"compressedSize"`
-	CompressionRatio float64 `json:"compressionRatio"`
-	Duration         float64 `json:"duration"`
-}
-
-// PackIPA packages an .app bundle into an .ipa file.
-func PackIPA(ctx context.Context, appPath, outputPath string, level int) (*IPAPackResult, error) {
-	if !IsAvailable() {
-		return nil, fmt.Errorf("swift ipa packer not available on %s", runtime.GOOS)
-	}
-
-	helper, err := findHelper(IPAPackBinary)
-	if err != nil {
-		return nil, err
-	}
-
-	cmd := exec.CommandContext(ctx, helper, "pack",
-		"--app", appPath,
-		"--output", outputPath,
-		"--level", fmt.Sprintf("%d", level),
-	)
-
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		return nil, fmt.Errorf("ipa packaging failed: %w (output: %s)", err, string(output))
-	}
-
-	var result IPAPackResult
-	if err := json.Unmarshal(output, &result); err != nil {
-		return nil, fmt.Errorf("failed to parse pack result: %w", err)
-	}
-
-	return &result, nil
-}
-
-// SimulatorDevice represents an iOS simulator
-type SimulatorDevice struct {
-	UDID        string `json:"udid"`
-	Name        string `json:"name"`
-	DeviceType  string `json:"deviceType"`
-	Runtime     string `json:"runtime"`
-	State       string `json:"state"`
-	IsAvailable bool   `json:"isAvailable"`
-}
-
-// ListSimulators returns available iOS simulators.
-func ListSimulators(ctx context.Context, bootedOnly bool) ([]SimulatorDevice, error) {
-	if !IsAvailable() {
-		return nil, fmt.Errorf("swift simulator helper not available on %s", runtime.GOOS)
-	}
-
-	helper, err := findHelper(SimulatorBinary)
-	if err != nil {
-		return nil, err
-	}
-
-	args := []string{"list"}
-	if bootedOnly {
-		args = append(args, "--booted")
-	}
-
-	cmd := exec.CommandContext(ctx, helper, args...)
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		return nil, fmt.Errorf("failed to list simulators: %w (output: %s)", err, string(output))
-	}
-
-	var devices []SimulatorDevice
-	if err := json.Unmarshal(output, &devices); err != nil {
-		return nil, fmt.Errorf("failed to parse simulator list: %w", err)
-	}
-
-	return devices, nil
-}
-
-// TakeSimulatorScreenshot captures a screenshot from a simulator.
-func TakeSimulatorScreenshot(ctx context.Context, deviceUDID, outputPath string) error {
-	if !IsAvailable() {
-		return fmt.Errorf("swift simulator helper not available on %s", runtime.GOOS)
-	}
-
-	helper, err := findHelper(SimulatorBinary)
-	if err != nil {
-		return err
-	}
-
-	cmd := exec.CommandContext(ctx, helper, "screenshot",
-		"--udid", deviceUDID,
-		"--output", outputPath,
-	)
-
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		return fmt.Errorf("screenshot capture failed: %w (output: %s)", err, string(output))
-	}
-
-	return nil
-}
-
-// SimulatorInstall installs an app on a simulator.
-func SimulatorInstall(ctx context.Context, deviceUDID, appPath string) error {
-	if !IsAvailable() {
-		return fmt.Errorf("swift simulator helper not available on %s", runtime.GOOS)
-	}
-
-	helper, err := findHelper(SimulatorBinary)
-	if err != nil {
-		return err
-	}
-
-	cmd := exec.CommandContext(ctx, helper, "install",
-		"--udid", deviceUDID,
-		appPath,
-	)
-
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		return fmt.Errorf("app install failed: %w (output: %s)", err, string(output))
-	}
-
-	return nil
-}
-
-// SimulatorLaunch launches an app on a simulator.
-func SimulatorLaunch(ctx context.Context, deviceUDID, bundleID string) error {
-	if !IsAvailable() {
-		return fmt.Errorf("swift simulator helper not available on %s", runtime.GOOS)
-	}
-
-	helper, err := findHelper(SimulatorBinary)
-	if err != nil {
-		return err
-	}
-
-	cmd := exec.CommandContext(ctx, helper, "launch",
-		"--udid", deviceUDID,
-		bundleID,
-	)
-
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		return fmt.Errorf("app launch failed: %w (output: %s)", err, string(output))
-	}
-
-	return nil
-}
-
 // VideoEncodeResult is returned after video encoding
 type VideoEncodeResult struct {
 	Input            string  `json:"input"`
@@ -713,176 +469,4 @@ func EncodeVideo(ctx context.Context, inputPath, outputPath, preset string) (*Vi
 	}
 
 	return &result, nil
-}
-
-// CodeSignResult is returned after code signing
-type CodeSignResult struct {
-	Success   bool     `json:"success"`
-	Path      string   `json:"path"`
-	Identity  string   `json:"identity,omitempty"`
-	Timestamp string   `json:"timestamp,omitempty"`
-	Errors    []string `json:"errors"`
-}
-
-// CodeSignVerifyResult is returned after signature verification
-type CodeSignVerifyResult struct {
-	Valid          bool   `json:"valid"`
-	Path           string `json:"path"`
-	Authority      string `json:"authority,omitempty"`
-	Identifier     string `json:"identifier,omitempty"`
-	TeamIdentifier string `json:"teamIdentifier,omitempty"`
-}
-
-// CodeSign signs an app bundle.
-func CodeSign(ctx context.Context, path, identity, entitlements string, force bool) (*CodeSignResult, error) {
-	if !IsAvailable() {
-		return nil, fmt.Errorf("swift codesign helper not available on %s", runtime.GOOS)
-	}
-
-	helper, err := findHelper(CodeSignBinary)
-	if err != nil {
-		return nil, err
-	}
-
-	args := []string{"sign", path}
-	if identity != "" {
-		args = append(args, "--identity", identity)
-	}
-	if entitlements != "" {
-		args = append(args, "--entitlements", entitlements)
-	}
-	if force {
-		args = append(args, "--force")
-	}
-
-	cmd := exec.CommandContext(ctx, helper, args...)
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		return nil, fmt.Errorf("code signing failed: %w (output: %s)", err, string(output))
-	}
-
-	var result CodeSignResult
-	if err := json.Unmarshal(output, &result); err != nil {
-		return nil, fmt.Errorf("failed to parse sign result: %w", err)
-	}
-
-	return &result, nil
-}
-
-// CodeSignVerify verifies code signature.
-func CodeSignVerify(ctx context.Context, path string) (*CodeSignVerifyResult, error) {
-	if !IsAvailable() {
-		return nil, fmt.Errorf("swift codesign helper not available on %s", runtime.GOOS)
-	}
-
-	helper, err := findHelper(CodeSignBinary)
-	if err != nil {
-		return nil, err
-	}
-
-	cmd := exec.CommandContext(ctx, helper, "verify", path)
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		return nil, fmt.Errorf("signature verification failed: %w (output: %s)", err, string(output))
-	}
-
-	var result CodeSignVerifyResult
-	if err := json.Unmarshal(output, &result); err != nil {
-		return nil, fmt.Errorf("failed to parse verify result: %w", err)
-	}
-
-	return &result, nil
-}
-
-// ListCodeSignIdentities lists available code signing identities.
-func ListCodeSignIdentities(ctx context.Context) ([]map[string]string, error) {
-	if !IsAvailable() {
-		return nil, fmt.Errorf("swift codesign helper not available on %s", runtime.GOOS)
-	}
-
-	helper, err := findHelper(CodeSignBinary)
-	if err != nil {
-		return nil, err
-	}
-
-	cmd := exec.CommandContext(ctx, helper, "list")
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		return nil, fmt.Errorf("failed to list identities: %w (output: %s)", err, string(output))
-	}
-
-	var identities []map[string]string
-	if err := json.Unmarshal(output, &identities); err != nil {
-		return nil, fmt.Errorf("failed to parse identities: %w", err)
-	}
-
-	return identities, nil
-}
-
-// ExtractionResult is returned after archive extraction
-type ExtractionResult struct {
-	Success        bool    `json:"success"`
-	ArchivePath    string  `json:"archivePath"`
-	OutputPath     string  `json:"outputPath"`
-	FilesExtracted int     `json:"filesExtracted"`
-	TotalSize      int64   `json:"totalSize"`
-	Duration       float64 `json:"duration"`
-}
-
-// ExtractArchive extracts a .zip or .ipa archive.
-func ExtractArchive(ctx context.Context, archivePath, outputPath string, progress bool) (*ExtractionResult, error) {
-	if !IsAvailable() {
-		return nil, fmt.Errorf("swift archive unzipper not available on %s", runtime.GOOS)
-	}
-
-	helper, err := findHelper(ArchiveUnzipBinary)
-	if err != nil {
-		return nil, err
-	}
-
-	args := []string{"extract", "--archive", archivePath, "--output", outputPath}
-	if progress {
-		args = append(args, "--progress")
-	}
-
-	cmd := exec.CommandContext(ctx, helper, args...)
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		return nil, fmt.Errorf("archive extraction failed: %w (output: %s)", err, string(output))
-	}
-
-	var result ExtractionResult
-	if err := json.Unmarshal(output, &result); err != nil {
-		return nil, fmt.Errorf("failed to parse extraction result: %w", err)
-	}
-
-	return &result, nil
-}
-
-// ListArchiveContents lists archive contents without extracting.
-func ListArchiveContents(ctx context.Context, archivePath string) ([]string, error) {
-	if !IsAvailable() {
-		return nil, fmt.Errorf("swift archive unzipper not available on %s", runtime.GOOS)
-	}
-
-	helper, err := findHelper(ArchiveUnzipBinary)
-	if err != nil {
-		return nil, err
-	}
-
-	cmd := exec.CommandContext(ctx, helper, "list", archivePath)
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		return nil, fmt.Errorf("failed to list archive contents: %w (output: %s)", err, string(output))
-	}
-
-	var result struct {
-		Archive string   `json:"archive"`
-		Files   []string `json:"files"`
-	}
-	if err := json.Unmarshal(output, &result); err != nil {
-		return nil, fmt.Errorf("failed to parse archive list: %w", err)
-	}
-
-	return result.Files, nil
 }

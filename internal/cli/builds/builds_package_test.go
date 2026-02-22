@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"runtime"
 	"strings"
 	"testing"
 )
@@ -250,19 +249,6 @@ func TestPrintPackagingStats(t *testing.T) {
 	printPackagingStats(1024*1024*10, 1024*1024*5, 2.0)    // 10MB -> 5MB, 2x ratio
 	printPackagingStats(1024*1024*100, 1024*1024*100, 1.0) // No compression
 	printPackagingStats(0, 0, 1.0)                         // Edge case
-}
-
-func TestPackageWithSwift_NotAvailable(t *testing.T) {
-	if runtime.GOOS == "darwin" {
-		t.Skip("Skipping on macOS - Swift helpers might be available")
-	}
-
-	ctx := context.Background()
-	_, err := packageWithSwift(ctx, "/test/app.app", "/test/output.ipa", 6)
-
-	if err == nil {
-		t.Error("Expected error when Swift helper not available")
-	}
 }
 
 func TestPackageWithGo_ContextCancellation(t *testing.T) {
